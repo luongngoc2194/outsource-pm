@@ -62,7 +62,7 @@ async function renderOfficePreviewHtml(filePath, rawUrlPath, embedMode) {
     typeBadge = 'WORD 97-2003 (.DOC)';
     const extractor = new WordExtractor();
     const doc = await extractor.extract(filePath);
-    const fullText = [doc.getHeader(), doc.getBody(), doc.getFootnotes(), doc.getEndnotes()].filter(Boolean).join('\n');
+    const fullText = [doc.getHeaders(), doc.getBody(), doc.getFootnotes(), doc.getEndnotes()].filter(Boolean).join('\n');
     const lines = fullText.split(/\r?\n/);
     const htmlLines = lines.map((line) => {
       const trimmed = line.trim();
