@@ -267,9 +267,9 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
               <span role="cell"><span class="chip" style="{{p.typeChip}}">{{p.typeLabel}}</span></span>
               <span role="cell" class="tn" style="{{p.dlStyle}}">{{p.deadline}}<sc-if value="{{p.overdue}}" hint-placeholder-val="{{ false }}"><br><span class="chip" style="background:#FBE3E1;color:#9B1F24;margin-top:2px">Trễ hạn</span></sc-if></span>
               <span role="cell">
-                <div class="tn" style="display:flex;justify-content:space-between;gap:8px"><span><strong>{{p.alloc}}</strong> / {{p.locked}} md</span><span class="sub">{{p.pct}}%</span></div>
+                <div class="tn" style="display:flex;justify-content:space-between;gap:8px"><span><strong>{{p.alloc}}</strong> / {{p.locked}}</span><span class="sub">{{p.pctLabel}}</span></div>
                 <div style="height:8px;border-radius:99px;background:#E8E6DF;overflow:hidden;margin:6px 0 4px"><div style="height:100%;border-radius:99px;width:{{p.pct}}%;background:{{p.barColor}}"></div></div>
-                <div class="sub tn">Còn <strong style="{{p.remStyle}}">{{p.rem}} md</strong> · {{p.lockedMm}} mm chốt</div>
+                <div class="sub tn">{{p.remPrefix}}<strong style="{{p.remStyle}}">{{p.rem}}</strong>{{p.remSuffix}}</div>
               </span>
               <span role="cell" class="r tn" style="color:var(--mute)">{{p.est}}</span>
               <span role="cell"><span class="chip" style="{{p.statusChip}}">{{p.statusLabel}}</span></span>
@@ -620,8 +620,8 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
         </div>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:14px;background:#E8F2F3;border:1px solid #B5D3D7;border-radius:12px;padding:14px">
-        <label class="field" style="flex:1 1 180px">Nỗ lực ước tính (md, tùy chọn)<input class="inp tn" type="text" inputmode="decimal" value="{{pv.est}}" onInput="{{pv.on.est}}"></label>
-        <label class="field" style="flex:1 1 180px;color:var(--pri)">Nỗ lực chốt (md) · bước 0.1<input class="inp tn" type="text" inputmode="decimal" value="{{pv.locked}}" onInput="{{pv.on.locked}}" style="border:2px solid var(--pri);font-weight:700"></label>
+        <label class="field" style="flex:1 1 180px">Nỗ lực ước tính (md, tùy chọn)<input class="inp tn" type="text" inputmode="decimal" value="{{pv.est}}" onInput="{{pv.on.est}}" placeholder="Chưa có"></label>
+        <label class="field" style="flex:1 1 180px;color:var(--pri)">Nỗ lực chốt (md, nhập khi đóng PYC)<input class="inp tn" type="text" inputmode="decimal" value="{{pv.locked}}" onInput="{{pv.on.locked}}" placeholder="Có thể nhập sau khi đóng PYC" style="border:2px solid var(--pri);font-weight:700"></label>
       </div>
       <div style="display:flex;flex-direction:column;gap:8px" role="radiogroup" aria-label="Trạng thái PYC">
         <span class="sub" style="font-weight:600">Trạng thái</span>
@@ -1005,7 +1005,7 @@ class Component extends DCLogic {
     setTimeout(() => { if (this.state.toast && this.state.toast.id === id) this.setState({ toast: null }); }, 7000);
   }
   field(group, key) {
-    return (e) => this.setState({ [group]: { ...this.state[group], [key]: e.target.value } });
+    return (e) => this.setState({ [group]: { ...this.state[group], [key]: e.target.value, err: '' } });
   }
   meta(coll, it, db) {
     if (coll === 'projects') return { table: 'PROJECT', rec: it.code };
@@ -1085,6 +1085,7 @@ class Component extends DCLogic {
   allocCheck(db, a) {
     const req = db.requests.find(r => r.id === a.req);
     const A = Number(req.locked);
+    const hasLock = A > 0;
     const B = this.allocOf(db, a.req, a.edit);
     let C = 0, stepBad = false, dupBad = false;
     const seen = {};
@@ -1099,10 +1100,10 @@ class Component extends DCLogic {
       return { key: r.key, err };
     });
     C = this.r1(C);
-    const rem = this.r1(A - B - C);
+    const rem = hasLock ? this.r1(A - B - C) : 0;
     const monthDup = db.batches.some(b => b.req === a.req && b.month === a.month && !b.del && b.id !== a.edit);
     const emptyRow = a.rows.some(r => r.md === '');
-    return { req, A, B, C, rem, rows, stepBad, dupBad, over: rem < 0, monthDup, emptyRow };
+    return { req, A, hasLock, B, C, rem, rows, stepBad, dupBad, over: hasLock && rem < 0, monthDup, emptyRow };
   }
   saveAlloc() {
     const s = this.state, a = s.alloc, db0 = s.db;
@@ -1140,10 +1141,10 @@ class Component extends DCLogic {
     const pid = this.curProjId(db);
     if (id) {
       const r = db.requests.find(x => x.id === id);
-      this.setState({ pyc: { id, code: r.code, type: r.type, name: r.name, est: r.est ? String(r.est) : '', locked: String(r.locked), deadline: r.deadline || '', status: r.status, requester: r.requester || '', link: r.link || '', err: '' } });
+      this.setState({ pyc: { id, code: r.code, type: r.type, name: r.name, est: r.est ? String(r.est) : '', locked: Number(r.locked) > 0 ? String(r.locked) : '', deadline: r.deadline || '', status: r.status, requester: r.requester || '', link: r.link || '', err: '' } });
     } else {
       const n = db.requests.filter(r => r.proj === pid).length + 1;
-      this.setState({ pyc: { id: null, code: 'PYC-' + String(n).padStart(3, '0'), type: 'CR', name: '', est: '', locked: '10.0', deadline: '2026-12-31', status: 'NEW', requester: '', link: '', err: '' } });
+      this.setState({ pyc: { id: null, code: 'PYC-' + String(n).padStart(3, '0'), type: 'CR', name: '', est: '', locked: '', deadline: '2026-12-31', status: 'NEW', requester: '', link: '', err: '' } });
     }
   }
   savePyc() {
@@ -1151,28 +1152,36 @@ class Component extends DCLogic {
     const pid = this.curProjId(db0);
     const bad = (m) => this.setState({ pyc: { ...p, err: m } });
     const code = p.code.trim(), name = p.name.trim();
+    const lockedStr = String(p.locked == null ? '' : p.locked).trim().replace(',', '.');
+    const estStr = String(p.est == null ? '' : p.est).trim().replace(',', '.');
     if (!code || !name) { bad('Vui lòng nhập đủ Mã PYC và Tên PYC.'); return; }
     if (db0.requests.some(r => !r.del && r.proj === pid && r.code.toLowerCase() === code.toLowerCase() && r.id !== p.id)) { bad('BR-05: Mã PYC "' + code + '" đã tồn tại trong dự án này.'); return; }
-    if (!this.step(p.locked) || Number(p.locked) < 0) { bad('BR-07: Nỗ lực chốt phải theo bước 0.1 md.'); return; }
-    if (p.est !== '' && !this.step(p.est)) { bad('BR-07: Nỗ lực ước tính phải theo bước 0.1 md.'); return; }
-    if (p.id) {
+    if (estStr !== '' && (!this.step(estStr) || Number(estStr) < 0)) { bad('BR-07: Nỗ lực ước tính phải theo bước 0.1 md.'); return; }
+    if (lockedStr !== '' && (!this.step(lockedStr) || Number(lockedStr) < 0)) { bad('BR-07: Nỗ lực chốt phải theo bước 0.1 md.'); return; }
+    const lockedVal = lockedStr === '' ? 0 : this.r1(lockedStr);
+    const estVal = estStr === '' ? 0 : this.r1(estStr);
+    if (p.status === 'CLOSED' && lockedVal <= 0) {
+      bad('Khi đóng PYC (trạng thái Đã đóng), vui lòng nhập Nỗ lực chốt (> 0 md).');
+      return;
+    }
+    if (p.id && lockedVal > 0) {
       const allocated = this.allocOf(db0, p.id);
-      if (Number(p.locked) < allocated) { bad('BR-02: Nỗ lực chốt mới (' + this.f1(p.locked) + ' md) không được nhỏ hơn tổng đã phân bổ (' + this.f1(allocated) + ' md).'); return; }
+      if (lockedVal < allocated) { bad('BR-02: Nỗ lực chốt mới (' + this.f1(lockedVal) + ' md) không được nhỏ hơn tổng đã phân bổ (' + this.f1(allocated) + ' md).'); return; }
     }
     this.mut(db => {
       if (p.id) {
         const r = db.requests.find(x => x.id === p.id);
         const old = r.locked;
-        Object.assign(r, { code, name, type: p.type, est: p.est === '' ? 0 : this.r1(p.est), locked: this.r1(p.locked), deadline: p.deadline, status: p.status, requester: p.requester.trim(), link: p.link.trim() });
-        if (old !== r.locked) this.log(db, 'REQUEST', code, 'UPDATE', 'locked_md', this.f1(old) + ' → ' + this.f1(r.locked) + ' md');
+        Object.assign(r, { code, name, type: p.type, est: estVal, locked: lockedVal, deadline: p.deadline, status: p.status, requester: p.requester.trim(), link: p.link.trim() });
+        if (old !== r.locked) this.log(db, 'REQUEST', code, 'UPDATE', 'locked_md', (old > 0 ? this.f1(old) + ' md' : 'Chưa chốt') + ' → ' + (r.locked > 0 ? this.f1(r.locked) + ' md' : 'Chưa chốt'));
       } else {
-        db.requests.push({ id: Date.now(), proj: pid, code, name, type: p.type, deadline: p.deadline, status: p.status, requester: p.requester.trim(), link: p.link.trim(), est: p.est === '' ? 0 : this.r1(p.est), locked: this.r1(p.locked), del: false });
-        this.log(db, 'REQUEST', code, 'INSERT', 'locked_md', 'Tạo mới PYC, chốt ' + this.f1(p.locked) + ' md');
+        db.requests.push({ id: Date.now(), proj: pid, code, name, type: p.type, deadline: p.deadline, status: p.status, requester: p.requester.trim(), link: p.link.trim(), est: estVal, locked: lockedVal, del: false });
+        this.log(db, 'REQUEST', code, 'INSERT', 'locked_md', 'Tạo mới PYC, ' + (lockedVal > 0 ? 'chốt ' + this.f1(lockedVal) + ' md' : 'chưa chốt nỗ lực'));
       }
     });
     this.setState({ pyc: null });
     this.toast((p.id ? 'Đã cập nhật ' : 'Đã thêm ') + code + '.', 'ok');
-    const payload = { proj: pid, code, name, type: p.type, est: p.est, locked: p.locked, deadline: p.deadline, status: p.status, requester: p.requester, link: p.link };
+    const payload = { proj: pid, code, name, type: p.type, est: estStr, locked: lockedStr, deadline: p.deadline, status: p.status, requester: p.requester, link: p.link };
     if (p.id) this.callApi('PUT', '/requests/' + p.id, payload);
     else this.callApi('POST', '/requests', payload);
   }
@@ -1409,7 +1418,7 @@ class Component extends DCLogic {
       if (rq.del) { this.toast('Không thể khôi phục đợt: ' + rq.code + ' đang ở Thùng rác. Hãy khôi phục PYC trước.', 'bad'); return; }
       const sum = this.r1(db0.items.filter(i => i.batch === id).reduce((a, i) => a + Number(i.md), 0));
       const cur = this.allocOf(db0, rq.id);
-      if (this.r1(cur + sum) > rq.locked) { this.toast('BR-04: Sau khôi phục tổng ' + this.f1(this.r1(cur + sum)) + ' md vượt nỗ lực chốt ' + this.f1(rq.locked) + ' md.', 'bad'); return; }
+      if (Number(rq.locked) > 0 && this.r1(cur + sum) > rq.locked) { this.toast('BR-04: Sau khôi phục tổng ' + this.f1(this.r1(cur + sum)) + ' md vượt nỗ lực chốt ' + this.f1(rq.locked) + ' md.', 'bad'); return; }
     }
     this.mut(db => {
       const it = db[coll].find(x => x.id === id);
@@ -1454,10 +1463,11 @@ class Component extends DCLogic {
 
     const buildRm = (list) => list.map(r => {
       const a = this.allocOf(db, r.id);
-      const rem = this.r1(r.locked - a);
-      const pct = r.locked > 0 ? Math.min(100, Math.round(a / r.locked * 100)) : 0;
+      const hasLock = Number(r.locked) > 0;
+      const rem = hasLock ? this.r1(r.locked - a) : 0;
+      const pct = hasLock ? Math.min(100, Math.round(a / r.locked * 100)) : 0;
       const overdue = !!(r.deadline && r.deadline < T && !closedSt.includes(r.status));
-      return { r, a, rem, pct, overdue };
+      return { r, a, rem, pct, overdue, hasLock };
     });
     const rm = buildRm(reqs);
     const allRm = buildRm(allReqs);
@@ -1465,15 +1475,15 @@ class Component extends DCLogic {
     // Project stats (current project)
     const totLocked = this.r1(reqs.reduce((x, r) => x + Number(r.locked), 0));
     const totAlloc = this.r1(rm.reduce((x, m) => x + m.a, 0));
-    const totRem = this.r1(totLocked - totAlloc);
-    const totPct = totLocked > 0 ? Math.round(totAlloc / totLocked * 100) : 0;
+    const totRem = this.r1(rm.reduce((x, m) => x + m.rem, 0));
+    const totPct = totLocked > 0 ? Math.min(100, Math.round(totAlloc / totLocked * 100)) : 0;
     const unsent = db.bbnt.filter(b => !b.del && b.status === 'NOT_SENT' && reqIds.includes(b.req));
 
     // Dashboard stats (across all active projects)
     const dLocked = this.r1(allReqs.reduce((x, r) => x + Number(r.locked), 0));
     const dAlloc = this.r1(allRm.reduce((x, m) => x + m.a, 0));
-    const dRem = this.r1(dLocked - dAlloc);
-    const dPct = dLocked > 0 ? Math.round(dAlloc / dLocked * 100) : 0;
+    const dRem = this.r1(allRm.reduce((x, m) => x + m.rem, 0));
+    const dPct = dLocked > 0 ? Math.min(100, Math.round(dAlloc / dLocked * 100)) : 0;
     const dUnsent = db.bbnt.filter(b => !b.del && b.status === 'NOT_SENT' && allReqIds.includes(b.req));
 
     // ----- nav -----
@@ -1527,9 +1537,9 @@ class Component extends DCLogic {
         monthTot[mo] = this.r1(monthTot[mo] + sum);
         return { text: sum > 0 ? this.f1(sum) : '·', style: sum > 0 ? 'font-weight:600' : 'color:#8C9096' };
       });
-      return { code: (pr ? pr.code + ' / ' : '') + m.r.code, name: m.r.name, locked: this.f1(m.r.locked) + ' md', lockedMm: this.mm(m.r.locked), cells,
-        alloc: this.f1(m.a) + ' md', allocMm: this.mm(m.a), pct: m.pct, barColor: m.rem === 0 ? '#11633A' : '#0B5563',
-        rem: this.f1(m.rem) + ' md', remMm: this.mm(m.rem), remStyle: m.rem > 0 ? 'color:#7A4F00' : 'color:#55606C' };
+      return { code: (pr ? pr.code + ' / ' : '') + m.r.code, name: m.r.name, locked: m.hasLock ? this.f1(m.r.locked) + ' md' : 'Chưa chốt', lockedMm: m.hasLock ? this.mm(m.r.locked) : '0.00', cells,
+        alloc: this.f1(m.a) + ' md', allocMm: this.mm(m.a), pct: m.pct, barColor: m.hasLock && m.rem === 0 ? '#11633A' : '#0B5563',
+        rem: m.hasLock ? this.f1(m.rem) + ' md' : 'Chưa chốt', remMm: m.hasLock ? this.mm(m.rem) : '0.00', remStyle: m.hasLock && m.rem > 0 ? 'color:#7A4F00' : 'color:#55606C' };
     });
     const matrix = {
       cols: 'minmax(200px,2fr) 110px ' + months.map(() => '90px').join(' ') + (months.length ? ' ' : '') + 'minmax(170px,1.2fr) 110px',
@@ -1557,8 +1567,12 @@ class Component extends DCLogic {
       const r = m.r, st = STATUS[r.status] || STATUS.NEW, tp = TYPE_MAP[r.type] || [r.type, 'neutral'];
       return { code: r.code, name: r.name, requester: r.requester || '--', type: r.type, typeLabel: tp[0], typeChip: chip(tp[1]),
         deadline: this.fmtDate(r.deadline), overdue: m.overdue, dlStyle: m.overdue ? 'color:#9B1F24;font-weight:600' : '',
-        alloc: this.f1(m.a), locked: this.f1(r.locked), pct: m.pct, barColor: m.rem === 0 ? '#11633A' : '#0B5563',
-        rem: this.f1(m.rem), remStyle: m.rem > 0 ? 'color:#7A4F00' : 'color:#11633A', lockedMm: this.mm(r.locked),
+        alloc: this.f1(m.a), locked: m.hasLock ? this.f1(r.locked) + ' md' : 'Chưa chốt', pct: m.pct, pctLabel: m.hasLock ? m.pct + '%' : 'Chưa chốt',
+        barColor: m.hasLock && m.rem === 0 ? '#11633A' : '#0B5563',
+        remPrefix: m.hasLock ? 'Còn ' : '',
+        rem: m.hasLock ? this.f1(m.rem) + ' md' : 'Chưa chốt nỗ lực',
+        remSuffix: m.hasLock ? ' · ' + this.mm(r.locked) + ' mm chốt' : ' (nhập khi đóng PYC)',
+        remStyle: m.hasLock ? (m.rem > 0 ? 'color:#7A4F00' : 'color:#11633A') : 'color:#55606C',
         est: r.est ? this.f1(r.est) + ' md' : '--', statusLabel: st[0], statusChip: chip(st[1]),
         allocate: () => this.openAlloc(r.id), edit: () => this.openPyc(r.id),
         del: () => this.ask('delPyc', r.id, 'Xóa ' + r.code + '?', 'PYC được chuyển vào Thùng rác (xóa mềm) và không còn tính vào tổng nỗ lực. Bạn có thể hoàn tác ngay hoặc khôi phục sau.', 'Xóa mềm', true) };
@@ -1671,7 +1685,7 @@ class Component extends DCLogic {
       else if (chk.dupBad) { pill = 'Trùng nhân sự'; tone = 'bad'; banner = 'Mỗi nhân sự chỉ có một dòng trong cùng một đợt.'; }
       else if (chk.monthDup) { pill = 'Tháng đã có đợt'; tone = 'bad'; banner = chk.req.code + ' đã có đợt phân bổ tháng ' + a.month + '. Mỗi PYC tối đa một đợt mỗi tháng.'; }
       else if (chk.C === 0) { pill = 'Chưa nhập nỗ lực'; tone = 'neutral'; }
-      else if (chk.rem === 0) { pill = 'Phân bổ hết 100%'; tone = 'ok'; }
+      else if (chk.hasLock && chk.rem === 0) { pill = 'Phân bổ hết 100%'; tone = 'ok'; }
       const bad = tone === 'bad';
       const bPct = chk.A > 0 ? Math.min(100, chk.B / chk.A * 100) : 0;
       const cPct = chk.A > 0 ? Math.max(0, Math.min(100 - bPct, chk.C / chk.A * 100)) : 0;
@@ -1681,12 +1695,12 @@ class Component extends DCLogic {
         month: a.month, note: a.note,
         onMonth: (ev) => this.setState({ alloc: { ...this.state.alloc, month: ev.target.value } }),
         onNote: (ev) => this.setState({ alloc: { ...this.state.alloc, note: ev.target.value } }),
-        A: this.f1(chk.A) + ' md', B: this.f1(chk.B) + ' md', C: this.f1(chk.C) + ' md', rem: this.f1(chk.rem) + ' md',
+        A: chk.hasLock ? this.f1(chk.A) + ' md' : 'Chưa chốt', B: this.f1(chk.B) + ' md', C: this.f1(chk.C) + ' md', rem: chk.hasLock ? this.f1(chk.rem) + ' md' : 'Chưa giới hạn',
         remStyle: bad || chk.over ? 'color:#9B1F24' : 'color:#11633A',
         pill, pillStyle: chip(tone),
         boxStyle: bad ? 'border:2px solid #C9514F;background:#FDF1F0' : 'border:2px solid #B5D3D7;background:#EEF5F6',
         bPct, cPct: chk.over ? 100 - bPct : cPct, cColor: bad ? '#9B1F24' : '#0B5563',
-        barLabel: 'Đã phân bổ khác ' + this.f1(chk.B) + ', đợt này ' + this.f1(chk.C) + ' trên tổng chốt ' + this.f1(chk.A) + ' md',
+        barLabel: 'Đã phân bổ khác ' + this.f1(chk.B) + ', đợt này ' + this.f1(chk.C) + (chk.hasLock ? ' trên tổng chốt ' + this.f1(chk.A) + ' md' : ' (PYC chưa chốt nỗ lực)'),
         banner, hasBanner: !!banner, rows: rowsV, noMembers: allowed.length === 0, canAdd: allowed.length > 0,
         cantSave: bad || chk.C === 0 || !a.rows.length || chk.emptyRow || !a.month,
         close: () => this.setState({ alloc: null }), save: () => this.saveAlloc(),
@@ -1699,8 +1713,8 @@ class Component extends DCLogic {
       const TYPES = [['CR', 'CR · Yêu cầu thay đổi'], ['BUG', 'BUG · Sửa lỗi'], ['NEW_FEATURE', 'Tính năng mới'], ['SUPPORT', 'Hỗ trợ vận hành']];
       pv = { open: true, title: p.id ? 'Sửa PYC ' + p.code : 'Thêm PYC mới', ...p, hasErr: !!p.err,
         on: { code: this.field('pyc', 'code'), name: this.field('pyc', 'name'), est: this.field('pyc', 'est'), locked: this.field('pyc', 'locked'), deadline: this.field('pyc', 'deadline'), requester: this.field('pyc', 'requester'), link: this.field('pyc', 'link') },
-        typeOpts: TYPES.map(t => ({ label: t[1], ...seg(p.type === t[0], () => this.setState({ pyc: { ...this.state.pyc, type: t[0] } })) })),
-        statusOpts: Object.keys(STATUS).map(k => ({ label: STATUS[k][0], ...seg(p.status === k, () => this.setState({ pyc: { ...this.state.pyc, status: k } })) })),
+        typeOpts: TYPES.map(t => ({ label: t[1], ...seg(p.type === t[0], () => this.setState({ pyc: { ...this.state.pyc, type: t[0], err: '' } })) })),
+        statusOpts: Object.keys(STATUS).map(k => ({ label: STATUS[k][0], ...seg(p.status === k, () => this.setState({ pyc: { ...this.state.pyc, status: k, err: '' } })) })),
         close: () => this.setState({ pyc: null }), save: () => this.savePyc() };
     }
 

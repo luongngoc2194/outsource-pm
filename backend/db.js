@@ -360,21 +360,29 @@ class PMRepository {
       .get(proj, c, id || 0);
     if (dup) throw new BusinessError('BR-05', `BR-05: Mã PYC "${c}" đã tồn tại trong dự án này.`);
 
-    // BR-07: Step 0.1 validation
-    if (!isValidStep(locked) || Number(locked) < 0) {
+    // BR-07: Step 0.1 validation (locked is optional until closing PYC)
+    const lockedStr = (locked === '' || locked === null || locked === undefined) ? '' : String(locked).trim().replace(',', '.');
+    const estStr = (est === '' || est === null || est === undefined) ? '' : String(est).trim().replace(',', '.');
+
+    if (lockedStr !== '' && (!isValidStep(lockedStr) || Number(lockedStr) < 0)) {
       throw new BusinessError('BR-07', 'BR-07: Nỗ lực chốt phải theo bước 0.1 md.');
     }
-    if (est !== '' && est !== null && est !== undefined && (!isValidStep(est) || Number(est) < 0)) {
+    if (estStr !== '' && (!isValidStep(estStr) || Number(estStr) < 0)) {
       throw new BusinessError('BR-07', 'BR-07: Nỗ lực ước tính phải theo bước 0.1 md.');
     }
 
-    const lockedVal = r1(locked);
-    const estVal = (est === '' || est === null || est === undefined) ? 0 : r1(est);
+    const lockedVal = lockedStr === '' ? 0 : r1(lockedStr);
+    const estVal = estStr === '' ? 0 : r1(estStr);
+    const st = status || 'NEW';
+
+    if (st === 'CLOSED' && lockedVal <= 0) {
+      throw new BusinessError('VALIDATION', 'Khi đóng PYC (trạng thái Đã đóng), vui lòng nhập Nỗ lực chốt (> 0 md).');
+    }
 
     if (id) {
-      // BR-02: Cannot reduce locked_md below current allocated_md
+      // BR-02: Cannot reduce locked_md below current allocated_md (when lockedVal > 0)
       const allocated = this.getAllocatedMd(id);
-      if (lockedVal < allocated) {
+      if (lockedVal > 0 && lockedVal < allocated) {
         throw new BusinessError('BR-02', `BR-02: Nỗ lực chốt mới (${f1(lockedVal)} md) không được nhỏ hơn tổng đã phân bổ (${f1(allocated)} md).`);
       }
       const oldRow = this.db.prepare('SELECT * FROM REQUEST WHERE id = ?').get(id);
@@ -382,10 +390,10 @@ class PMRepository {
         UPDATE REQUEST
         SET code = ?, name = ?, type = ?, estimated_md = ?, locked_md = ?, deadline = ?, status = ?, customer_requester = ?, external_link = ?, updated_at = datetime('now','localtime')
         WHERE id = ?
-      `).run(c, n, type || 'CR', estVal, lockedVal, deadline || '', status || 'NEW', (requester || '').trim(), (link || '').trim(), id);
+      `).run(c, n, type || 'CR', estVal, lockedVal, deadline || '', st, (requester || '').trim(), (link || '').trim(), id);
 
       if (oldRow && r1(oldRow.locked_md) !== lockedVal) {
-        this.logAudit('REQUEST', c, 'UPDATE', 'locked_md', `${f1(oldRow.locked_md)} → ${f1(lockedVal)} md`);
+        this.logAudit('REQUEST', c, 'UPDATE', 'locked_md', `${oldRow.locked_md > 0 ? f1(oldRow.locked_md) + ' md' : 'Chưa chốt'} → ${lockedVal > 0 ? f1(lockedVal) + ' md' : 'Chưa chốt'}`);
       } else {
         this.logAudit('REQUEST', c, 'UPDATE', 'info', `Cập nhật thông tin ${c}`);
       }
@@ -394,9 +402,9 @@ class PMRepository {
       const res = this.db.prepare(`
         INSERT INTO REQUEST (project_id, code, name, type, deadline, status, customer_requester, external_link, estimated_md, locked_md, is_deleted)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
-      `).run(proj, c, n, type || 'CR', deadline || '', status || 'NEW', (requester || '').trim(), (link || '').trim(), estVal, lockedVal);
+      `).run(proj, c, n, type || 'CR', deadline || '', st, (requester || '').trim(), (link || '').trim(), estVal, lockedVal);
       const newId = Number(res.lastInsertRowid);
-      this.logAudit('REQUEST', c, 'INSERT', 'locked_md', `Tạo mới PYC, chốt ${f1(lockedVal)} md`);
+      this.logAudit('REQUEST', c, 'INSERT', 'locked_md', `Tạo mới PYC, ${lockedVal > 0 ? 'chốt ' + f1(lockedVal) + ' md' : 'chưa chốt nỗ lực'}`);
       return newId;
     }
   }
@@ -517,10 +525,10 @@ class PMRepository {
       cleanItems.push({ pers: persId, md: mdVal, note: (r.note || '').trim() });
     }
 
-    // BR-01: Cannot exceed locked_md
+    // BR-01: Cannot exceed locked_md (when locked_md > 0)
     const otherAllocated = this.getAllocatedMd(reqId, batchId);
     const newTotalAllocated = r1(otherAllocated + batchTotal);
-    if (newTotalAllocated > r1(rq.locked_md)) {
+    if (r1(rq.locked_md) > 0 && newTotalAllocated > r1(rq.locked_md)) {
       throw new BusinessError(
         'BR-01',
         `BR-01: Tổng nỗ lực phân bổ (${f1(newTotalAllocated)} md) vượt quá nỗ lực chốt (${f1(rq.locked_md)} md) của ${rq.code}.`
@@ -689,7 +697,7 @@ class PMRepository {
         this.db.prepare('SELECT COALESCE(SUM(effort_md), 0) AS s FROM ALLOCATION_ITEM WHERE batch_id = ?').get(id).s
       );
       const curAlloc = this.getAllocatedMd(row.request_id);
-      if (r1(curAlloc + batchSum) > r1(rq.locked_md)) {
+      if (r1(rq.locked_md) > 0 && r1(curAlloc + batchSum) > r1(rq.locked_md)) {
         throw new BusinessError(
           'BR-04',
           `BR-04: Sau khôi phục tổng ${f1(r1(curAlloc + batchSum))} md vượt nỗ lực chốt ${f1(rq.locked_md)} md.`
