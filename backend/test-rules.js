@@ -52,20 +52,20 @@ function runTests() {
     console.log('✔ TC-03 PASS: Hạ số chốt PYC-001 xuống 25.0 md (< 28.0 md đã phân bổ) bị chặn (BR-02)');
   }
 
-  // TC-04: Kiểm tra bước nhảy nỗ lực 0.1 (BR-07)
+  // TC-04: Kiểm tra bước nhảy nỗ lực 0.01 (BR-07)
   {
     assert.throws(
       () => repo.saveAllocationBatch({
         batchId: null,
         reqId: 1,
         month: '2026-12',
-        note: 'Test bước 0.1',
-        rows: [{ pers: 1, md: 1.25, note: 'Sai bước 0.1' }]
+        note: 'Test bước 0.01',
+        rows: [{ pers: 1, md: 1.255, note: 'Sai bước 0.01' }]
       }),
       (err) => err.code === 'BR-07',
-      'Nhập 1.25 md phải bị từ chối'
+      'Nhập 1.255 MM phải bị từ chối'
     );
-    console.log('✔ TC-04 PASS: Nhập 1.25 md bị từ chối theo quy tắc bước nhảy 0.1 md (BR-07)');
+    console.log('✔ TC-04 PASS: Nhập 1.255 MM bị từ chối theo quy tắc bước nhảy 0.01 MM (BR-07)');
   }
 
   // TC-05: Gán phân bổ cho nhân sự chưa tham gia PYC hoặc đã nghỉ (BR-03)

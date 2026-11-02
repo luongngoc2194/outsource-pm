@@ -2,13 +2,13 @@ const { DatabaseSync } = require('node:sqlite');
 const path = require('node:path');
 const fs = require('node:fs');
 
-const r1 = (v) => Math.round((Number(v) + Number.EPSILON) * 10) / 10;
-const f1 = (v) => Number(v).toFixed(1);
-const mm = (md) => (Number(md) / 22).toFixed(2);
+const r1 = (v) => Math.round((Number(v) + Number.EPSILON) * 100) / 100;
+const f1 = (v) => Number(v).toFixed(2);
+const mm = (md) => (Number(md) * 22).toFixed(2);
 const isValidStep = (v) => {
   if (v === '' || v === null || v === undefined || isNaN(v)) return false;
   const n = Number(v);
-  return Math.abs(Math.round(n * 10) - n * 10) < 1e-6;
+  return Math.abs(Math.round(n * 100) - n * 100) < 1e-6;
 };
 
 function createDatabase(dbPath) {
@@ -365,10 +365,10 @@ class PMRepository {
     const estStr = (est === '' || est === null || est === undefined) ? '' : String(est).trim().replace(',', '.');
 
     if (lockedStr !== '' && (!isValidStep(lockedStr) || Number(lockedStr) < 0)) {
-      throw new BusinessError('BR-07', 'BR-07: Nỗ lực chốt phải theo bước 0.1 MM.');
+      throw new BusinessError('BR-07', 'BR-07: Nỗ lực chốt phải theo bước 0.01 MM.');
     }
     if (estStr !== '' && (!isValidStep(estStr) || Number(estStr) < 0)) {
-      throw new BusinessError('BR-07', 'BR-07: Nỗ lực ước tính phải theo bước 0.1 MM.');
+      throw new BusinessError('BR-07', 'BR-07: Nỗ lực ước tính phải theo bước 0.01 MM.');
     }
 
     const lockedVal = lockedStr === '' ? 0 : r1(lockedStr);
@@ -517,7 +517,7 @@ class PMRepository {
       seenPers.add(persId);
 
       if (!isValidStep(r.md) || Number(r.md) <= 0) {
-        throw new BusinessError('BR-07', `BR-07: Nỗ lực phải > 0 và theo bước 0.1 MM (${r.md} bị từ chối).`);
+        throw new BusinessError('BR-07', `BR-07: Nỗ lực phải > 0 và theo bước 0.01 MM (${r.md} bị từ chối).`);
       }
 
       const mdVal = r1(r.md);

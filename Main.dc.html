@@ -97,7 +97,7 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
   <header style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px">
     <div>
       <h1 style="font-size:26px;letter-spacing:-.01em">Tổng quan nỗ lực</h1>
-      <p style="margin-top:4px;color:var(--mute)">Đơn vị nỗ lực: Man-Month (MM) · bước 0.1 MM (quy đổi 1 MM = 22 MD). Chỉ tính bản ghi chưa xóa mềm.</p>
+      <p style="margin-top:4px;color:var(--mute)">Đơn vị nỗ lực: Man-Month (MM) · bước 0.01 MM (quy đổi 1 MM = 22 MD). Chỉ tính bản ghi chưa xóa mềm.</p>
     </div>
     <span class="chip" style="background:#fff;border:1px solid var(--line);color:var(--ink);padding:5px 12px">Hôm nay · 02/11/2026</span>
   </header>
@@ -968,13 +968,13 @@ class Component extends DCLogic {
   }
 
   // ---------- helpers ----------
-  r1(v) { return Math.round((Number(v) + Number.EPSILON) * 10) / 10; }
-  mm(md) { return (Number(md) * 22).toFixed(1); }
-  f1(v) { return Number(v).toFixed(1); }
+  r1(v) { return Math.round((Number(v) + Number.EPSILON) * 100) / 100; }
+  mm(md) { return (Number(md) * 22).toFixed(2); }
+  f1(v) { return Number(v).toFixed(2); }
   step(v) {
     if (v === '' || v === null || isNaN(v)) return false;
     const n = Number(v);
-    return Math.abs(Math.round(n * 10) - n * 10) < 1e-6;
+    return Math.abs(Math.round(n * 100) - n * 100) < 1e-6;
   }
   fmtDate(d) { if (!d) return '--'; const p = d.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
   curProjId(db) {
@@ -1092,7 +1092,7 @@ class Component extends DCLogic {
     const rows = a.rows.map(r => {
       let err = '';
       if (r.md !== '') {
-        if (!this.step(r.md) || Number(r.md) <= 0) { err = 'Nỗ lực phải > 0 và theo bước 0.1 MM (1.25 bị từ chối) · BR-07'; stepBad = true; }
+        if (!this.step(r.md) || Number(r.md) <= 0) { err = 'Nỗ lực phải > 0 và theo bước 0.01 MM · BR-07'; stepBad = true; }
         else C += Number(r.md);
       }
       if (seen[r.pers]) { err = err || 'Nhân sự này đã có dòng khác trong cùng đợt'; dupBad = true; }
@@ -1127,10 +1127,10 @@ class Component extends DCLogic {
         if (rq.status === 'NEW') rq.status = 'IN_PROGRESS';
       }
       items.forEach(it => db.items.push({ id: Date.now() + Math.random(), batch: bid, pers: it.pers, md: it.md, note: it.note, del: false }));
-      this.log(db, 'ALLOCATION_BATCH', code + ' (' + a.month + ')', a.edit ? 'UPDATE' : 'INSERT', 'effort_md', (a.edit ? 'Cập nhật đợt: ' : 'Thêm đợt mới: +') + total.toFixed(1) + ' MM');
+      this.log(db, 'ALLOCATION_BATCH', code + ' (' + a.month + ')', a.edit ? 'UPDATE' : 'INSERT', 'effort_md', (a.edit ? 'Cập nhật đợt: ' : 'Thêm đợt mới: +') + total.toFixed(2) + ' MM');
     });
     this.setState({ alloc: null });
-    this.toast((a.edit ? 'Đã cập nhật' : 'Đã tạo') + ' đợt phân bổ T' + a.month + ' của ' + code + ' (' + total.toFixed(1) + ' MM).', 'ok');
+    this.toast((a.edit ? 'Đã cập nhật' : 'Đã tạo') + ' đợt phân bổ T' + a.month + ' của ' + code + ' (' + total.toFixed(2) + ' MM).', 'ok');
     if (a.edit) this.callApi('PUT', '/allocations/' + a.edit, { reqId: a.req, month: a.month, note: a.note, rows: items });
     else this.callApi('POST', '/allocations', { reqId: a.req, month: a.month, note: a.note, rows: items });
   }
@@ -1156,8 +1156,8 @@ class Component extends DCLogic {
     const estStr = String(p.est == null ? '' : p.est).trim().replace(',', '.');
     if (!code || !name) { bad('Vui lòng nhập đủ Mã PYC và Tên PYC.'); return; }
     if (db0.requests.some(r => !r.del && r.proj === pid && r.code.toLowerCase() === code.toLowerCase() && r.id !== p.id)) { bad('BR-05: Mã PYC "' + code + '" đã tồn tại trong dự án này.'); return; }
-    if (estStr !== '' && (!this.step(estStr) || Number(estStr) < 0)) { bad('BR-07: Nỗ lực ước tính phải theo bước 0.1 MM.'); return; }
-    if (lockedStr !== '' && (!this.step(lockedStr) || Number(lockedStr) < 0)) { bad('BR-07: Nỗ lực chốt phải theo bước 0.1 MM.'); return; }
+    if (estStr !== '' && (!this.step(estStr) || Number(estStr) < 0)) { bad('BR-07: Nỗ lực ước tính phải theo bước 0.01 MM.'); return; }
+    if (lockedStr !== '' && (!this.step(lockedStr) || Number(lockedStr) < 0)) { bad('BR-07: Nỗ lực chốt phải theo bước 0.01 MM.'); return; }
     const lockedVal = lockedStr === '' ? 0 : this.r1(lockedStr);
     const estVal = estStr === '' ? 0 : this.r1(estStr);
     if (p.status === 'CLOSED' && lockedVal <= 0) {
@@ -1680,7 +1680,7 @@ class Component extends DCLogic {
           onRemove: () => this.setState({ alloc: { ...this.state.alloc, rows: this.state.alloc.rows.filter(x => x.key !== r.key) } }) };
       });
       let pill = 'Hợp lệ', tone = 'ok', banner = '';
-      if (chk.stepBad) { pill = 'Sai bước 0.1 (BR-07)'; tone = 'bad'; banner = 'Có dòng nhập sai bước 0.1 MM. Xem lỗi ở từng dòng bên dưới.'; }
+      if (chk.stepBad) { pill = 'Sai bước 0.01 (BR-07)'; tone = 'bad'; banner = 'Có dòng nhập sai bước 0.01 MM. Xem lỗi ở từng dòng bên dưới.'; }
       else if (chk.over) { pill = 'Vượt nỗ lực chốt (BR-01)'; tone = 'bad'; banner = 'Tổng phân bổ ' + this.f1(this.r1(chk.B + chk.C)) + ' MM vượt nỗ lực chốt ' + this.f1(chk.A) + ' MM của ' + chk.req.code + '. Muốn vượt, hãy tăng số chốt trước.'; }
       else if (chk.dupBad) { pill = 'Trùng nhân sự'; tone = 'bad'; banner = 'Mỗi nhân sự chỉ có một dòng trong cùng một đợt.'; }
       else if (chk.monthDup) { pill = 'Tháng đã có đợt'; tone = 'bad'; banner = chk.req.code + ' đã có đợt phân bổ tháng ' + a.month + '. Mỗi PYC tối đa một đợt mỗi tháng.'; }
