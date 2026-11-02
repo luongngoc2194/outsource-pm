@@ -573,16 +573,26 @@ class PMRepository {
   }
 
   // ==================== DOCUMENT & BBNT ====================
-  saveDocument({ proj, req, title, type, url, note }) {
+  saveDocument({ id, proj, req, title, type, url, note }) {
     const t = (title || '').trim();
     const u = (url || '').trim();
-    if (!t || !u) throw new BusinessError('VALIDATION', 'Vui lòng nhập tiêu đề và liên kết.');
-    const res = this.db.prepare(`
-      INSERT INTO DOCUMENT (project_id, request_id, title, document_type, external_url, note, is_deleted)
-      VALUES (?, ?, ?, ?, ?, ?, 0)
-    `).run(proj, req || null, t, (type || 'Tài liệu').trim(), u, (note || '').trim());
-    this.logAudit('DOCUMENT', t, 'INSERT', 'title', t);
-    return Number(res.lastInsertRowid);
+    if (!t || !u) throw new BusinessError('VALIDATION', 'Vui lòng nhập tiêu đề và đính kèm file hoặc liên kết.');
+    if (id) {
+      this.db.prepare(`
+        UPDATE DOCUMENT
+        SET request_id = ?, title = ?, document_type = ?, external_url = ?, note = ?, updated_at = datetime('now','localtime')
+        WHERE id = ?
+      `).run(req || null, t, (type || 'Tài liệu').trim(), u, (note || '').trim(), id);
+      this.logAudit('DOCUMENT', t, 'UPDATE', 'info', `Cập nhật hồ sơ ${t}`);
+      return id;
+    } else {
+      const res = this.db.prepare(`
+        INSERT INTO DOCUMENT (project_id, request_id, title, document_type, external_url, note, is_deleted)
+        VALUES (?, ?, ?, ?, ?, ?, 0)
+      `).run(proj, req || null, t, (type || 'Tài liệu').trim(), u, (note || '').trim());
+      this.logAudit('DOCUMENT', t, 'INSERT', 'title', t);
+      return Number(res.lastInsertRowid);
+    }
   }
 
   saveBbnt({ id, req, code, title, url, status, sent, note }) {
@@ -885,6 +895,15 @@ class PMRepository {
         lines.push([
           proj ? proj.code : 'DA-01', b.code, b.title, req.code,
           b.status === 'SENT' ? 'Đã gửi' : 'Chưa gửi', b.sent || '', b.url
+        ].map(esc).join(','));
+      });
+    } else if (type === 'docs') {
+      lines.push(['Ma_Du_An', 'Tieu_De_Ho_So', 'Loai_Tai_Lieu', 'Gan_Voi_PYC', 'Link_Hoac_File', 'Ghi_Chu'].map(esc).join(','));
+      state.docs.filter(d => !d.del && (!projectId || d.proj === Number(projectId))).forEach(d => {
+        const proj = state.projects.find(p => p.id === d.proj);
+        const req = state.requests.find(r => r.id === d.req && !r.del);
+        lines.push([
+          proj ? proj.code : 'DA-01', d.title, d.type, req ? req.code : 'Chung dự án', d.url, d.note || ''
         ].map(esc).join(','));
       });
     }

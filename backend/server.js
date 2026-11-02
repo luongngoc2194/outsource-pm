@@ -40,7 +40,21 @@ const MIME_TYPES = {
   '.css': 'text/css; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
   '.svg': 'image/svg+xml',
-  '.ico': 'image/x-icon'
+  '.ico': 'image/x-icon',
+  '.pdf': 'application/pdf',
+  '.doc': 'application/msword',
+  '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  '.xls': 'application/vnd.ms-excel',
+  '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  '.ppt': 'application/vnd.ms-powerpoint',
+  '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  '.zip': 'application/zip',
+  '.rar': 'application/vnd.rar',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.txt': 'text/plain; charset=utf-8',
+  '.csv': 'text/csv; charset=utf-8'
 };
 
 const server = http.createServer(async (req, res) => {
@@ -128,11 +142,40 @@ const server = http.createServer(async (req, res) => {
         return sendJson(res, 200, { id: batchId, db: repo.getFullState() });
       }
 
-      // POST /api/documents
+      // POST /api/upload (Upload file attachment for Hồ sơ / BBNT)
+      if (req.method === 'POST' && pathname === '/api/upload') {
+        const body = await readJsonBody(req);
+        const origName = String(body.fileName || 'file.bin').replace(/[^a-zA-Z0-9._\-\u00C0-\u1EF9 ]/g, '_').trim() || 'file.bin';
+        const dataUrl = String(body.dataUrl || '');
+        const match = dataUrl.match(/^data:[^;]*;base64,(.+)$/);
+        const base64Data = match ? match[1] : dataUrl;
+        if (!base64Data) {
+          throw new BusinessError('VALIDATION', 'Không có dữ liệu file tải lên.');
+        }
+        const uploadDir = path.resolve(__dirname, '..', 'uploads');
+        fs.mkdirSync(uploadDir, { recursive: true });
+        const savedName = `${Date.now()}_${origName}`;
+        const destPath = path.join(uploadDir, savedName);
+        const buf = Buffer.from(base64Data, 'base64');
+        fs.writeFileSync(destPath, buf);
+        return sendJson(res, 201, {
+          url: '/uploads/' + encodeURIComponent(savedName),
+          fileName: origName,
+          size: buf.length
+        });
+      }
+
+      // POST /api/documents & PUT /api/documents/:id
       if (req.method === 'POST' && pathname === '/api/documents') {
         const body = await readJsonBody(req);
         const id = repo.saveDocument(body);
         return sendJson(res, 201, { id, db: repo.getFullState() });
+      }
+      if (req.method === 'PUT' && /^\/api\/documents\/\d+$/.test(pathname)) {
+        const id = Number(pathname.split('/').pop());
+        const body = await readJsonBody(req);
+        repo.saveDocument({ ...body, id });
+        return sendJson(res, 200, { id, db: repo.getFullState() });
       }
 
       // POST /api/acceptance-records, PUT /api/acceptance-records/:id, PATCH /api/acceptance-records/:id/status
@@ -199,7 +242,7 @@ const server = http.createServer(async (req, res) => {
 
   // ==================== SERVE FRONTEND STATIC FILES ====================
   const rootDir = path.resolve(__dirname, '..');
-  let relPath = pathname === '/' ? '/index.html' : pathname;
+  let relPath = decodeURIComponent(pathname === '/' ? '/index.html' : pathname);
   let filePath = path.join(rootDir, relPath);
 
   if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
@@ -210,7 +253,12 @@ const server = http.createServer(async (req, res) => {
   try {
     const ext = path.extname(filePath).toLowerCase();
     const content = fs.readFileSync(filePath);
-    res.writeHead(200, { 'Content-Type': MIME_TYPES[ext] || 'application/octet-stream' });
+    const headers = { 'Content-Type': MIME_TYPES[ext] || 'application/octet-stream' };
+    if (parsedUrl.searchParams.get('download') === '1') {
+      const baseName = path.basename(filePath).replace(/^\d+_/, '');
+      headers['Content-Disposition'] = `attachment; filename*=UTF-8''${encodeURIComponent(baseName)}`;
+    }
+    res.writeHead(200, headers);
     res.end(content);
   } catch (e) {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
