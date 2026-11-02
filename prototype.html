@@ -33,6 +33,7 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
 .trow{display:grid;grid-template-columns:var(--cols);gap:12px;padding:12px 16px;border-bottom:1px solid #EEECE5;align-items:center}
 .trow:hover{background:#FBFAF7}
 .tfoot{display:grid;grid-template-columns:var(--cols);gap:12px;padding:12px 16px;background:#FAF9F5;border-top:2px solid var(--line);font-weight:700;align-items:center}
+.thead > *,.trow > *,.tfoot > *{min-width:0}
 .r{text-align:right}
 .field{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:600;color:var(--mute)}
 .inp{height:38px;padding:0 10px;border:1px solid #8C9096;border-radius:8px;font:inherit;font-size:14px;color:var(--ink);background:#fff;width:100%;box-sizing:border-box}
@@ -254,7 +255,7 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
         <button class="btn btn-pri" onClick="{{newPyc}}">+ Thêm PYC</button>
       </div>
       <div style="overflow-x:auto">
-        <div role="table" aria-label="Danh sách PYC" style="--cols:minmax(230px,2.2fr) 70px 120px minmax(210px,1.7fr) 90px 130px 200px;min-width:1100px">
+        <div role="table" aria-label="Danh sách PYC" style="--cols:minmax(220px,2fr) 130px 120px minmax(210px,1.7fr) 90px 130px 200px;min-width:1140px">
           <div class="thead" role="row"><span role="columnheader">PYC</span><span role="columnheader">Loại</span><span role="columnheader">Hạn</span><span role="columnheader">Phân bổ / Chốt</span><span role="columnheader" class="r">Ước tính</span><span role="columnheader">Trạng thái</span><span role="columnheader" class="r">Thao tác</span></div>
           <sc-for list="{{pycRows}}" as="p" hint-placeholder-count="2">
             <div class="trow" role="row">
@@ -263,7 +264,7 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
                 <div style="font-weight:600">{{p.name}}</div>
                 <div class="sub">KH: {{p.requester}}</div>
               </span>
-              <span role="cell"><span class="chip" style="background:#ECEAE4;color:#444C55">{{p.type}}</span></span>
+              <span role="cell"><span class="chip" style="{{p.typeChip}}">{{p.typeLabel}}</span></span>
               <span role="cell" class="tn" style="{{p.dlStyle}}">{{p.deadline}}<sc-if value="{{p.overdue}}" hint-placeholder-val="{{ false }}"><br><span class="chip" style="background:#FBE3E1;color:#9B1F24;margin-top:2px">Trễ hạn</span></sc-if></span>
               <span role="cell">
                 <div class="tn" style="display:flex;justify-content:space-between;gap:8px"><span><strong>{{p.alloc}}</strong> / {{p.locked}} md</span><span class="sub">{{p.pct}}%</span></div>
@@ -1551,9 +1552,10 @@ class Component extends DCLogic {
       { label: 'Còn lại', value: this.f1(totRem) + ' md', sub: this.mm(totRem) + ' mm', style: 'color:#7A4F00' }
     ];
 
+    const TYPE_MAP = { CR: ['CR · Thay đổi', 'info'], BUG: ['Bug · Sửa lỗi', 'bad'], NEW_FEATURE: ['Tính năng mới', 'ok'], SUPPORT: ['Hỗ trợ', 'warn'] };
     const pycRows = rm.map(m => {
-      const r = m.r, st = STATUS[r.status];
-      return { code: r.code, name: r.name, requester: r.requester || '--', type: r.type,
+      const r = m.r, st = STATUS[r.status] || STATUS.NEW, tp = TYPE_MAP[r.type] || [r.type, 'neutral'];
+      return { code: r.code, name: r.name, requester: r.requester || '--', type: r.type, typeLabel: tp[0], typeChip: chip(tp[1]),
         deadline: this.fmtDate(r.deadline), overdue: m.overdue, dlStyle: m.overdue ? 'color:#9B1F24;font-weight:600' : '',
         alloc: this.f1(m.a), locked: this.f1(r.locked), pct: m.pct, barColor: m.rem === 0 ? '#11633A' : '#0B5563',
         rem: this.f1(m.rem), remStyle: m.rem > 0 ? 'color:#7A4F00' : 'color:#11633A', lockedMm: this.mm(r.locked),
