@@ -365,10 +365,10 @@ class PMRepository {
     const estStr = (est === '' || est === null || est === undefined) ? '' : String(est).trim().replace(',', '.');
 
     if (lockedStr !== '' && (!isValidStep(lockedStr) || Number(lockedStr) < 0)) {
-      throw new BusinessError('BR-07', 'BR-07: Nỗ lực chốt phải theo bước 0.1 md.');
+      throw new BusinessError('BR-07', 'BR-07: Nỗ lực chốt phải theo bước 0.1 MM.');
     }
     if (estStr !== '' && (!isValidStep(estStr) || Number(estStr) < 0)) {
-      throw new BusinessError('BR-07', 'BR-07: Nỗ lực ước tính phải theo bước 0.1 md.');
+      throw new BusinessError('BR-07', 'BR-07: Nỗ lực ước tính phải theo bước 0.1 MM.');
     }
 
     const lockedVal = lockedStr === '' ? 0 : r1(lockedStr);
@@ -376,14 +376,14 @@ class PMRepository {
     const st = status || 'NEW';
 
     if (st === 'CLOSED' && lockedVal <= 0) {
-      throw new BusinessError('VALIDATION', 'Khi đóng PYC (trạng thái Đã đóng), vui lòng nhập Nỗ lực chốt (> 0 md).');
+      throw new BusinessError('VALIDATION', 'Khi đóng PYC (trạng thái Đã đóng), vui lòng nhập Nỗ lực chốt (> 0 MM).');
     }
 
     if (id) {
       // BR-02: Cannot reduce locked_md below current allocated_md (when lockedVal > 0)
       const allocated = this.getAllocatedMd(id);
       if (lockedVal > 0 && lockedVal < allocated) {
-        throw new BusinessError('BR-02', `BR-02: Nỗ lực chốt mới (${f1(lockedVal)} md) không được nhỏ hơn tổng đã phân bổ (${f1(allocated)} md).`);
+        throw new BusinessError('BR-02', `BR-02: Nỗ lực chốt mới (${f1(lockedVal)} MM) không được nhỏ hơn tổng đã phân bổ (${f1(allocated)} MM).`);
       }
       const oldRow = this.db.prepare('SELECT * FROM REQUEST WHERE id = ?').get(id);
       this.db.prepare(`
@@ -393,7 +393,7 @@ class PMRepository {
       `).run(c, n, type || 'CR', estVal, lockedVal, deadline || '', st, (requester || '').trim(), (link || '').trim(), id);
 
       if (oldRow && r1(oldRow.locked_md) !== lockedVal) {
-        this.logAudit('REQUEST', c, 'UPDATE', 'locked_md', `${oldRow.locked_md > 0 ? f1(oldRow.locked_md) + ' md' : 'Chưa chốt'} → ${lockedVal > 0 ? f1(lockedVal) + ' md' : 'Chưa chốt'}`);
+        this.logAudit('REQUEST', c, 'UPDATE', 'locked_md', `${oldRow.locked_md > 0 ? f1(oldRow.locked_md) + ' MM' : 'Chưa chốt'} → ${lockedVal > 0 ? f1(lockedVal) + ' MM' : 'Chưa chốt'}`);
       } else {
         this.logAudit('REQUEST', c, 'UPDATE', 'info', `Cập nhật thông tin ${c}`);
       }
@@ -404,7 +404,7 @@ class PMRepository {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
       `).run(proj, c, n, type || 'CR', deadline || '', st, (requester || '').trim(), (link || '').trim(), estVal, lockedVal);
       const newId = Number(res.lastInsertRowid);
-      this.logAudit('REQUEST', c, 'INSERT', 'locked_md', `Tạo mới PYC, ${lockedVal > 0 ? 'chốt ' + f1(lockedVal) + ' md' : 'chưa chốt nỗ lực'}`);
+      this.logAudit('REQUEST', c, 'INSERT', 'locked_md', `Tạo mới PYC, ${lockedVal > 0 ? 'chốt ' + f1(lockedVal) + ' MM' : 'chưa chốt nỗ lực'}`);
       return newId;
     }
   }
@@ -517,7 +517,7 @@ class PMRepository {
       seenPers.add(persId);
 
       if (!isValidStep(r.md) || Number(r.md) <= 0) {
-        throw new BusinessError('BR-07', `BR-07: Nỗ lực phải > 0 và theo bước 0.1 md (${r.md} bị từ chối).`);
+        throw new BusinessError('BR-07', `BR-07: Nỗ lực phải > 0 và theo bước 0.1 MM (${r.md} bị từ chối).`);
       }
 
       const mdVal = r1(r.md);
@@ -531,7 +531,7 @@ class PMRepository {
     if (r1(rq.locked_md) > 0 && newTotalAllocated > r1(rq.locked_md)) {
       throw new BusinessError(
         'BR-01',
-        `BR-01: Tổng nỗ lực phân bổ (${f1(newTotalAllocated)} md) vượt quá nỗ lực chốt (${f1(rq.locked_md)} md) của ${rq.code}.`
+        `BR-01: Tổng nỗ lực phân bổ (${f1(newTotalAllocated)} MM) vượt quá nỗ lực chốt (${f1(rq.locked_md)} MM) của ${rq.code}.`
       );
     }
 

@@ -27,7 +27,7 @@ function runTests() {
         note: 'Test vượt chốt',
         rows: [{ pers: 1, md: 3.0, note: 'Thêm 3.0 md' }]
       }),
-      (err) => err.code === 'BR-01' && err.message.includes('31.0 md'),
+      (err) => err.code === 'BR-01' && err.message.includes('31.0'),
       'Phải chặn khi thêm 3.0 md vào PYC-001'
     );
     console.log('✔ TC-02 PASS: Thêm 3.0 md vào PYC-001 bị chặn (BR-01: 31.0 md > chốt 30.0 md)');

@@ -97,7 +97,7 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
   <header style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px">
     <div>
       <h1 style="font-size:26px;letter-spacing:-.01em">Tổng quan nỗ lực</h1>
-      <p style="margin-top:4px;color:var(--mute)">Quy ước 1 man-month (mm) = 22 man-day (md). Chỉ tính bản ghi chưa xóa mềm.</p>
+      <p style="margin-top:4px;color:var(--mute)">Đơn vị nỗ lực: Man-Month (MM) · bước 0.1 MM (quy đổi 1 MM = 22 MD). Chỉ tính bản ghi chưa xóa mềm.</p>
     </div>
     <span class="chip" style="background:#fff;border:1px solid var(--line);color:var(--ink);padding:5px 12px">Hôm nay · 02/11/2026</span>
   </header>
@@ -142,13 +142,13 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
       <div style="padding:16px 18px 12px"><h2 style="font-size:16px">Nỗ lực theo nhân sự</h2></div>
       <div style="overflow-x:auto">
         <div role="table" aria-label="Nỗ lực theo nhân sự" style="--cols:minmax(150px,1.6fr) 60px 90px 90px;min-width:440px">
-          <div class="thead" role="row"><span role="columnheader">Nhân sự</span><span role="columnheader" class="r">PYC</span><span role="columnheader" class="r">md</span><span role="columnheader" class="r">mm</span></div>
+          <div class="thead" role="row"><span role="columnheader">Nhân sự</span><span role="columnheader" class="r">PYC</span><span role="columnheader" class="r">MM</span><span role="columnheader" class="r">MD (×22)</span></div>
           <sc-for list="{{persReport}}" as="p" hint-placeholder-count="4">
             <div class="trow" role="row">
               <span role="cell"><strong>{{p.name}}</strong> <span class="sub">{{p.role}}</span></span>
               <span role="cell" class="r tn">{{p.pycs}}</span>
-              <span role="cell" class="r tn" style="font-weight:700">{{p.md}}</span>
-              <span role="cell" class="r tn mono" style="color:var(--pri);font-weight:600">{{p.mm}}</span>
+              <span role="cell" class="r tn mono" style="color:var(--pri);font-weight:700">{{p.md}}</span>
+              <span role="cell" class="r tn" style="color:var(--mute)">{{p.mm}}</span>
             </div>
           </sc-for>
         </div>
@@ -159,7 +159,7 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
   <section class="card" style="overflow:hidden" aria-label="Ma trận nỗ lực">
     <div style="padding:16px 18px 12px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px">
       <h2 style="font-size:16px">Ma trận nỗ lực theo PYC và tháng</h2>
-      <span class="sub">Đơn vị md, mm = md / 22</span>
+      <span class="sub">Đơn vị: MM (1 MM = 22 MD)</span>
     </div>
     <div style="overflow-x:auto">
       <div role="table" aria-label="Ma trận nỗ lực" style="--cols:{{matrix.cols}};min-width:{{matrix.minW}}px">
@@ -173,13 +173,13 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
         <sc-for list="{{matrix.rows}}" as="row" hint-placeholder-count="2">
           <div class="trow" role="row">
             <span role="cell"><span class="mono" style="font-weight:600;color:var(--pri)">{{row.code}}</span><br><span class="sub">{{row.name}}</span></span>
-            <span role="cell" class="r tn"><strong>{{row.locked}}</strong><br><span class="sub">{{row.lockedMm}} mm</span></span>
+            <span role="cell" class="r tn"><strong>{{row.locked}}</strong><br><span class="sub">{{row.lockedMm}} MD</span></span>
             <sc-for list="{{row.cells}}" as="c" hint-placeholder-count="2"><span role="cell" class="r tn" style="{{c.style}}">{{c.text}}</span></sc-for>
             <span role="cell">
-              <span class="tn" style="font-weight:700">{{row.alloc}}</span> <span class="sub">({{row.allocMm}} mm)</span>
+              <span class="tn" style="font-weight:700">{{row.alloc}}</span> <span class="sub">({{row.allocMm}} MD)</span>
               <div style="height:6px;border-radius:99px;background:#E8E6DF;overflow:hidden;margin-top:6px"><div style="height:100%;width:{{row.pct}}%;background:{{row.barColor}}"></div></div>
             </span>
-            <span role="cell" class="r tn" style="font-weight:700;{{row.remStyle}}">{{row.rem}}<br><span class="sub" style="font-weight:400">{{row.remMm}} mm</span></span>
+            <span role="cell" class="r tn" style="font-weight:700;{{row.remStyle}}">{{row.rem}}<br><span class="sub" style="font-weight:400">{{row.remMm}} MD</span></span>
           </div>
         </sc-for>
         <div class="tfoot" role="row">
@@ -327,7 +327,7 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
               <span role="cell" style="color:var(--mute)">{{m.role}}</span>
               <span role="cell"><span class="chip" style="background:#E2EEF9;color:#1B4A82">{{m.roleIn}}</span></span>
               <span role="cell"><span class="chip" style="{{m.chip}}">{{m.statusLabel}}</span></span>
-              <span role="cell" class="r tn"><strong>{{m.md}} md</strong><br><span class="sub">{{m.mm}} mm</span></span>
+              <span role="cell" class="r tn"><strong>{{m.md}} MM</strong><br><span class="sub">{{m.mm}} MD</span></span>
               <span role="cell" class="r"><button class="btn btn-sm btn-bad" onClick="{{m.remove}}">Gỡ</button></span>
             </div>
           </sc-for>
@@ -354,7 +354,7 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
           <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 16px;background:#FAF9F5;border-bottom:1px solid var(--line)">
             <span class="chip mono" style="background:var(--pri);color:#fff">T{{b.month}}</span>
             <span style="font-weight:600;flex:1 1 220px"><span class="mono" style="color:var(--pri)">{{b.code}}</span> · {{b.name}}<br><span class="sub" style="font-weight:400">{{b.note}}</span></span>
-            <span class="tn" style="font-weight:700">{{b.total}} md <span class="sub" style="font-weight:400">({{b.totalMm}} mm)</span></span>
+            <span class="tn" style="font-weight:700">{{b.total}} MM <span class="sub" style="font-weight:400">({{b.totalMm}} MD)</span></span>
             <button class="btn btn-sm" onClick="{{b.edit}}">Sửa đợt</button>
             <button class="btn btn-sm btn-bad" onClick="{{b.del}}">Xóa đợt</button>
           </div>
@@ -362,7 +362,7 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
             <sc-for list="{{b.items}}" as="i" hint-placeholder-count="2">
               <div style="display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;padding:10px 16px;border-bottom:1px solid #EEECE5">
                 <span style="flex:1 1 200px;font-weight:600">{{i.who}}</span>
-                <span class="tn" style="width:90px;text-align:right;font-weight:700;color:var(--ok)">{{i.md}} md</span>
+                <span class="tn" style="width:90px;text-align:right;font-weight:700;color:var(--ok)">{{i.md}} MM</span>
                 <span class="sub" style="flex:2 1 260px">{{i.note}}</span>
               </div>
             </sc-for>
@@ -583,7 +583,7 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
               </sc-for>
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start">
-              <label class="field" style="flex:0 0 150px">Nỗ lực (md)<input class="inp tn" type="text" inputmode="decimal" value="{{r.md}}" onInput="{{r.onMd}}" placeholder="0.0" style="border-color:{{r.border}};font-weight:700;text-align:right"></label>
+              <label class="field" style="flex:0 0 150px">Nỗ lực (MM)<input class="inp tn" type="text" inputmode="decimal" value="{{r.md}}" onInput="{{r.onMd}}" placeholder="0.0" style="border-color:{{r.border}};font-weight:700;text-align:right"></label>
               <label class="field" style="flex:1 1 220px">Ghi chú công việc<input class="inp" type="text" value="{{r.note}}" onInput="{{r.onNote}}" placeholder="Công việc đã làm trong tháng"></label>
               <button class="btn btn-sm btn-bad" onClick="{{r.onRemove}}" style="margin-top:22px" aria-label="Xóa dòng">Xóa dòng</button>
             </div>
@@ -620,8 +620,8 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
         </div>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:14px;background:#E8F2F3;border:1px solid #B5D3D7;border-radius:12px;padding:14px">
-        <label class="field" style="flex:1 1 180px">Nỗ lực ước tính (md, tùy chọn)<input class="inp tn" type="text" inputmode="decimal" value="{{pv.est}}" onInput="{{pv.on.est}}" placeholder="Chưa có"></label>
-        <label class="field" style="flex:1 1 180px;color:var(--pri)">Nỗ lực chốt (md, nhập khi đóng PYC)<input class="inp tn" type="text" inputmode="decimal" value="{{pv.locked}}" onInput="{{pv.on.locked}}" placeholder="Có thể nhập sau khi đóng PYC" style="border:2px solid var(--pri);font-weight:700"></label>
+        <label class="field" style="flex:1 1 180px">Nỗ lực ước tính (MM, tùy chọn)<input class="inp tn" type="text" inputmode="decimal" value="{{pv.est}}" onInput="{{pv.on.est}}" placeholder="Chưa có"></label>
+        <label class="field" style="flex:1 1 180px;color:var(--pri)">Nỗ lực chốt (MM, nhập khi đóng PYC)<input class="inp tn" type="text" inputmode="decimal" value="{{pv.locked}}" onInput="{{pv.on.locked}}" placeholder="Có thể nhập sau khi đóng PYC" style="border:2px solid var(--pri);font-weight:700"></label>
       </div>
       <div style="display:flex;flex-direction:column;gap:8px" role="radiogroup" aria-label="Trạng thái PYC">
         <span class="sub" style="font-weight:600">Trạng thái</span>
@@ -969,7 +969,7 @@ class Component extends DCLogic {
 
   // ---------- helpers ----------
   r1(v) { return Math.round((Number(v) + Number.EPSILON) * 10) / 10; }
-  mm(md) { return (Number(md) / 22).toFixed(2); }
+  mm(md) { return (Number(md) * 22).toFixed(1); }
   f1(v) { return Number(v).toFixed(1); }
   step(v) {
     if (v === '' || v === null || isNaN(v)) return false;
@@ -1092,7 +1092,7 @@ class Component extends DCLogic {
     const rows = a.rows.map(r => {
       let err = '';
       if (r.md !== '') {
-        if (!this.step(r.md) || Number(r.md) <= 0) { err = 'Nỗ lực phải > 0 và theo bước 0.1 md (1.25 bị từ chối) · BR-07'; stepBad = true; }
+        if (!this.step(r.md) || Number(r.md) <= 0) { err = 'Nỗ lực phải > 0 và theo bước 0.1 MM (1.25 bị từ chối) · BR-07'; stepBad = true; }
         else C += Number(r.md);
       }
       if (seen[r.pers]) { err = err || 'Nhân sự này đã có dòng khác trong cùng đợt'; dupBad = true; }
@@ -1127,10 +1127,10 @@ class Component extends DCLogic {
         if (rq.status === 'NEW') rq.status = 'IN_PROGRESS';
       }
       items.forEach(it => db.items.push({ id: Date.now() + Math.random(), batch: bid, pers: it.pers, md: it.md, note: it.note, del: false }));
-      this.log(db, 'ALLOCATION_BATCH', code + ' (' + a.month + ')', a.edit ? 'UPDATE' : 'INSERT', 'effort_md', (a.edit ? 'Cập nhật đợt: ' : 'Thêm đợt mới: +') + total.toFixed(1) + ' md');
+      this.log(db, 'ALLOCATION_BATCH', code + ' (' + a.month + ')', a.edit ? 'UPDATE' : 'INSERT', 'effort_md', (a.edit ? 'Cập nhật đợt: ' : 'Thêm đợt mới: +') + total.toFixed(1) + ' MM');
     });
     this.setState({ alloc: null });
-    this.toast((a.edit ? 'Đã cập nhật' : 'Đã tạo') + ' đợt phân bổ T' + a.month + ' của ' + code + ' (' + total.toFixed(1) + ' md).', 'ok');
+    this.toast((a.edit ? 'Đã cập nhật' : 'Đã tạo') + ' đợt phân bổ T' + a.month + ' của ' + code + ' (' + total.toFixed(1) + ' MM).', 'ok');
     if (a.edit) this.callApi('PUT', '/allocations/' + a.edit, { reqId: a.req, month: a.month, note: a.note, rows: items });
     else this.callApi('POST', '/allocations', { reqId: a.req, month: a.month, note: a.note, rows: items });
   }
@@ -1156,27 +1156,27 @@ class Component extends DCLogic {
     const estStr = String(p.est == null ? '' : p.est).trim().replace(',', '.');
     if (!code || !name) { bad('Vui lòng nhập đủ Mã PYC và Tên PYC.'); return; }
     if (db0.requests.some(r => !r.del && r.proj === pid && r.code.toLowerCase() === code.toLowerCase() && r.id !== p.id)) { bad('BR-05: Mã PYC "' + code + '" đã tồn tại trong dự án này.'); return; }
-    if (estStr !== '' && (!this.step(estStr) || Number(estStr) < 0)) { bad('BR-07: Nỗ lực ước tính phải theo bước 0.1 md.'); return; }
-    if (lockedStr !== '' && (!this.step(lockedStr) || Number(lockedStr) < 0)) { bad('BR-07: Nỗ lực chốt phải theo bước 0.1 md.'); return; }
+    if (estStr !== '' && (!this.step(estStr) || Number(estStr) < 0)) { bad('BR-07: Nỗ lực ước tính phải theo bước 0.1 MM.'); return; }
+    if (lockedStr !== '' && (!this.step(lockedStr) || Number(lockedStr) < 0)) { bad('BR-07: Nỗ lực chốt phải theo bước 0.1 MM.'); return; }
     const lockedVal = lockedStr === '' ? 0 : this.r1(lockedStr);
     const estVal = estStr === '' ? 0 : this.r1(estStr);
     if (p.status === 'CLOSED' && lockedVal <= 0) {
-      bad('Khi đóng PYC (trạng thái Đã đóng), vui lòng nhập Nỗ lực chốt (> 0 md).');
+      bad('Khi đóng PYC (trạng thái Đã đóng), vui lòng nhập Nỗ lực chốt (> 0 MM).');
       return;
     }
     if (p.id && lockedVal > 0) {
       const allocated = this.allocOf(db0, p.id);
-      if (lockedVal < allocated) { bad('BR-02: Nỗ lực chốt mới (' + this.f1(lockedVal) + ' md) không được nhỏ hơn tổng đã phân bổ (' + this.f1(allocated) + ' md).'); return; }
+      if (lockedVal < allocated) { bad('BR-02: Nỗ lực chốt mới (' + this.f1(lockedVal) + ' MM) không được nhỏ hơn tổng đã phân bổ (' + this.f1(allocated) + ' MM).'); return; }
     }
     this.mut(db => {
       if (p.id) {
         const r = db.requests.find(x => x.id === p.id);
         const old = r.locked;
         Object.assign(r, { code, name, type: p.type, est: estVal, locked: lockedVal, deadline: p.deadline, status: p.status, requester: p.requester.trim(), link: p.link.trim() });
-        if (old !== r.locked) this.log(db, 'REQUEST', code, 'UPDATE', 'locked_md', (old > 0 ? this.f1(old) + ' md' : 'Chưa chốt') + ' → ' + (r.locked > 0 ? this.f1(r.locked) + ' md' : 'Chưa chốt'));
+        if (old !== r.locked) this.log(db, 'REQUEST', code, 'UPDATE', 'locked_md', (old > 0 ? this.f1(old) + ' MM' : 'Chưa chốt') + ' → ' + (r.locked > 0 ? this.f1(r.locked) + ' MM' : 'Chưa chốt'));
       } else {
         db.requests.push({ id: Date.now(), proj: pid, code, name, type: p.type, deadline: p.deadline, status: p.status, requester: p.requester.trim(), link: p.link.trim(), est: estVal, locked: lockedVal, del: false });
-        this.log(db, 'REQUEST', code, 'INSERT', 'locked_md', 'Tạo mới PYC, ' + (lockedVal > 0 ? 'chốt ' + this.f1(lockedVal) + ' md' : 'chưa chốt nỗ lực'));
+        this.log(db, 'REQUEST', code, 'INSERT', 'locked_md', 'Tạo mới PYC, ' + (lockedVal > 0 ? 'chốt ' + this.f1(lockedVal) + ' MM' : 'chưa chốt nỗ lực'));
       }
     });
     this.setState({ pyc: null });
@@ -1505,15 +1505,15 @@ class Component extends DCLogic {
 
     // ----- dashboard -----
     const kpis = [
-      { label: 'Tổng nỗ lực chốt', value: this.f1(dLocked), unit: 'md', sub: this.mm(dLocked) + ' man-month · ' + projs.length + ' dự án', subStyle: 'color:#0B5563', hasBar: false, pct: 0 },
-      { label: 'Đã phân bổ lũy kế', value: this.f1(dAlloc), unit: 'md', sub: this.mm(dAlloc) + ' mm · ' + dPct + '%', subStyle: 'color:#11633A', hasBar: true, pct: dPct },
-      { label: 'Còn lại chưa phân bổ', value: this.f1(dRem), unit: 'md', sub: this.mm(dRem) + ' man-month', subStyle: 'color:#7A4F00', hasBar: false, pct: 0 }
+      { label: 'Tổng nỗ lực chốt', value: this.f1(dLocked), unit: 'MM', sub: this.mm(dLocked) + ' MD · ' + projs.length + ' dự án', subStyle: 'color:#0B5563', hasBar: false, pct: 0 },
+      { label: 'Đã phân bổ lũy kế', value: this.f1(dAlloc), unit: 'MM', sub: this.mm(dAlloc) + ' MD · ' + dPct + '%', subStyle: 'color:#11633A', hasBar: true, pct: dPct },
+      { label: 'Còn lại chưa phân bổ', value: this.f1(dRem), unit: 'MM', sub: this.mm(dRem) + ' MD', subStyle: 'color:#7A4F00', hasBar: false, pct: 0 }
     ];
     const alerts = [];
     allRm.forEach(m => { if (m.overdue) alerts.push({ sev: 0, tag: 'Trễ hạn', tone: 'bad', text: m.r.code + ' quá hạn hoàn thành (' + this.fmtDate(m.r.deadline) + ')', actLabel: 'Mở PYC', act: () => this.setState({ screen: 'projects', curProj: m.r.proj, tab: 'pyc' }) }); });
-    allRm.forEach(m => { if (m.r.locked > 0 && m.rem === 0 && !db.bbnt.some(b => b.req === m.r.id && !b.del)) alerts.push({ sev: 0, tag: 'Thiếu biên bản', tone: 'bad', text: m.r.code + ' đã phân bổ 100% (' + this.f1(m.r.locked) + ' md) nhưng chưa có BBNT', actLabel: 'Thêm biên bản', act: () => this.setState({ screen: 'projects', curProj: m.r.proj, tab: 'bbnt' }) }); });
+    allRm.forEach(m => { if (m.r.locked > 0 && m.rem === 0 && !db.bbnt.some(b => b.req === m.r.id && !b.del)) alerts.push({ sev: 0, tag: 'Thiếu biên bản', tone: 'bad', text: m.r.code + ' đã phân bổ 100% (' + this.f1(m.r.locked) + ' MM) nhưng chưa có BBNT', actLabel: 'Thêm biên bản', act: () => this.setState({ screen: 'projects', curProj: m.r.proj, tab: 'bbnt' }) }); });
     dUnsent.forEach(b => { const rq = db.requests.find(r => r.id === b.req); alerts.push({ sev: 1, tag: 'Chưa gửi khách', tone: 'warn', text: 'Biên bản ' + b.code + ' (' + (rq ? rq.code : '') + ') chưa gửi khách hàng', actLabel: 'Đánh dấu đã gửi', act: () => this.ask('sendBbnt', b.id, 'Đánh dấu ' + b.code + ' đã gửi khách?', 'Hệ thống sẽ ghi nhận ngày gửi là 02/11/2026 (BR-09).', 'Đánh dấu đã gửi') }); });
-    allRm.forEach(m => { if (m.rem > 0 && m.r.status !== 'CLOSED') alerts.push({ sev: 2, tag: 'Còn nỗ lực', tone: 'info', text: m.r.code + ' còn ' + this.f1(m.rem) + ' md (' + this.mm(m.rem) + ' mm) chưa phân bổ', actLabel: 'Phân bổ', act: () => { this.setState({ curProj: m.r.proj }); this.openAlloc(m.r.id); } }); });
+    allRm.forEach(m => { if (m.rem > 0 && m.r.status !== 'CLOSED') alerts.push({ sev: 2, tag: 'Còn nỗ lực', tone: 'info', text: m.r.code + ' còn ' + this.f1(m.rem) + ' MM (' + this.mm(m.rem) + ' MD) chưa phân bổ', actLabel: 'Phân bổ', act: () => { this.setState({ curProj: m.r.proj }); this.openAlloc(m.r.id); } }); });
     alerts.sort((x, y) => x.sev - y.sev);
     kpis.push({ label: 'Cần xử lý', value: String(alerts.length), unit: 'mục', sub: dUnsent.length + ' biên bản chờ gửi', subStyle: 'color:#9B1F24', hasBar: false, pct: 0 });
     const alertsV = alerts.map(a => ({ tag: a.tag, chip: chip(a.tone), text: a.text, actLabel: a.actLabel, act: a.act }));
@@ -1537,16 +1537,16 @@ class Component extends DCLogic {
         monthTot[mo] = this.r1(monthTot[mo] + sum);
         return { text: sum > 0 ? this.f1(sum) : '·', style: sum > 0 ? 'font-weight:600' : 'color:#8C9096' };
       });
-      return { code: (pr ? pr.code + ' / ' : '') + m.r.code, name: m.r.name, locked: m.hasLock ? this.f1(m.r.locked) + ' md' : 'Chưa chốt', lockedMm: m.hasLock ? this.mm(m.r.locked) : '0.00', cells,
-        alloc: this.f1(m.a) + ' md', allocMm: this.mm(m.a), pct: m.pct, barColor: m.hasLock && m.rem === 0 ? '#11633A' : '#0B5563',
-        rem: m.hasLock ? this.f1(m.rem) + ' md' : 'Chưa chốt', remMm: m.hasLock ? this.mm(m.rem) : '0.00', remStyle: m.hasLock && m.rem > 0 ? 'color:#7A4F00' : 'color:#55606C' };
+      return { code: (pr ? pr.code + ' / ' : '') + m.r.code, name: m.r.name, locked: m.hasLock ? this.f1(m.r.locked) + ' MM' : 'Chưa chốt', lockedMm: m.hasLock ? this.mm(m.r.locked) : '0.0', cells,
+        alloc: this.f1(m.a) + ' MM', allocMm: this.mm(m.a), pct: m.pct, barColor: m.hasLock && m.rem === 0 ? '#11633A' : '#0B5563',
+        rem: m.hasLock ? this.f1(m.rem) + ' MM' : 'Chưa chốt', remMm: m.hasLock ? this.mm(m.rem) : '0.0', remStyle: m.hasLock && m.rem > 0 ? 'color:#7A4F00' : 'color:#55606C' };
     });
     const matrix = {
       cols: 'minmax(200px,2fr) 110px ' + months.map(() => '90px').join(' ') + (months.length ? ' ' : '') + 'minmax(170px,1.2fr) 110px',
       minW: 560 + months.length * 100,
       months: months.map(m => ({ label: m.slice(5) + '/' + m.slice(0, 4) })), rows: matrixRows,
-      totLocked: this.f1(dLocked) + ' md', totMonths: months.map(m => ({ text: this.f1(monthTot[m]) })),
-      totAlloc: this.f1(dAlloc) + ' md (' + this.mm(dAlloc) + ' mm)', totRem: this.f1(dRem) + ' md'
+      totLocked: this.f1(dLocked) + ' MM', totMonths: months.map(m => ({ text: this.f1(monthTot[m]) })),
+      totAlloc: this.f1(dAlloc) + ' MM (' + this.mm(dAlloc) + ' MD)', totRem: this.f1(dRem) + ' MM'
     };
 
     const validBatches = db.batches.filter(b => !b.del && reqIds.includes(b.req));
@@ -1557,9 +1557,9 @@ class Component extends DCLogic {
       style: s.tab === t[0] ? 'color:#0B5563;background:#fff;box-shadow:inset 0 -3px 0 #0B5563' : '' }));
     const projStats = [
       { label: 'Số PYC', value: String(reqs.length), sub: 'đang hoạt động', style: '' },
-      { label: 'Tổng chốt', value: this.f1(totLocked) + ' md', sub: this.mm(totLocked) + ' mm', style: 'color:#0B5563' },
-      { label: 'Đã phân bổ', value: this.f1(totAlloc) + ' md', sub: this.mm(totAlloc) + ' mm', style: 'color:#11633A' },
-      { label: 'Còn lại', value: this.f1(totRem) + ' md', sub: this.mm(totRem) + ' mm', style: 'color:#7A4F00' }
+      { label: 'Tổng chốt', value: this.f1(totLocked) + ' MM', sub: this.mm(totLocked) + ' MD', style: 'color:#0B5563' },
+      { label: 'Đã phân bổ', value: this.f1(totAlloc) + ' MM', sub: this.mm(totAlloc) + ' MD', style: 'color:#11633A' },
+      { label: 'Còn lại', value: this.f1(totRem) + ' MM', sub: this.mm(totRem) + ' MD', style: 'color:#7A4F00' }
     ];
 
     const TYPE_MAP = { CR: ['CR · Thay đổi', 'info'], BUG: ['Bug · Sửa lỗi', 'bad'], NEW_FEATURE: ['Tính năng mới', 'ok'], SUPPORT: ['Hỗ trợ', 'warn'] };
@@ -1567,13 +1567,13 @@ class Component extends DCLogic {
       const r = m.r, st = STATUS[r.status] || STATUS.NEW, tp = TYPE_MAP[r.type] || [r.type, 'neutral'];
       return { code: r.code, name: r.name, requester: r.requester || '--', type: r.type, typeLabel: tp[0], typeChip: chip(tp[1]),
         deadline: this.fmtDate(r.deadline), overdue: m.overdue, dlStyle: m.overdue ? 'color:#9B1F24;font-weight:600' : '',
-        alloc: this.f1(m.a), locked: m.hasLock ? this.f1(r.locked) + ' md' : 'Chưa chốt', pct: m.pct, pctLabel: m.hasLock ? m.pct + '%' : 'Chưa chốt',
+        alloc: this.f1(m.a), locked: m.hasLock ? this.f1(r.locked) + ' MM' : 'Chưa chốt', pct: m.pct, pctLabel: m.hasLock ? m.pct + '%' : 'Chưa chốt',
         barColor: m.hasLock && m.rem === 0 ? '#11633A' : '#0B5563',
         remPrefix: m.hasLock ? 'Còn ' : '',
-        rem: m.hasLock ? this.f1(m.rem) + ' md' : 'Chưa chốt nỗ lực',
-        remSuffix: m.hasLock ? ' · ' + this.mm(r.locked) + ' mm chốt' : ' (nhập khi đóng PYC)',
+        rem: m.hasLock ? this.f1(m.rem) + ' MM' : 'Chưa chốt nỗ lực',
+        remSuffix: m.hasLock ? ' · ' + this.mm(r.locked) + ' MD chốt' : ' (nhập khi đóng PYC)',
         remStyle: m.hasLock ? (m.rem > 0 ? 'color:#7A4F00' : 'color:#11633A') : 'color:#55606C',
-        est: r.est ? this.f1(r.est) + ' md' : '--', statusLabel: st[0], statusChip: chip(st[1]),
+        est: r.est ? this.f1(r.est) + ' MM' : '--', statusLabel: st[0], statusChip: chip(st[1]),
         allocate: () => this.openAlloc(r.id), edit: () => this.openPyc(r.id),
         del: () => this.ask('delPyc', r.id, 'Xóa ' + r.code + '?', 'PYC được chuyển vào Thùng rác (xóa mềm) và không còn tính vào tổng nỗ lực. Bạn có thể hoàn tác ngay hoặc khôi phục sau.', 'Xóa mềm', true) };
     });
@@ -1611,7 +1611,7 @@ class Component extends DCLogic {
         return { month: b.month, code: rq.code, name: rq.name, note: b.note || '', total: this.f1(total), totalMm: this.mm(total),
           items: its.map(i => { const p = db.personnel.find(x => x.id === i.pers); return { who: p ? p.code + ' · ' + p.name : 'N/A', md: this.f1(i.md), note: i.note || '' }; }),
           edit: () => this.openAlloc(rq.id, b.id),
-          del: () => this.ask('delBatch', b.id, 'Xóa đợt phân bổ T' + b.month + ' của ' + rq.code + '?', 'Đợt chuyển vào Thùng rác; nỗ lực còn lại của PYC sẽ tăng thêm ' + this.f1(total) + ' md.', 'Xóa mềm đợt', true) };
+          del: () => this.ask('delBatch', b.id, 'Xóa đợt phân bổ T' + b.month + ' của ' + rq.code + '?', 'Đợt chuyển vào Thùng rác; nỗ lực còn lại của PYC sẽ tăng thêm ' + this.f1(total) + ' MM.', 'Xóa mềm đợt', true) };
       });
 
     // docs
@@ -1649,11 +1649,11 @@ class Component extends DCLogic {
 
     const trash = [];
     db.projects.filter(x => x.del).forEach(p => trash.push({ kind: 'Dự án', tone: 'info', title: p.code + ' · ' + p.name, impact: 'Khách hàng: ' + (p.customer || 'Nội bộ'), restore: () => this.restore('projects', p.id) }));
-    db.requests.filter(x => x.del).forEach(r => trash.push({ kind: 'PYC', tone: 'neutral', title: r.code + ' · ' + r.name, impact: 'Nỗ lực chốt ' + this.f1(r.locked) + ' md', restore: () => this.restore('requests', r.id) }));
+    db.requests.filter(x => x.del).forEach(r => trash.push({ kind: 'PYC', tone: 'neutral', title: r.code + ' · ' + r.name, impact: 'Nỗ lực chốt ' + this.f1(r.locked) + ' MM', restore: () => this.restore('requests', r.id) }));
     db.batches.filter(x => x.del).forEach(b => {
       const rq = db.requests.find(r => r.id === b.req);
       const sum = this.r1(db.items.filter(i => i.batch === b.id).reduce((x, i) => x + Number(i.md), 0));
-      trash.push({ kind: 'Đợt phân bổ', tone: 'info', title: 'T' + b.month + ' của ' + (rq ? rq.code : ''), impact: 'Khôi phục sẽ cộng lại ' + this.f1(sum) + ' md (kiểm tra BR-04)', restore: () => this.restore('batches', b.id) });
+      trash.push({ kind: 'Đợt phân bổ', tone: 'info', title: 'T' + b.month + ' của ' + (rq ? rq.code : ''), impact: 'Khôi phục sẽ cộng lại ' + this.f1(sum) + ' MM (kiểm tra BR-04)', restore: () => this.restore('batches', b.id) });
     });
     db.bbnt.filter(x => x.del).forEach(b => trash.push({ kind: 'Biên bản NT', tone: 'warn', title: b.code + ' · ' + b.title, impact: 'Không ảnh hưởng nỗ lực', restore: () => this.restore('bbnt', b.id) }));
     db.docs.filter(x => x.del).forEach(d => trash.push({ kind: 'Hồ sơ', tone: 'neutral', title: d.title, impact: 'Không ảnh hưởng nỗ lực', restore: () => this.restore('docs', d.id) }));
@@ -1680,8 +1680,8 @@ class Component extends DCLogic {
           onRemove: () => this.setState({ alloc: { ...this.state.alloc, rows: this.state.alloc.rows.filter(x => x.key !== r.key) } }) };
       });
       let pill = 'Hợp lệ', tone = 'ok', banner = '';
-      if (chk.stepBad) { pill = 'Sai bước 0.1 (BR-07)'; tone = 'bad'; banner = 'Có dòng nhập sai bước 0.1 md. Xem lỗi ở từng dòng bên dưới.'; }
-      else if (chk.over) { pill = 'Vượt nỗ lực chốt (BR-01)'; tone = 'bad'; banner = 'Tổng phân bổ ' + this.f1(this.r1(chk.B + chk.C)) + ' md vượt nỗ lực chốt ' + this.f1(chk.A) + ' md của ' + chk.req.code + '. Muốn vượt, hãy tăng số chốt trước.'; }
+      if (chk.stepBad) { pill = 'Sai bước 0.1 (BR-07)'; tone = 'bad'; banner = 'Có dòng nhập sai bước 0.1 MM. Xem lỗi ở từng dòng bên dưới.'; }
+      else if (chk.over) { pill = 'Vượt nỗ lực chốt (BR-01)'; tone = 'bad'; banner = 'Tổng phân bổ ' + this.f1(this.r1(chk.B + chk.C)) + ' MM vượt nỗ lực chốt ' + this.f1(chk.A) + ' MM của ' + chk.req.code + '. Muốn vượt, hãy tăng số chốt trước.'; }
       else if (chk.dupBad) { pill = 'Trùng nhân sự'; tone = 'bad'; banner = 'Mỗi nhân sự chỉ có một dòng trong cùng một đợt.'; }
       else if (chk.monthDup) { pill = 'Tháng đã có đợt'; tone = 'bad'; banner = chk.req.code + ' đã có đợt phân bổ tháng ' + a.month + '. Mỗi PYC tối đa một đợt mỗi tháng.'; }
       else if (chk.C === 0) { pill = 'Chưa nhập nỗ lực'; tone = 'neutral'; }
@@ -1695,12 +1695,12 @@ class Component extends DCLogic {
         month: a.month, note: a.note,
         onMonth: (ev) => this.setState({ alloc: { ...this.state.alloc, month: ev.target.value } }),
         onNote: (ev) => this.setState({ alloc: { ...this.state.alloc, note: ev.target.value } }),
-        A: chk.hasLock ? this.f1(chk.A) + ' md' : 'Chưa chốt', B: this.f1(chk.B) + ' md', C: this.f1(chk.C) + ' md', rem: chk.hasLock ? this.f1(chk.rem) + ' md' : 'Chưa giới hạn',
+        A: chk.hasLock ? this.f1(chk.A) + ' MM' : 'Chưa chốt', B: this.f1(chk.B) + ' MM', C: this.f1(chk.C) + ' MM', rem: chk.hasLock ? this.f1(chk.rem) + ' MM' : 'Chưa giới hạn',
         remStyle: bad || chk.over ? 'color:#9B1F24' : 'color:#11633A',
         pill, pillStyle: chip(tone),
         boxStyle: bad ? 'border:2px solid #C9514F;background:#FDF1F0' : 'border:2px solid #B5D3D7;background:#EEF5F6',
         bPct, cPct: chk.over ? 100 - bPct : cPct, cColor: bad ? '#9B1F24' : '#0B5563',
-        barLabel: 'Đã phân bổ khác ' + this.f1(chk.B) + ', đợt này ' + this.f1(chk.C) + (chk.hasLock ? ' trên tổng chốt ' + this.f1(chk.A) + ' md' : ' (PYC chưa chốt nỗ lực)'),
+        barLabel: 'Đã phân bổ khác ' + this.f1(chk.B) + ', đợt này ' + this.f1(chk.C) + (chk.hasLock ? ' trên tổng chốt ' + this.f1(chk.A) + ' MM' : ' (PYC chưa chốt nỗ lực)'),
         banner, hasBanner: !!banner, rows: rowsV, noMembers: allowed.length === 0, canAdd: allowed.length > 0,
         cantSave: bad || chk.C === 0 || !a.rows.length || chk.emptyRow || !a.month,
         close: () => this.setState({ alloc: null }), save: () => this.saveAlloc(),
