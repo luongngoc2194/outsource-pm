@@ -1,0 +1,1760 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Outsource PM</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+:root{--ink:#16202A;--mute:#55606C;--line:#E2E0D8;--pri:#0B5563;--pri-d:#08424E;--ok:#11633A;--warn:#7A4F00;--bad:#9B1F24;--info:#1B4A82}
+body{margin:0;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink);background:#F4F3EE;font-size:14px;line-height:1.45}
+h1,h2,h3,p{margin:0}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+.tn{font-variant-numeric:tabular-nums}
+button{font:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
+a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:underline}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:0 14px;border-radius:8px;border:1px solid #B9B6AB;background:#fff;color:var(--ink);font-weight:600;font-size:13px;white-space:nowrap}
+.btn:hover{background:#F0EFE9}
+.btn-pri{background:var(--pri);border-color:var(--pri);color:#fff}.btn-pri:hover{background:var(--pri-d)}
+.btn-sm{min-height:30px;padding:0 10px;font-size:12px}
+.btn-bad{color:var(--bad);border-color:#E3B9B7}.btn-bad:hover{background:#FBE3E1}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.thead{display:grid;grid-template-columns:var(--cols);gap:12px;padding:10px 16px;background:#FAF9F5;border-bottom:1px solid var(--line);font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--mute);align-items:center}
+.trow{display:grid;grid-template-columns:var(--cols);gap:12px;padding:12px 16px;border-bottom:1px solid #EEECE5;align-items:center}
+.trow:hover{background:#FBFAF7}
+.tfoot{display:grid;grid-template-columns:var(--cols);gap:12px;padding:12px 16px;background:#FAF9F5;border-top:2px solid var(--line);font-weight:700;align-items:center}
+.r{text-align:right}
+.field{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:600;color:var(--mute)}
+.inp{height:38px;padding:0 10px;border:1px solid #8C9096;border-radius:8px;font:inherit;font-size:14px;color:var(--ink);background:#fff;width:100%;box-sizing:border-box}
+.inp:focus{outline:2px solid var(--pri);outline-offset:0;border-color:var(--pri)}
+.seg{min-height:32px;padding:0 12px;border-radius:8px;border:1px solid #B9B6AB;background:#fff;color:var(--ink);font-size:13px;font-weight:600}
+.seg:hover{background:#F0EFE9}
+.nav-btn{display:flex;align-items:center;gap:11px;width:100%;min-height:42px;padding:0 12px;border:0;border-radius:9px;background:transparent;color:#C7D2D9;font-size:14px;font-weight:500;text-align:left}
+.nav-btn:hover{background:#1A2F3B;color:#fff}
+.tab{min-height:46px;padding:0 18px;border:0;background:transparent;color:var(--mute);font-size:13.5px;font-weight:600;white-space:nowrap}
+.tab:hover{background:#F0EFE9}
+.sub{font-size:12px;color:var(--mute)}
+</style>
+</helmet>
+
+<div style="min-height:100vh;display:flex;flex-wrap:wrap;background:#F4F3EE">
+
+<!-- ============ SIDEBAR ============ -->
+<aside style="flex:1 1 248px;background:#10202A;color:#C7D2D9;padding:22px 14px;display:flex;flex-direction:column;gap:22px;box-sizing:border-box">
+  <div style="display:flex;align-items:center;gap:10px;padding:0 8px">
+    <div style="width:36px;height:36px;border-radius:10px;background:#5CC8C0;color:#10202A;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px">PM</div>
+    <div>
+      <div style="color:#fff;font-weight:700;font-size:15px">Outsource PM</div>
+      <div style="font-size:12px">Nỗ lực &amp; nghiệm thu</div>
+    </div>
+  </div>
+
+  <nav aria-label="Điều hướng chính" style="display:flex;flex-direction:column;gap:4px">
+    <sc-for list="{{nav}}" as="n" hint-placeholder-count="5">
+      <button class="nav-btn" onClick="{{n.go}}" style="{{n.style}}" aria-current="{{n.current}}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{n.icon}}"></path></svg>
+        <span style="flex:1">{{n.label}}</span>
+        <sc-if value="{{n.hasBadge}}" hint-placeholder-val="{{ true }}">
+          <span class="chip tn" style="{{n.badgeStyle}}">{{n.badge}}</span>
+        </sc-if>
+      </button>
+    </sc-for>
+  </nav>
+
+  <div style="margin-top:auto;display:flex;flex-direction:column;gap:12px">
+    <div style="border:1px solid #2A404D;border-radius:12px;padding:12px 14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
+        <div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase">Dự án đang chọn</div>
+        <button class="btn btn-sm" onClick="{{newProj}}" style="min-height:22px;padding:0 8px;font-size:11px;background:#1E3744;color:#5CC8C0;border-color:#2A404D">+ Dự án</button>
+      </div>
+      <div style="color:#fff;font-weight:600;margin-top:4px">{{curProj.code}} · {{curProj.name}}</div>
+      <div style="font-size:12px;margin-top:2px">{{curProj.customer}}</div>
+    </div>
+    <div style="font-size:12px;padding:0 8px;display:flex;align-items:center;justify-content:space-between">
+      <span>Ngày: <strong style="color:#fff">02/11/2026</strong></span>
+      <span class="chip" style="{{dbBadgeStyle}}">{{dbBadge}}</span>
+    </div>
+  </div>
+</aside>
+
+<!-- ============ MAIN ============ -->
+<main style="flex:999 1 560px;min-width:0;padding:28px 32px 48px;box-sizing:border-box">
+
+<!-- ======== DASHBOARD ======== -->
+<sc-if value="{{isDash}}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:20px">
+  <header style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px">
+    <div>
+      <h1 style="font-size:26px;letter-spacing:-.01em">Tổng quan nỗ lực</h1>
+      <p style="margin-top:4px;color:var(--mute)">Quy ước 1 man-month (mm) = 22 man-day (md). Chỉ tính bản ghi chưa xóa mềm.</p>
+    </div>
+    <span class="chip" style="background:#fff;border:1px solid var(--line);color:var(--ink);padding:5px 12px">Hôm nay · 02/11/2026</span>
+  </header>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
+    <sc-for list="{{kpis}}" as="k" hint-placeholder-count="4">
+      <div class="card" style="padding:18px">
+        <div style="font-size:12px;font-weight:600;color:var(--mute)">{{k.label}}</div>
+        <div style="display:flex;align-items:baseline;gap:6px;margin-top:8px">
+          <span class="tn" style="font-size:32px;font-weight:700;letter-spacing:-.02em;line-height:1.1">{{k.value}}</span>
+          <span style="color:var(--mute)">{{k.unit}}</span>
+        </div>
+        <div style="margin-top:6px;font-size:13px;font-weight:600;{{k.subStyle}}">{{k.sub}}</div>
+        <sc-if value="{{k.hasBar}}" hint-placeholder-val="{{ false }}">
+          <div style="height:8px;border-radius:99px;background:#E8E6DF;overflow:hidden;margin-top:10px"><div style="height:100%;border-radius:99px;width:{{k.pct}}%;background:var(--pri)"></div></div>
+        </sc-if>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+    <section class="card" style="flex:1 1 420px;min-width:0;overflow:hidden" aria-label="Cần xử lý">
+      <div style="padding:16px 18px 12px;display:flex;align-items:center;justify-content:space-between">
+        <h2 style="font-size:16px">Cần xử lý</h2>
+        <span class="sub">Sắp theo mức ưu tiên</span>
+      </div>
+      <div style="display:flex;flex-direction:column">
+        <sc-for list="{{alerts}}" as="a" hint-placeholder-count="3">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 18px;border-top:1px solid #EEECE5">
+            <span class="chip" style="{{a.chip}}">{{a.tag}}</span>
+            <span style="flex:1 1 200px;min-width:0">{{a.text}}</span>
+            <button class="btn btn-sm" onClick="{{a.act}}">{{a.actLabel}}</button>
+          </div>
+        </sc-for>
+        <sc-if value="{{noAlerts}}" hint-placeholder-val="{{ false }}">
+          <div style="padding:20px 18px;border-top:1px solid #EEECE5;color:var(--ok);font-weight:600">Không có mục nào cần xử lý.</div>
+        </sc-if>
+      </div>
+    </section>
+
+    <section class="card" style="flex:1 1 380px;min-width:0;overflow:hidden" aria-label="Nỗ lực theo nhân sự">
+      <div style="padding:16px 18px 12px"><h2 style="font-size:16px">Nỗ lực theo nhân sự</h2></div>
+      <div style="overflow-x:auto">
+        <div role="table" aria-label="Nỗ lực theo nhân sự" style="--cols:minmax(150px,1.6fr) 60px 90px 90px;min-width:440px">
+          <div class="thead" role="row"><span role="columnheader">Nhân sự</span><span role="columnheader" class="r">PYC</span><span role="columnheader" class="r">md</span><span role="columnheader" class="r">mm</span></div>
+          <sc-for list="{{persReport}}" as="p" hint-placeholder-count="4">
+            <div class="trow" role="row">
+              <span role="cell"><strong>{{p.name}}</strong> <span class="sub">{{p.role}}</span></span>
+              <span role="cell" class="r tn">{{p.pycs}}</span>
+              <span role="cell" class="r tn" style="font-weight:700">{{p.md}}</span>
+              <span role="cell" class="r tn mono" style="color:var(--pri);font-weight:600">{{p.mm}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section class="card" style="overflow:hidden" aria-label="Ma trận nỗ lực">
+    <div style="padding:16px 18px 12px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px">
+      <h2 style="font-size:16px">Ma trận nỗ lực theo PYC và tháng</h2>
+      <span class="sub">Đơn vị md, mm = md / 22</span>
+    </div>
+    <div style="overflow-x:auto">
+      <div role="table" aria-label="Ma trận nỗ lực" style="--cols:{{matrix.cols}};min-width:{{matrix.minW}}px">
+        <div class="thead" role="row">
+          <span role="columnheader">PYC</span>
+          <span role="columnheader" class="r">Chốt</span>
+          <sc-for list="{{matrix.months}}" as="m" hint-placeholder-count="2"><span role="columnheader" class="r">T{{m.label}}</span></sc-for>
+          <span role="columnheader">Đã phân bổ</span>
+          <span role="columnheader" class="r">Còn lại</span>
+        </div>
+        <sc-for list="{{matrix.rows}}" as="row" hint-placeholder-count="2">
+          <div class="trow" role="row">
+            <span role="cell"><span class="mono" style="font-weight:600;color:var(--pri)">{{row.code}}</span><br><span class="sub">{{row.name}}</span></span>
+            <span role="cell" class="r tn"><strong>{{row.locked}}</strong><br><span class="sub">{{row.lockedMm}} mm</span></span>
+            <sc-for list="{{row.cells}}" as="c" hint-placeholder-count="2"><span role="cell" class="r tn" style="{{c.style}}">{{c.text}}</span></sc-for>
+            <span role="cell">
+              <span class="tn" style="font-weight:700">{{row.alloc}}</span> <span class="sub">({{row.allocMm}} mm)</span>
+              <div style="height:6px;border-radius:99px;background:#E8E6DF;overflow:hidden;margin-top:6px"><div style="height:100%;width:{{row.pct}}%;background:{{row.barColor}}"></div></div>
+            </span>
+            <span role="cell" class="r tn" style="font-weight:700;{{row.remStyle}}">{{row.rem}}<br><span class="sub" style="font-weight:400">{{row.remMm}} mm</span></span>
+          </div>
+        </sc-for>
+        <div class="tfoot" role="row">
+          <span role="cell">Tổng cộng</span>
+          <span role="cell" class="r tn">{{matrix.totLocked}}</span>
+          <sc-for list="{{matrix.totMonths}}" as="t" hint-placeholder-count="2"><span role="cell" class="r tn">{{t.text}}</span></sc-for>
+          <span role="cell" class="tn" style="color:var(--ok)">{{matrix.totAlloc}}</span>
+          <span role="cell" class="r tn" style="color:var(--warn)">{{matrix.totRem}}</span>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</sc-if>
+
+<!-- ======== PROJECTS ======== -->
+<sc-if value="{{isProj}}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:18px">
+  <section class="card" style="padding:14px 18px;display:flex;flex-direction:column;gap:12px" aria-label="Danh sách dự án">
+    <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px">
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px" role="radiogroup" aria-label="Chọn dự án">
+        <span class="sub" style="font-weight:600;margin-right:4px">Dự án</span>
+        <sc-for list="{{projOpts}}" as="po" hint-placeholder-count="2">
+          <button class="seg" role="radio" aria-checked="{{po.on}}" onClick="{{po.pick}}" style="{{po.style}}">{{po.label}}</button>
+        </sc-for>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-sm" onClick="{{openExcel}}">Nhập / Xuất Excel</button>
+        <button class="btn btn-sm" onClick="{{editCurProj}}">Sửa dự án</button>
+        <sc-if value="{{canDelProj}}" hint-placeholder-val="{{ false }}">
+          <button class="btn btn-sm btn-bad" onClick="{{delCurProj}}">Xóa dự án</button>
+        </sc-if>
+        <button class="btn btn-sm btn-pri" onClick="{{newProj}}">+ Thêm dự án</button>
+      </div>
+    </div>
+  </section>
+
+  <header style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px">
+    <div>
+      <div class="sub mono" style="font-weight:600">{{curProj.code}}</div>
+      <h1 style="font-size:26px;letter-spacing:-.01em;margin-top:2px">{{curProj.name}}</h1>
+      <p style="margin-top:4px;color:var(--mute)">Khách hàng: {{curProj.customer}}</p>
+    </div>
+    <span class="chip" style="{{curProj.chip}}">{{curProj.statusLabel}}</span>
+  </header>
+
+  <div class="card" style="padding:18px;display:flex;flex-wrap:wrap;gap:20px 32px;align-items:center">
+    <sc-for list="{{projStats}}" as="s" hint-placeholder-count="4">
+      <div style="min-width:120px">
+        <div class="sub" style="font-weight:600">{{s.label}}</div>
+        <div class="tn" style="font-size:22px;font-weight:700;margin-top:2px;{{s.style}}">{{s.value}}</div>
+        <div class="sub tn">{{s.sub}}</div>
+      </div>
+    </sc-for>
+    <div style="flex:1 1 220px;min-width:200px">
+      <div style="display:flex;justify-content:space-between" class="sub"><span style="font-weight:600">Tiến độ phân bổ</span><span class="tn" style="font-weight:700;color:var(--ink)">{{projPct}}%</span></div>
+      <div style="height:10px;border-radius:99px;background:#E8E6DF;overflow:hidden;margin-top:8px"><div style="height:100%;border-radius:99px;width:{{projPct}}%;background:var(--pri)"></div></div>
+    </div>
+  </div>
+
+  <div class="card" style="overflow:hidden">
+    <div role="tablist" aria-label="Chi tiết dự án" style="display:flex;overflow-x:auto;background:#FAF9F5;border-bottom:1px solid var(--line)">
+      <sc-for list="{{tabs}}" as="t" hint-placeholder-count="5">
+        <button class="tab" role="tab" aria-selected="{{t.on}}" onClick="{{t.pick}}" style="{{t.style}}">{{t.label}}</button>
+      </sc-for>
+    </div>
+
+    <!-- TAB PYC -->
+    <sc-if value="{{tabPyc}}" hint-placeholder-val="{{ true }}">
+    <div style="padding:16px 0 0">
+      <div style="padding:0 16px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between">
+        <p style="color:var(--mute)">Mỗi PYC có nỗ lực chốt (trần phân bổ). Tiến độ cho thấy phần đã phân bổ.</p>
+        <button class="btn btn-pri" onClick="{{newPyc}}">+ Thêm PYC</button>
+      </div>
+      <div style="overflow-x:auto">
+        <div role="table" aria-label="Danh sách PYC" style="--cols:minmax(230px,2.2fr) 70px 120px minmax(210px,1.7fr) 90px 130px 200px;min-width:1100px">
+          <div class="thead" role="row"><span role="columnheader">PYC</span><span role="columnheader">Loại</span><span role="columnheader">Hạn</span><span role="columnheader">Phân bổ / Chốt</span><span role="columnheader" class="r">Ước tính</span><span role="columnheader">Trạng thái</span><span role="columnheader" class="r">Thao tác</span></div>
+          <sc-for list="{{pycRows}}" as="p" hint-placeholder-count="2">
+            <div class="trow" role="row">
+              <span role="cell">
+                <span class="mono" style="font-weight:600;color:var(--pri)">{{p.code}}</span>
+                <div style="font-weight:600">{{p.name}}</div>
+                <div class="sub">KH: {{p.requester}}</div>
+              </span>
+              <span role="cell"><span class="chip" style="background:#ECEAE4;color:#444C55">{{p.type}}</span></span>
+              <span role="cell" class="tn" style="{{p.dlStyle}}">{{p.deadline}}<sc-if value="{{p.overdue}}" hint-placeholder-val="{{ false }}"><br><span class="chip" style="background:#FBE3E1;color:#9B1F24;margin-top:2px">Trễ hạn</span></sc-if></span>
+              <span role="cell">
+                <div class="tn" style="display:flex;justify-content:space-between;gap:8px"><span><strong>{{p.alloc}}</strong> / {{p.locked}} md</span><span class="sub">{{p.pct}}%</span></div>
+                <div style="height:8px;border-radius:99px;background:#E8E6DF;overflow:hidden;margin:6px 0 4px"><div style="height:100%;border-radius:99px;width:{{p.pct}}%;background:{{p.barColor}}"></div></div>
+                <div class="sub tn">Còn <strong style="{{p.remStyle}}">{{p.rem}} md</strong> · {{p.lockedMm}} mm chốt</div>
+              </span>
+              <span role="cell" class="r tn" style="color:var(--mute)">{{p.est}}</span>
+              <span role="cell"><span class="chip" style="{{p.statusChip}}">{{p.statusLabel}}</span></span>
+              <span role="cell" class="r" style="display:flex;gap:6px;justify-content:flex-end">
+                <button class="btn btn-sm btn-pri" onClick="{{p.allocate}}">Phân bổ</button>
+                <button class="btn btn-sm" onClick="{{p.edit}}">Sửa</button>
+                <button class="btn btn-sm btn-bad" onClick="{{p.del}}" aria-label="Xóa PYC">Xóa</button>
+              </span>
+            </div>
+          </sc-for>
+          <sc-if value="{{noPyc}}" hint-placeholder-val="{{ false }}"><div style="padding:32px;text-align:center;color:var(--mute)">Chưa có PYC nào. Bấm "+ Thêm PYC" để bắt đầu.</div></sc-if>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- TAB MEMBERS -->
+    <sc-if value="{{tabMembers}}" hint-placeholder-val="{{ false }}">
+    <div style="padding:16px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center" role="radiogroup" aria-label="Chọn PYC">
+        <span class="sub" style="font-weight:600;margin-right:4px">Xem theo PYC</span>
+        <sc-for list="{{memberReqOpts}}" as="o" hint-placeholder-count="2">
+          <button class="seg" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button>
+        </sc-for>
+      </div>
+      <div style="border:1px dashed #B9B6AB;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:12px">
+        <div style="font-weight:600">Gán nhân sự vào {{memberReqCode}}</div>
+        <sc-if value="{{hasAvail}}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-wrap:wrap;gap:8px" role="radiogroup" aria-label="Nhân sự đang làm">
+            <sc-for list="{{availOpts}}" as="o" hint-placeholder-count="2">
+              <button class="seg" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
+            <label class="field" style="flex:1 1 220px">Vai trò trong PYC<input class="inp" type="text" value="{{assignRoleVal}}" onInput="{{onAssignRole}}" placeholder="VD: Backend Dev, Tester, BA"></label>
+            <button class="btn btn-pri" onClick="{{assign}}">Gán vào PYC</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{noAvail}}" hint-placeholder-val="{{ false }}"><p class="sub">Mọi nhân sự đang làm đã được gán vào PYC này.</p></sc-if>
+      </div>
+      <div style="overflow-x:auto;border:1px solid var(--line);border-radius:12px">
+        <div role="table" aria-label="Nhân sự trong PYC" style="--cols:80px minmax(160px,1.4fr) 100px minmax(140px,1.2fr) 130px 150px 110px;min-width:880px">
+          <div class="thead" role="row"><span role="columnheader">Mã</span><span role="columnheader">Họ và tên</span><span role="columnheader">Vai trò chính</span><span role="columnheader">Vai trò trong PYC</span><span role="columnheader">Trạng thái</span><span role="columnheader" class="r">Đã phân bổ</span><span role="columnheader" class="r">Thao tác</span></div>
+          <sc-for list="{{memberRows}}" as="m" hint-placeholder-count="3">
+            <div class="trow" role="row">
+              <span role="cell" class="mono" style="font-weight:600">{{m.code}}</span>
+              <span role="cell" style="font-weight:600">{{m.name}}</span>
+              <span role="cell" style="color:var(--mute)">{{m.role}}</span>
+              <span role="cell"><span class="chip" style="background:#E2EEF9;color:#1B4A82">{{m.roleIn}}</span></span>
+              <span role="cell"><span class="chip" style="{{m.chip}}">{{m.statusLabel}}</span></span>
+              <span role="cell" class="r tn"><strong>{{m.md}} md</strong><br><span class="sub">{{m.mm}} mm</span></span>
+              <span role="cell" class="r"><button class="btn btn-sm btn-bad" onClick="{{m.remove}}">Gỡ</button></span>
+            </div>
+          </sc-for>
+          <sc-if value="{{noMembers}}" hint-placeholder-val="{{ false }}"><div style="padding:28px;text-align:center;color:var(--mute)">PYC này chưa có nhân sự nào.</div></sc-if>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- TAB ALLOCATIONS -->
+    <sc-if value="{{tabAlloc}}" hint-placeholder-val="{{ false }}">
+    <div style="padding:16px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center" role="radiogroup" aria-label="Lọc PYC">
+          <span class="sub" style="font-weight:600;margin-right:4px">Lọc</span>
+          <sc-for list="{{allocFilterOpts}}" as="o" hint-placeholder-count="3">
+            <button class="seg" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button>
+          </sc-for>
+        </div>
+        <button class="btn btn-pri" onClick="{{newAlloc}}">+ Tạo đợt phân bổ cuối tháng</button>
+      </div>
+      <sc-for list="{{batchCards}}" as="b" hint-placeholder-count="2">
+        <section style="border:1px solid var(--line);border-radius:12px;overflow:hidden">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 16px;background:#FAF9F5;border-bottom:1px solid var(--line)">
+            <span class="chip mono" style="background:var(--pri);color:#fff">T{{b.month}}</span>
+            <span style="font-weight:600;flex:1 1 220px"><span class="mono" style="color:var(--pri)">{{b.code}}</span> · {{b.name}}<br><span class="sub" style="font-weight:400">{{b.note}}</span></span>
+            <span class="tn" style="font-weight:700">{{b.total}} md <span class="sub" style="font-weight:400">({{b.totalMm}} mm)</span></span>
+            <button class="btn btn-sm" onClick="{{b.edit}}">Sửa đợt</button>
+            <button class="btn btn-sm btn-bad" onClick="{{b.del}}">Xóa đợt</button>
+          </div>
+          <div>
+            <sc-for list="{{b.items}}" as="i" hint-placeholder-count="2">
+              <div style="display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;padding:10px 16px;border-bottom:1px solid #EEECE5">
+                <span style="flex:1 1 200px;font-weight:600">{{i.who}}</span>
+                <span class="tn" style="width:90px;text-align:right;font-weight:700;color:var(--ok)">{{i.md}} md</span>
+                <span class="sub" style="flex:2 1 260px">{{i.note}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+      </sc-for>
+      <sc-if value="{{noBatches}}" hint-placeholder-val="{{ false }}"><div style="padding:36px;text-align:center;color:var(--mute);border:1px dashed #B9B6AB;border-radius:12px">Chưa có đợt phân bổ nào.</div></sc-if>
+    </div>
+    </sc-if>
+
+    <!-- TAB DOCS -->
+    <sc-if value="{{tabDocs}}" hint-placeholder-val="{{ false }}">
+    <div style="padding:16px 0 0">
+      <div style="padding:0 16px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between">
+        <p style="color:var(--mute)">Lưu liên kết tài liệu (SharePoint, Drive, Confluence...). Gắn chung dự án hoặc riêng từng PYC.</p>
+        <button class="btn btn-pri" onClick="{{newDoc}}">+ Thêm hồ sơ</button>
+      </div>
+      <div style="overflow-x:auto">
+        <div role="table" aria-label="Hồ sơ dự án" style="--cols:minmax(220px,2fr) 130px 120px minmax(160px,1.4fr) minmax(120px,1fr) 80px;min-width:900px">
+          <div class="thead" role="row"><span role="columnheader">Tiêu đề</span><span role="columnheader">Loại</span><span role="columnheader">Gắn với</span><span role="columnheader">Liên kết</span><span role="columnheader">Ghi chú</span><span role="columnheader" class="r">Thao tác</span></div>
+          <sc-for list="{{docRows}}" as="d" hint-placeholder-count="2">
+            <div class="trow" role="row">
+              <span role="cell" style="font-weight:600">{{d.title}}</span>
+              <span role="cell"><span class="chip" style="background:#ECEAE4;color:#444C55">{{d.type}}</span></span>
+              <span role="cell" class="mono" style="font-size:12.5px">{{d.scope}}</span>
+              <span role="cell"><a href="{{d.url}}" target="_blank" rel="noopener">Mở liên kết ↗</a></span>
+              <span role="cell" class="sub">{{d.note}}</span>
+              <span role="cell" class="r"><button class="btn btn-sm btn-bad" onClick="{{d.del}}">Xóa</button></span>
+            </div>
+          </sc-for>
+          <sc-if value="{{noDocs}}" hint-placeholder-val="{{ false }}"><div style="padding:28px;text-align:center;color:var(--mute)">Chưa có hồ sơ nào.</div></sc-if>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- TAB BBNT -->
+    <sc-if value="{{tabBbnt}}" hint-placeholder-val="{{ false }}">
+    <div style="padding:16px 0 0">
+      <div style="padding:0 16px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between">
+        <p style="color:var(--mute)">Một PYC có thể có nhiều biên bản. Khi đánh dấu <strong>Đã gửi</strong>, hệ thống tự ghi ngày gửi (BR-09).</p>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span class="chip" style="background:#FBEFD0;color:#7A4F00">{{unsentCount}} biên bản chưa gửi</span>
+          <button class="btn btn-pri" onClick="{{newBbnt}}">+ Thêm biên bản</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <div role="table" aria-label="Biên bản nghiệm thu" style="--cols:100px minmax(220px,2fr) 100px 110px 230px 110px;min-width:960px">
+          <div class="thead" role="row"><span role="columnheader">Mã BBNT</span><span role="columnheader">Tiêu đề</span><span role="columnheader">PYC</span><span role="columnheader">File</span><span role="columnheader">Gửi khách</span><span role="columnheader" class="r">Thao tác</span></div>
+          <sc-for list="{{bbntRows}}" as="b" hint-placeholder-count="2">
+            <div class="trow" role="row">
+              <span role="cell" class="mono" style="font-weight:600">{{b.code}}</span>
+              <span role="cell" style="font-weight:600">{{b.title}}</span>
+              <span role="cell" class="mono" style="color:var(--pri);font-weight:600">{{b.req}}</span>
+              <span role="cell"><a href="{{b.url}}" target="_blank" rel="noopener">Mở file ↗</a></span>
+              <span role="cell" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+                <span class="chip" style="{{b.chip}}">{{b.label}}</span>
+                <button class="btn btn-sm" onClick="{{b.toggle}}">{{b.toggleLabel}}</button>
+              </span>
+              <span role="cell" class="r"><button class="btn btn-sm btn-bad" onClick="{{b.del}}">Xóa</button></span>
+            </div>
+          </sc-for>
+          <sc-if value="{{noBbnt}}" hint-placeholder-val="{{ false }}"><div style="padding:28px;text-align:center;color:var(--mute)">Chưa có biên bản nghiệm thu nào.</div></sc-if>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+
+<!-- ======== PERSONNEL ======== -->
+<sc-if value="{{isPers}}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:18px">
+  <header style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px">
+    <div>
+      <h1 style="font-size:26px;letter-spacing:-.01em">Nhân sự</h1>
+      <p style="margin-top:4px;color:var(--mute)">Danh mục dùng chung. Nhân sự "Đã nghỉ" giữ nguyên phân bổ lịch sử nhưng không thể phân bổ mới (BR-03).</p>
+    </div>
+    <button class="btn btn-pri" onClick="{{newPers}}">+ Thêm nhân sự</button>
+  </header>
+  <section class="card" style="overflow:hidden">
+    <div style="overflow-x:auto">
+      <div role="table" aria-label="Danh mục nhân sự" style="--cols:80px minmax(170px,1.6fr) 110px 160px minmax(160px,1.6fr) 80px 90px;min-width:880px">
+        <div class="thead" role="row"><span role="columnheader">Mã</span><span role="columnheader">Họ và tên</span><span role="columnheader">Vai trò</span><span role="columnheader">Trạng thái</span><span role="columnheader">Ghi chú</span><span role="columnheader" class="r">Đang ở PYC</span><span role="columnheader" class="r">Thao tác</span></div>
+        <sc-for list="{{persRows}}" as="p" hint-placeholder-count="4">
+          <div class="trow" role="row">
+            <span role="cell" class="mono" style="font-weight:600">{{p.code}}</span>
+            <span role="cell" style="font-weight:600">{{p.name}}</span>
+            <span role="cell">{{p.role}}</span>
+            <span role="cell"><button class="chip" style="border:0;min-height:28px;{{p.chip}}" onClick="{{p.toggle}}" aria-label="Đổi trạng thái nhân sự">{{p.statusLabel}}</button></span>
+            <span role="cell" class="sub">{{p.note}}</span>
+            <span role="cell" class="r tn">{{p.count}}</span>
+            <span role="cell" class="r"><button class="btn btn-sm" onClick="{{p.edit}}">Sửa</button></span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+</div>
+</sc-if>
+
+<!-- ======== AUDIT ======== -->
+<sc-if value="{{isAudit}}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:18px">
+  <header>
+    <h1 style="font-size:26px;letter-spacing:-.01em">Nhật ký thay đổi</h1>
+    <p style="margin-top:4px;color:var(--mute)">Tự động ghi mọi thao tác thêm mới, cập nhật, xóa mềm và khôi phục.</p>
+  </header>
+  <div style="display:flex;flex-wrap:wrap;gap:8px" role="radiogroup" aria-label="Lọc hành động">
+    <sc-for list="{{auditFilterOpts}}" as="o" hint-placeholder-count="5">
+      <button class="seg" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button>
+    </sc-for>
+  </div>
+  <section class="card" style="overflow:hidden">
+    <div style="overflow-x:auto">
+      <div role="table" aria-label="Nhật ký" style="--cols:170px 170px minmax(150px,1.3fr) 120px 120px minmax(220px,2fr);min-width:1000px">
+        <div class="thead" role="row"><span role="columnheader">Thời điểm</span><span role="columnheader">Bảng</span><span role="columnheader">Bản ghi</span><span role="columnheader">Hành động</span><span role="columnheader">Trường</span><span role="columnheader">Cũ → Mới</span></div>
+        <sc-for list="{{auditRows}}" as="l" hint-placeholder-count="4">
+          <div class="trow" role="row">
+            <span role="cell" class="mono tn" style="font-size:12px;color:var(--mute)">{{l.time}}</span>
+            <span role="cell" class="mono" style="font-size:12px;font-weight:600">{{l.table}}</span>
+            <span role="cell" style="font-weight:600">{{l.record}}</span>
+            <span role="cell"><span class="chip" style="{{l.chip}}">{{l.label}}</span></span>
+            <span role="cell" class="mono" style="font-size:12px">{{l.field}}</span>
+            <span role="cell">{{l.change}}</span>
+          </div>
+        </sc-for>
+        <sc-if value="{{noAudit}}" hint-placeholder-val="{{ false }}"><div style="padding:28px;text-align:center;color:var(--mute)">Không có bản ghi nào cho bộ lọc này.</div></sc-if>
+      </div>
+    </div>
+  </section>
+</div>
+</sc-if>
+
+<!-- ======== TRASH ======== -->
+<sc-if value="{{isTrash}}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:18px">
+  <header>
+    <h1 style="font-size:26px;letter-spacing:-.01em">Thùng rác</h1>
+    <p style="margin-top:4px;color:var(--mute)">Bản ghi xóa mềm không tính vào tổng nỗ lực. Khi khôi phục đợt phân bổ, hệ thống kiểm tra lại trần nỗ lực chốt (BR-04).</p>
+  </header>
+  <section class="card" style="overflow:hidden">
+    <div style="overflow-x:auto">
+      <div role="table" aria-label="Bản ghi đã xóa mềm" style="--cols:140px minmax(220px,2fr) minmax(160px,1.4fr) 130px;min-width:720px">
+        <div class="thead" role="row"><span role="columnheader">Loại</span><span role="columnheader">Bản ghi</span><span role="columnheader">Tác động nỗ lực</span><span role="columnheader" class="r">Thao tác</span></div>
+        <sc-for list="{{trashRows}}" as="t" hint-placeholder-count="2">
+          <div class="trow" role="row">
+            <span role="cell"><span class="chip" style="{{t.chip}}">{{t.kind}}</span></span>
+            <span role="cell" style="font-weight:600">{{t.title}}</span>
+            <span role="cell" class="sub">{{t.impact}}</span>
+            <span role="cell" class="r"><button class="btn btn-sm btn-pri" onClick="{{t.restore}}">Khôi phục</button></span>
+          </div>
+        </sc-for>
+        <sc-if value="{{noTrash}}" hint-placeholder-val="{{ true }}"><div style="padding:40px;text-align:center;color:var(--mute)">Thùng rác trống.</div></sc-if>
+      </div>
+    </div>
+  </section>
+</div>
+</sc-if>
+
+</main>
+</div>
+
+<!-- ============ MODAL: ALLOCATION ============ -->
+<sc-if value="{{av.open}}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;background:rgba(16,32,42,.58);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50">
+  <div role="dialog" aria-modal="true" aria-label="Đợt phân bổ cuối tháng" class="card" style="width:100%;max-width:780px;max-height:94vh;display:flex;flex-direction:column;overflow:hidden;border-radius:16px">
+    <div style="padding:16px 22px;background:#10202A;color:#fff;display:flex;align-items:center;justify-content:space-between">
+      <h3 style="font-size:16px">{{av.title}}</h3>
+      <button class="btn btn-sm" onClick="{{av.close}}" aria-label="Đóng" style="background:transparent;color:#fff;border-color:#4A6070">Đóng</button>
+    </div>
+    <div style="padding:20px 22px;overflow-y:auto;display:flex;flex-direction:column;gap:18px">
+      <div style="display:flex;flex-direction:column;gap:8px" role="radiogroup" aria-label="Chọn PYC">
+        <span class="sub" style="font-weight:600">PYC</span>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <sc-for list="{{av.reqOpts}}" as="o" hint-placeholder-count="2">
+            <button class="seg" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:14px">
+        <label class="field" style="flex:1 1 180px">Tháng phân bổ<input class="inp" type="month" value="{{av.month}}" onInput="{{av.onMonth}}"></label>
+        <label class="field" style="flex:3 1 280px">Ghi chú đợt<input class="inp" type="text" value="{{av.note}}" onInput="{{av.onNote}}" placeholder="VD: Phân bổ nỗ lực đợt cuối tháng"></label>
+      </div>
+
+      <div aria-live="polite" style="{{av.boxStyle}};border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px">
+          <span style="font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink)">Cân đối nỗ lực theo thời gian thực</span>
+          <span class="chip" style="{{av.pillStyle}}">{{av.pill}}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px">
+          <div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px"><div class="sub">Chốt (A)</div><div class="tn" style="font-size:18px;font-weight:700">{{av.A}}</div></div>
+          <div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px"><div class="sub">Đợt khác (B)</div><div class="tn" style="font-size:18px;font-weight:700">{{av.B}}</div></div>
+          <div style="background:#fff;border:2px solid var(--pri);border-radius:10px;padding:9px 11px"><div class="sub" style="color:var(--pri);font-weight:600">Đợt này (C)</div><div class="tn" style="font-size:18px;font-weight:700;color:var(--pri)">{{av.C}}</div></div>
+          <div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px"><div class="sub">Còn lại (A − B − C)</div><div class="tn" style="font-size:18px;font-weight:700;{{av.remStyle}}">{{av.rem}}</div></div>
+        </div>
+        <div style="height:10px;border-radius:99px;background:#DAD7CD;overflow:hidden;display:flex" role="img" aria-label="{{av.barLabel}}">
+          <div style="height:100%;width:{{av.bPct}}%;background:#5B6B77"></div>
+          <div style="height:100%;width:{{av.cPct}}%;background:{{av.cColor}}"></div>
+        </div>
+        <sc-if value="{{av.hasBanner}}" hint-placeholder-val="{{ false }}"><p style="font-size:13px;font-weight:600;color:var(--bad)">{{av.banner}}</p></sc-if>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <span style="font-size:13px;font-weight:700">Chi tiết nhân sự trong đợt</span>
+          <sc-if value="{{av.canAdd}}" hint-placeholder-val="{{ true }}"><button class="btn btn-sm" onClick="{{av.addRow}}">+ Thêm dòng</button></sc-if>
+        </div>
+        <sc-if value="{{av.noMembers}}" hint-placeholder-val="{{ false }}"><p style="color:var(--bad);font-weight:600;font-size:13px">PYC này chưa có nhân sự đang làm nào được gán (BR-03). Hãy sang tab "Nhân sự tham gia" để gán trước.</p></sc-if>
+        <sc-for list="{{av.rows}}" as="r" hint-placeholder-count="2">
+          <div style="border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;background:#FDFCFA">
+            <div style="display:flex;flex-wrap:wrap;gap:6px" role="radiogroup" aria-label="Nhân sự">
+              <sc-for list="{{r.options}}" as="o" hint-placeholder-count="3">
+                <button class="seg" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button>
+              </sc-for>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start">
+              <label class="field" style="flex:0 0 150px">Nỗ lực (md)<input class="inp tn" type="text" inputmode="decimal" value="{{r.md}}" onInput="{{r.onMd}}" placeholder="0.0" style="border-color:{{r.border}};font-weight:700;text-align:right"></label>
+              <label class="field" style="flex:1 1 220px">Ghi chú công việc<input class="inp" type="text" value="{{r.note}}" onInput="{{r.onNote}}" placeholder="Công việc đã làm trong tháng"></label>
+              <button class="btn btn-sm btn-bad" onClick="{{r.onRemove}}" style="margin-top:22px" aria-label="Xóa dòng">Xóa dòng</button>
+            </div>
+            <sc-if value="{{r.hasErr}}" hint-placeholder-val="{{ false }}"><p style="font-size:12.5px;font-weight:600;color:var(--bad)">{{r.err}}</p></sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="padding:14px 22px;background:#FAF9F5;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px">
+      <button class="btn" onClick="{{av.close}}">Hủy</button>
+      <button class="btn btn-pri" onClick="{{av.save}}" disabled="{{av.cantSave}}">Lưu đợt phân bổ</button>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ MODAL: PYC ============ -->
+<sc-if value="{{pv.open}}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;background:rgba(16,32,42,.58);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50">
+  <div role="dialog" aria-modal="true" aria-label="Thông tin PYC" class="card" style="width:100%;max-width:640px;max-height:94vh;display:flex;flex-direction:column;overflow:hidden;border-radius:16px">
+    <div style="padding:16px 22px;background:#10202A;color:#fff;display:flex;align-items:center;justify-content:space-between">
+      <h3 style="font-size:16px">{{pv.title}}</h3>
+      <button class="btn btn-sm" onClick="{{pv.close}}" aria-label="Đóng" style="background:transparent;color:#fff;border-color:#4A6070">Đóng</button>
+    </div>
+    <div style="padding:20px 22px;overflow-y:auto;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;flex-wrap:wrap;gap:14px">
+        <label class="field" style="flex:1 1 160px">Mã PYC (duy nhất trong dự án)<input class="inp mono" type="text" value="{{pv.code}}" onInput="{{pv.on.code}}"></label>
+        <label class="field" style="flex:3 1 280px">Tên PYC<input class="inp" type="text" value="{{pv.name}}" onInput="{{pv.on.name}}" placeholder="Nhập tên yêu cầu"></label>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px" role="radiogroup" aria-label="Loại PYC">
+        <span class="sub" style="font-weight:600">Loại PYC</span>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <sc-for list="{{pv.typeOpts}}" as="o" hint-placeholder-count="4"><button class="seg" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button></sc-for>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:14px;background:#E8F2F3;border:1px solid #B5D3D7;border-radius:12px;padding:14px">
+        <label class="field" style="flex:1 1 180px">Nỗ lực ước tính (md, tùy chọn)<input class="inp tn" type="text" inputmode="decimal" value="{{pv.est}}" onInput="{{pv.on.est}}"></label>
+        <label class="field" style="flex:1 1 180px;color:var(--pri)">Nỗ lực chốt (md) · bước 0.1<input class="inp tn" type="text" inputmode="decimal" value="{{pv.locked}}" onInput="{{pv.on.locked}}" style="border:2px solid var(--pri);font-weight:700"></label>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px" role="radiogroup" aria-label="Trạng thái PYC">
+        <span class="sub" style="font-weight:600">Trạng thái</span>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <sc-for list="{{pv.statusOpts}}" as="o" hint-placeholder-count="5"><button class="seg" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button></sc-for>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:14px">
+        <label class="field" style="flex:1 1 180px">Hạn hoàn thành<input class="inp" type="date" value="{{pv.deadline}}" onInput="{{pv.on.deadline}}"></label>
+        <label class="field" style="flex:2 1 240px">Người yêu cầu (khách hàng)<input class="inp" type="text" value="{{pv.requester}}" onInput="{{pv.on.requester}}" placeholder="VD: Anh Nam - P.Kế toán"></label>
+      </div>
+      <label class="field">Link Jira / ITSM<input class="inp" type="text" value="{{pv.link}}" onInput="{{pv.on.link}}" placeholder="https://jira..."></label>
+      <sc-if value="{{pv.hasErr}}" hint-placeholder-val="{{ false }}"><p style="font-size:13px;font-weight:600;color:var(--bad)" aria-live="polite">{{pv.err}}</p></sc-if>
+    </div>
+    <div style="padding:14px 22px;background:#FAF9F5;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px">
+      <button class="btn" onClick="{{pv.close}}">Hủy</button>
+      <button class="btn btn-pri" onClick="{{pv.save}}">Lưu PYC</button>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ MODAL: DOC ============ -->
+<sc-if value="{{dv.open}}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;background:rgba(16,32,42,.58);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50">
+  <div role="dialog" aria-modal="true" aria-label="Thêm hồ sơ" class="card" style="width:100%;max-width:520px;max-height:94vh;display:flex;flex-direction:column;overflow:hidden;border-radius:16px">
+    <div style="padding:16px 22px;background:#10202A;color:#fff;display:flex;align-items:center;justify-content:space-between">
+      <h3 style="font-size:16px">Thêm hồ sơ dự án</h3>
+      <button class="btn btn-sm" onClick="{{dv.close}}" aria-label="Đóng" style="background:transparent;color:#fff;border-color:#4A6070">Đóng</button>
+    </div>
+    <div style="padding:20px 22px;overflow-y:auto;display:flex;flex-direction:column;gap:14px">
+      <label class="field">Tiêu đề<input class="inp" type="text" value="{{dv.title}}" onInput="{{dv.on.title}}" placeholder="VD: Biên bản họp khởi động"></label>
+      <label class="field">Loại tài liệu<input class="inp" type="text" value="{{dv.type}}" onInput="{{dv.on.type}}" placeholder="Đề cương, SRS, Thiết kế..."></label>
+      <div style="display:flex;flex-direction:column;gap:8px" role="radiogroup" aria-label="Gắn với">
+        <span class="sub" style="font-weight:600">Gắn với</span>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <sc-for list="{{dv.scopeOpts}}" as="o" hint-placeholder-count="3"><button class="seg" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button></sc-for>
+        </div>
+      </div>
+      <label class="field">Liên kết (SharePoint / Drive)<input class="inp" type="text" value="{{dv.url}}" onInput="{{dv.on.url}}" placeholder="https://..."></label>
+      <label class="field">Ghi chú<input class="inp" type="text" value="{{dv.note}}" onInput="{{dv.on.note}}"></label>
+      <sc-if value="{{dv.hasErr}}" hint-placeholder-val="{{ false }}"><p style="font-size:13px;font-weight:600;color:var(--bad)">{{dv.err}}</p></sc-if>
+    </div>
+    <div style="padding:14px 22px;background:#FAF9F5;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px">
+      <button class="btn" onClick="{{dv.close}}">Hủy</button>
+      <button class="btn btn-pri" onClick="{{dv.save}}">Lưu hồ sơ</button>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ MODAL: PERSONNEL ============ -->
+<sc-if value="{{nv.open}}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;background:rgba(16,32,42,.58);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50">
+  <div role="dialog" aria-modal="true" aria-label="Thông tin nhân sự" class="card" style="width:100%;max-width:520px;max-height:94vh;display:flex;flex-direction:column;overflow:hidden;border-radius:16px">
+    <div style="padding:16px 22px;background:#10202A;color:#fff;display:flex;align-items:center;justify-content:space-between">
+      <h3 style="font-size:16px">{{nv.title}}</h3>
+      <button class="btn btn-sm" onClick="{{nv.close}}" aria-label="Đóng" style="background:transparent;color:#fff;border-color:#4A6070">Đóng</button>
+    </div>
+    <div style="padding:20px 22px;overflow-y:auto;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;flex-wrap:wrap;gap:14px">
+        <label class="field" style="flex:1 1 120px">Mã nhân sự<input class="inp mono" type="text" value="{{nv.code}}" onInput="{{nv.on.code}}"></label>
+        <label class="field" style="flex:3 1 240px">Họ và tên<input class="inp" type="text" value="{{nv.name}}" onInput="{{nv.on.name}}"></label>
+      </div>
+      <label class="field">Vai trò chính<input class="inp" type="text" value="{{nv.role}}" onInput="{{nv.on.role}}" placeholder="Dev / Tester / BA"></label>
+      <div style="display:flex;flex-direction:column;gap:8px" role="radiogroup" aria-label="Trạng thái">
+        <span class="sub" style="font-weight:600">Trạng thái</span>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <sc-for list="{{nv.statusOpts}}" as="o" hint-placeholder-count="2"><button class="seg" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button></sc-for>
+        </div>
+      </div>
+      <label class="field">Ghi chú<input class="inp" type="text" value="{{nv.note}}" onInput="{{nv.on.note}}"></label>
+      <sc-if value="{{nv.hasErr}}" hint-placeholder-val="{{ false }}"><p style="font-size:13px;font-weight:600;color:var(--bad)">{{nv.err}}</p></sc-if>
+    </div>
+    <div style="padding:14px 22px;background:#FAF9F5;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px">
+      <button class="btn" onClick="{{nv.close}}">Hủy</button>
+      <button class="btn btn-pri" onClick="{{nv.save}}">Lưu</button>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ MODAL: PROJECT ============ -->
+<sc-if value="{{mj.open}}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;background:rgba(16,32,42,.58);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50">
+  <div role="dialog" aria-modal="true" aria-label="Thông tin dự án" class="card" style="width:100%;max-width:520px;max-height:94vh;display:flex;flex-direction:column;overflow:hidden;border-radius:16px">
+    <div style="padding:16px 22px;background:#10202A;color:#fff;display:flex;align-items:center;justify-content:space-between">
+      <h3 style="font-size:16px">{{mj.title}}</h3>
+      <button class="btn btn-sm" onClick="{{mj.close}}" aria-label="Đóng" style="background:transparent;color:#fff;border-color:#4A6070">Đóng</button>
+    </div>
+    <div style="padding:20px 22px;overflow-y:auto;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;flex-wrap:wrap;gap:14px">
+        <label class="field" style="flex:1 1 130px">Mã dự án (duy nhất)<input class="inp mono" type="text" value="{{mj.code}}" onInput="{{mj.on.code}}" placeholder="VD: DA-02"></label>
+        <label class="field" style="flex:3 1 240px">Tên dự án<input class="inp" type="text" value="{{mj.name}}" onInput="{{mj.on.name}}" placeholder="Nhập tên dự án"></label>
+      </div>
+      <label class="field">Khách hàng / Đối tác<input class="inp" type="text" value="{{mj.customer}}" onInput="{{mj.on.customer}}" placeholder="VD: Viettel / Khối CNTT"></label>
+      <div style="display:flex;flex-direction:column;gap:8px" role="radiogroup" aria-label="Trạng thái dự án">
+        <span class="sub" style="font-weight:600">Trạng thái</span>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <sc-for list="{{mj.statusOpts}}" as="o" hint-placeholder-count="3"><button class="seg" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button></sc-for>
+        </div>
+      </div>
+      <sc-if value="{{mj.hasErr}}" hint-placeholder-val="{{ false }}"><p style="font-size:13px;font-weight:600;color:var(--bad)" aria-live="polite">{{mj.err}}</p></sc-if>
+    </div>
+    <div style="padding:14px 22px;background:#FAF9F5;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px">
+      <button class="btn" onClick="{{mj.close}}">Hủy</button>
+      <button class="btn btn-pri" onClick="{{mj.save}}">Lưu dự án</button>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ MODAL: BBNT ============ -->
+<sc-if value="{{bv.open}}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;background:rgba(16,32,42,.58);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50">
+  <div role="dialog" aria-modal="true" aria-label="Biên bản nghiệm thu" class="card" style="width:100%;max-width:540px;max-height:94vh;display:flex;flex-direction:column;overflow:hidden;border-radius:16px">
+    <div style="padding:16px 22px;background:#10202A;color:#fff;display:flex;align-items:center;justify-content:space-between">
+      <h3 style="font-size:16px">Thêm biên bản nghiệm thu</h3>
+      <button class="btn btn-sm" onClick="{{bv.close}}" aria-label="Đóng" style="background:transparent;color:#fff;border-color:#4A6070">Đóng</button>
+    </div>
+    <div style="padding:20px 22px;overflow-y:auto;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;flex-wrap:wrap;gap:14px">
+        <label class="field" style="flex:1 1 130px">Mã BBNT<input class="inp mono" type="text" value="{{bv.code}}" onInput="{{bv.on.code}}" placeholder="BBNT-03"></label>
+        <label class="field" style="flex:3 1 240px">Tiêu đề biên bản<input class="inp" type="text" value="{{bv.title}}" onInput="{{bv.on.title}}" placeholder="VD: Nghiệm thu PYC-001"></label>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px" role="radiogroup" aria-label="Gắn PYC">
+        <span class="sub" style="font-weight:600">Gắn với PYC</span>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <sc-for list="{{bv.reqOpts}}" as="o" hint-placeholder-count="2"><button class="seg" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button></sc-for>
+        </div>
+      </div>
+      <label class="field">Liên kết file (Drive / SharePoint)<input class="inp" type="text" value="{{bv.url}}" onInput="{{bv.on.url}}" placeholder="https://drive.google.com/..."></label>
+      <div style="display:flex;flex-direction:column;gap:8px" role="radiogroup" aria-label="Trạng thái gửi">
+        <span class="sub" style="font-weight:600">Trạng thái gửi khách</span>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <sc-for list="{{bv.statusOpts}}" as="o" hint-placeholder-count="2"><button class="seg" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button></sc-for>
+        </div>
+      </div>
+      <sc-if value="{{bv.hasErr}}" hint-placeholder-val="{{ false }}"><p style="font-size:13px;font-weight:600;color:var(--bad)">{{bv.err}}</p></sc-if>
+    </div>
+    <div style="padding:14px 22px;background:#FAF9F5;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px">
+      <button class="btn" onClick="{{bv.close}}">Hủy</button>
+      <button class="btn btn-pri" onClick="{{bv.save}}">Lưu biên bản</button>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ MODAL: EXCEL IMPORT / EXPORT ============ -->
+<sc-if value="{{xv.open}}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;background:rgba(16,32,42,.58);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50">
+  <div role="dialog" aria-modal="true" aria-label="Nhập Xuất Excel" class="card" style="width:100%;max-width:740px;max-height:94vh;display:flex;flex-direction:column;overflow:hidden;border-radius:16px">
+    <div style="padding:16px 22px;background:#10202A;color:#fff;display:flex;align-items:center;justify-content:space-between">
+      <h3 style="font-size:16px">Nhập / Xuất Excel (Dry-run Validate &amp; Upsert chống trùng)</h3>
+      <button class="btn btn-sm" onClick="{{xv.close}}" aria-label="Đóng" style="background:transparent;color:#fff;border-color:#4A6070">Đóng</button>
+    </div>
+    <div style="padding:20px 22px;overflow-y:auto;display:flex;flex-direction:column;gap:16px">
+      <div style="border:1px solid var(--line);border-radius:12px;padding:14px;background:#FAF9F5;display:flex;flex-direction:column;gap:10px">
+        <div style="font-weight:700">1. Xuất dữ liệu ra Excel / CSV (mở trực tiếp bằng Microsoft Excel)</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <button class="btn btn-sm btn-pri" onClick="{{xv.expPyc}}">⬇ Xuất danh sách PYC</button>
+          <button class="btn btn-sm btn-pri" onClick="{{xv.expAlloc}}">⬇ Xuất phân bổ nỗ lực</button>
+          <button class="btn btn-sm btn-pri" onClick="{{xv.expBbnt}}">⬇ Xuất biên bản nghiệm thu</button>
+          <button class="btn btn-sm btn-pri" onClick="{{xv.expPers}}">⬇ Xuất danh mục nhân sự</button>
+        </div>
+      </div>
+
+      <div style="border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px">
+          <div>
+            <div style="font-weight:700">2. Nhập Excel (Dry-run kiểm tra lỗi theo dòng &amp; Upsert không tạo trùng)</div>
+            <div class="sub">Kiểm tra BR-01, BR-02, BR-07 trước khi lưu. Nếu trùng mã sẽ tự động cập nhật (Upsert).</div>
+          </div>
+          <button class="btn btn-sm" onClick="{{xv.runSample}}">Chạy kiểm tra mẫu</button>
+        </div>
+        <div style="overflow-x:auto;border:1px solid var(--line);border-radius:10px">
+          <div role="table" aria-label="Kết quả Dry-run" style="--cols:60px 180px 100px minmax(220px,1.8fr);min-width:580px">
+            <div class="thead" role="row"><span role="columnheader">Dòng</span><span role="columnheader">Khóa bản ghi</span><span role="columnheader">Chế độ</span><span role="columnheader">Kết quả kiểm tra</span></div>
+            <sc-for list="{{xv.rows}}" as="r" hint-placeholder-count="4">
+              <div class="trow" role="row">
+                <span role="cell" class="mono tn">#{{r.row}}</span>
+                <span role="cell" class="mono" style="font-weight:600">{{r.key}}</span>
+                <span role="cell"><span class="chip" style="{{r.chip}}">{{r.mode}}</span></span>
+                <span role="cell" style="{{r.msgStyle}}">{{r.message}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="padding:14px 22px;background:#FAF9F5;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px">
+      <button class="btn" onClick="{{xv.close}}">Đóng</button>
+      <button class="btn btn-pri" onClick="{{xv.commit}}">Chỉ nạp các dòng hợp lệ (Upsert)</button>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ DIALOG: CONFIRM ============ -->
+<sc-if value="{{cv.open}}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;background:rgba(16,32,42,.58);display:flex;align-items:center;justify-content:center;padding:16px;z-index:60">
+  <div role="alertdialog" aria-modal="true" aria-label="{{cv.title}}" class="card" style="width:100%;max-width:440px;padding:22px;display:flex;flex-direction:column;gap:12px;border-radius:16px">
+    <h3 style="font-size:17px">{{cv.title}}</h3>
+    <p style="color:var(--mute)">{{cv.body}}</p>
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:6px">
+      <button class="btn" onClick="{{cv.cancel}}">Hủy</button>
+      <button class="btn btn-pri" onClick="{{cv.ok}}" style="{{cv.okStyle}}">{{cv.okLabel}}</button>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ TOAST ============ -->
+<sc-if value="{{tv.open}}" hint-placeholder-val="{{ false }}">
+<div role="status" aria-live="polite" style="position:fixed;right:20px;bottom:20px;z-index:70;max-width:420px;display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;box-shadow:0 8px 28px rgba(16,32,42,.3);{{tv.style}}">
+  <span style="flex:1;font-weight:600;font-size:13.5px">{{tv.msg}}</span>
+  <sc-if value="{{tv.hasUndo}}" hint-placeholder-val="{{ false }}"><button class="btn btn-sm" onClick="{{tv.undo}}">Hoàn tác</button></sc-if>
+  <button class="btn btn-sm" onClick="{{tv.close}}" aria-label="Đóng thông báo" style="background:transparent;color:inherit;border-color:currentColor">Đóng</button>
+</div>
+</sc-if>
+
+</x-dc>
+
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = this.initial();
+    this.apiBase = 'http://localhost:3000/api';
+  }
+
+  componentDidMount() {
+    this.syncFromServer();
+  }
+
+  async syncFromServer() {
+    try {
+      const res = await fetch(this.apiBase + '/state');
+      if (res.ok) {
+        const db = await res.json();
+        this.setState({ db, apiConnected: true });
+      }
+    } catch (_) {
+      this.setState({ apiConnected: false });
+    }
+  }
+
+  async callApi(method, path, body) {
+    try {
+      const res = await fetch(this.apiBase + path, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: body ? JSON.stringify(body) : undefined
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.db) {
+          this.setState({ db: data.db, apiConnected: true });
+          return data;
+        }
+      }
+    } catch (_) {
+      this.setState({ apiConnected: false });
+    }
+    return null;
+  }
+
+  initial() {
+    return {
+      screen: 'projects', tab: 'pyc', curProj: 1, memberReq: 1, allocFilter: 'ALL', auditFilter: 'ALL',
+      assignPers: 0, assignRole: '', apiConnected: false,
+      alloc: null, pyc: null, doc: null, pers: null, proj: null, bbntModal: null, excelModal: null, confirm: null, toast: null,
+      db: {
+        projects: [
+          { id: 1, code: 'DA-01', name: 'Cổng thông tin khách hàng', customer: 'Viettel / Khối CNTT', status: 'ACTIVE', del: false }
+        ],
+        requests: [
+          { id: 1, proj: 1, code: 'PYC-001', name: 'Thêm báo cáo doanh thu', type: 'CR', deadline: '2026-12-15', status: 'IN_PROGRESS', requester: 'Anh Nam - P.Kế toán', link: 'https://jira.example.com/browse/PYC-001', est: 28, locked: 30, del: false },
+          { id: 2, proj: 1, code: 'PYC-002', name: 'Sửa lỗi xuất Excel', type: 'BUG', deadline: '2026-11-10', status: 'IN_PROGRESS', requester: 'Chị Hương - Vận hành', link: 'https://jira.example.com/browse/PYC-002', est: 8, locked: 10, del: false }
+        ],
+        personnel: [
+          { id: 1, code: 'NS01', name: 'Nguyễn Văn An', role: 'Dev', status: 'ACTIVE', note: 'Backend Core', del: false },
+          { id: 2, code: 'NS02', name: 'Trần Văn Bình', role: 'Dev', status: 'ACTIVE', note: 'Frontend Angular', del: false },
+          { id: 3, code: 'NS03', name: 'Lê Thị Chi', role: 'Tester', status: 'ACTIVE', note: 'QA / Tester', del: false },
+          { id: 4, code: 'NS04', name: 'Phạm Văn Dũng', role: 'BA', status: 'INACTIVE', note: 'Đã nghỉ việc từ T09/2026', del: false }
+        ],
+        members: [
+          { id: 1, req: 1, pers: 1, role: 'Backend Dev', del: false },
+          { id: 2, req: 1, pers: 2, role: 'Frontend Dev', del: false },
+          { id: 3, req: 1, pers: 3, role: 'Tester', del: false },
+          { id: 4, req: 2, pers: 2, role: 'Frontend Dev', del: false }
+        ],
+        batches: [
+          { id: 1, req: 1, month: '2026-10', note: 'Phân bổ nỗ lực đợt cuối T10/2026', del: false },
+          { id: 2, req: 1, month: '2026-11', note: 'Phân bổ nỗ lực đợt cuối T11/2026', del: false },
+          { id: 3, req: 2, month: '2026-10', note: 'Xử lý lỗi xuất file Excel T10/2026', del: false }
+        ],
+        items: [
+          { id: 1, batch: 1, pers: 1, md: 10, note: 'Thiết kế DB + API báo cáo', del: false },
+          { id: 2, batch: 1, pers: 2, md: 6.5, note: 'Giao diện bảng biểu báo cáo', del: false },
+          { id: 3, batch: 2, pers: 1, md: 8, note: 'Tối ưu truy vấn và xuất file', del: false },
+          { id: 4, batch: 2, pers: 3, md: 3.5, note: 'Kiểm thử SIT và UAT', del: false },
+          { id: 5, batch: 3, pers: 2, md: 4, note: 'Fix lỗi tràn bộ nhớ khi xuất Excel', del: false }
+        ],
+        docs: [
+          { id: 1, proj: 1, req: null, title: 'Đề cương và kiến trúc tổng thể DA-01', type: 'Đề cương', url: 'https://sharepoint.example.com/da01-spec', note: 'Bản chốt v1.2', del: false },
+          { id: 2, proj: 1, req: 1, title: 'Đặc tả yêu cầu (SRS) - Báo cáo doanh thu', type: 'SRS / Thiết kế', url: 'https://sharepoint.example.com/pyc001-srs', note: 'Khách hàng đã ký duyệt', del: false }
+        ],
+        bbnt: [
+          { id: 1, req: 1, code: 'BBNT-01', title: 'Nghiệm thu giai đoạn 1 PYC-001', url: 'https://drive.google.com/bbnt-01', status: 'SENT', sent: '2026-11-01', del: false },
+          { id: 2, req: 2, code: 'BBNT-02', title: 'Nghiệm thu bản vá lỗi Excel PYC-002', url: 'https://drive.google.com/bbnt-02', status: 'NOT_SENT', sent: null, del: false }
+        ],
+        audit: [
+          { id: 3, time: '2026-11-01 15:20:00', table: 'ALLOCATION_BATCH', record: 'PYC-001 (2026-11)', action: 'INSERT', field: 'effort_md', change: '16.5 → 28.0 md (An: 8.0, Chi: 3.5)' },
+          { id: 2, time: '2026-10-31 17:30:00', table: 'ALLOCATION_BATCH', record: 'PYC-001 (2026-10)', action: 'INSERT', field: 'effort_md', change: '0.0 → 16.5 md (An: 10.0, Bình: 6.5)' },
+          { id: 1, time: '2026-10-01 09:00:00', table: 'REQUEST', record: 'PYC-001', action: 'INSERT', field: 'locked_md', change: 'NULL → 30.0 md' }
+        ]
+      }
+    };
+  }
+
+  // ---------- helpers ----------
+  r1(v) { return Math.round((Number(v) + Number.EPSILON) * 10) / 10; }
+  mm(md) { return (Number(md) / 22).toFixed(2); }
+  f1(v) { return Number(v).toFixed(1); }
+  step(v) {
+    if (v === '' || v === null || isNaN(v)) return false;
+    const n = Number(v);
+    return Math.abs(Math.round(n * 10) - n * 10) < 1e-6;
+  }
+  fmtDate(d) { if (!d) return '--'; const p = d.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
+  curProjId(db) {
+    const projs = db.projects.filter(p => !p.del);
+    return projs.some(p => p.id === this.state.curProj) ? this.state.curProj : (projs[0] ? projs[0].id : 1);
+  }
+  allocOf(db, reqId, excl) {
+    const ids = db.batches.filter(b => b.req === reqId && !b.del && b.id !== excl).map(b => b.id);
+    return this.r1(db.items.filter(i => ids.includes(i.batch) && !i.del).reduce((a, i) => a + Number(i.md), 0));
+  }
+  allowed(db, reqId) {
+    const ids = db.members.filter(m => m.req === reqId && !m.del).map(m => m.pers);
+    return db.personnel.filter(p => !p.del && p.status === 'ACTIVE' && ids.includes(p.id));
+  }
+  mut(fn) {
+    const db = JSON.parse(JSON.stringify(this.state.db));
+    const out = fn(db);
+    this.setState({ db });
+    return out;
+  }
+  log(db, table, record, action, field, change) {
+    const t = new Date().toTimeString().slice(0, 8);
+    db.audit.unshift({ id: Date.now() + Math.random(), time: '2026-11-02 ' + t, table, record, action, field, change });
+  }
+  toast(msg, tone, undo) {
+    const id = Date.now();
+    this.setState({ toast: { id, msg, tone: tone || 'ok', undo: undo || null } });
+    setTimeout(() => { if (this.state.toast && this.state.toast.id === id) this.setState({ toast: null }); }, 7000);
+  }
+  field(group, key) {
+    return (e) => this.setState({ [group]: { ...this.state[group], [key]: e.target.value } });
+  }
+  meta(coll, it, db) {
+    if (coll === 'projects') return { table: 'PROJECT', rec: it.code };
+    if (coll === 'requests') return { table: 'REQUEST', rec: it.code };
+    if (coll === 'batches') { const r = db.requests.find(x => x.id === it.req); return { table: 'ALLOCATION_BATCH', rec: (r ? r.code : '') + ' (' + it.month + ')' }; }
+    if (coll === 'bbnt') return { table: 'ACCEPTANCE_RECORD', rec: it.code };
+    if (coll === 'docs') return { table: 'DOCUMENT', rec: it.title };
+    return { table: 'REQUEST_MEMBER', rec: '#' + it.id };
+  }
+
+  // ---------- project modal logic ----------
+  openProj(id) {
+    const db = this.state.db;
+    if (id) {
+      const p = db.projects.find(x => x.id === id);
+      this.setState({ proj: { id, code: p.code, name: p.name, customer: p.customer || '', status: p.status || 'ACTIVE', err: '' } });
+    } else {
+      const n = db.projects.length + 1;
+      this.setState({ proj: { id: null, code: 'DA-' + String(n).padStart(2, '0'), name: '', customer: '', status: 'ACTIVE', err: '' } });
+    }
+  }
+  saveProj() {
+    const p = this.state.proj, db0 = this.state.db;
+    const bad = (m) => this.setState({ proj: { ...p, err: m } });
+    const code = p.code.trim(), name = p.name.trim(), customer = p.customer.trim();
+    if (!code || !name) { bad('Vui lòng nhập đủ Mã dự án và Tên dự án.'); return; }
+    if (db0.projects.some(x => !x.del && x.code.toLowerCase() === code.toLowerCase() && x.id !== p.id)) {
+      bad('Mã dự án "' + code + '" đã tồn tại.');
+      return;
+    }
+    let nextProjId = this.state.curProj;
+    this.mut(db => {
+      if (p.id) {
+        const x = db.projects.find(y => y.id === p.id);
+        Object.assign(x, { code, name, customer: customer || 'Nội bộ', status: p.status });
+        this.log(db, 'PROJECT', code, 'UPDATE', 'info', 'Cập nhật dự án ' + name);
+      } else {
+        nextProjId = Date.now();
+        db.projects.push({ id: nextProjId, code, name, customer: customer || 'Nội bộ', status: p.status, del: false });
+        this.log(db, 'PROJECT', code, 'INSERT', 'code', 'Tạo mới dự án ' + name);
+      }
+    });
+    this.setState({ proj: null, curProj: nextProjId, allocFilter: 'ALL', screen: 'projects' });
+    this.toast((p.id ? 'Đã cập nhật dự án ' : 'Đã tạo dự án ') + code + '.', 'ok');
+    if (p.id) this.callApi('PUT', '/projects/' + p.id, { code, name, customer, status: p.status });
+    else this.callApi('POST', '/projects', { code, name, customer, status: p.status }).then(r => { if (r && r.id) this.setState({ curProj: r.id }); });
+  }
+
+  // ---------- allocation modal logic ----------
+  blankRow(reqId) {
+    const first = this.allowed(this.state.db, reqId)[0];
+    return { key: Date.now() + Math.random(), pers: first ? first.id : 0, md: '', note: '' };
+  }
+  openAlloc(reqId, batchId) {
+    const db = this.state.db;
+    const pid = this.curProjId(db);
+    const reqs = db.requests.filter(r => !r.del && r.proj === pid);
+    if (!reqs.length && !batchId) {
+      this.toast('Dự án này chưa có PYC nào. Hãy thêm PYC trước.', 'warn');
+      return;
+    }
+    let a;
+    if (batchId) {
+      const b = db.batches.find(x => x.id === batchId);
+      a = { edit: batchId, req: b.req, month: b.month, note: b.note || '',
+        rows: db.items.filter(i => i.batch === batchId && !i.del).map(i => ({ key: i.id, pers: i.pers, md: String(i.md), note: i.note || '' })) };
+    } else {
+      const rid = reqId || reqs[0].id;
+      a = { edit: null, req: rid, month: '2026-12', note: '', rows: [this.blankRow(rid)] };
+    }
+    this.setState({ alloc: a });
+  }
+  rowSet(key, patch) {
+    const a = this.state.alloc;
+    this.setState({ alloc: { ...a, rows: a.rows.map(r => r.key === key ? { ...r, ...patch } : r) } });
+  }
+  allocCheck(db, a) {
+    const req = db.requests.find(r => r.id === a.req);
+    const A = Number(req.locked);
+    const B = this.allocOf(db, a.req, a.edit);
+    let C = 0, stepBad = false, dupBad = false;
+    const seen = {};
+    const rows = a.rows.map(r => {
+      let err = '';
+      if (r.md !== '') {
+        if (!this.step(r.md) || Number(r.md) <= 0) { err = 'Nỗ lực phải > 0 và theo bước 0.1 md (1.25 bị từ chối) · BR-07'; stepBad = true; }
+        else C += Number(r.md);
+      }
+      if (seen[r.pers]) { err = err || 'Nhân sự này đã có dòng khác trong cùng đợt'; dupBad = true; }
+      seen[r.pers] = true;
+      return { key: r.key, err };
+    });
+    C = this.r1(C);
+    const rem = this.r1(A - B - C);
+    const monthDup = db.batches.some(b => b.req === a.req && b.month === a.month && !b.del && b.id !== a.edit);
+    const emptyRow = a.rows.some(r => r.md === '');
+    return { req, A, B, C, rem, rows, stepBad, dupBad, over: rem < 0, monthDup, emptyRow };
+  }
+  saveAlloc() {
+    const s = this.state, a = s.alloc, db0 = s.db;
+    const chk = this.allocCheck(db0, a);
+    if (!a.month) { this.toast('Vui lòng chọn tháng phân bổ.', 'bad'); return; }
+    if (!a.rows.length || chk.emptyRow) { this.toast('Mỗi dòng nhân sự cần nhập nỗ lực.', 'bad'); return; }
+    if (chk.stepBad || chk.dupBad || chk.over || chk.monthDup) { this.toast('Đợt phân bổ chưa hợp lệ, xem bảng cân đối.', 'bad'); return; }
+    const items = a.rows.map(r => ({ pers: r.pers, md: this.r1(r.md), note: (r.note || '').trim() }));
+    const total = this.r1(items.reduce((x, y) => x + y.md, 0));
+    const code = chk.req.code;
+    this.mut(db => {
+      let bid = a.edit;
+      if (bid) {
+        const b = db.batches.find(x => x.id === bid);
+        b.month = a.month; b.note = a.note.trim();
+        db.items = db.items.filter(i => i.batch !== bid);
+      } else {
+        bid = Date.now();
+        db.batches.push({ id: bid, req: a.req, month: a.month, note: a.note.trim(), del: false });
+        const rq = db.requests.find(r => r.id === a.req);
+        if (rq.status === 'NEW') rq.status = 'IN_PROGRESS';
+      }
+      items.forEach(it => db.items.push({ id: Date.now() + Math.random(), batch: bid, pers: it.pers, md: it.md, note: it.note, del: false }));
+      this.log(db, 'ALLOCATION_BATCH', code + ' (' + a.month + ')', a.edit ? 'UPDATE' : 'INSERT', 'effort_md', (a.edit ? 'Cập nhật đợt: ' : 'Thêm đợt mới: +') + total.toFixed(1) + ' md');
+    });
+    this.setState({ alloc: null });
+    this.toast((a.edit ? 'Đã cập nhật' : 'Đã tạo') + ' đợt phân bổ T' + a.month + ' của ' + code + ' (' + total.toFixed(1) + ' md).', 'ok');
+    if (a.edit) this.callApi('PUT', '/allocations/' + a.edit, { reqId: a.req, month: a.month, note: a.note, rows: items });
+    else this.callApi('POST', '/allocations', { reqId: a.req, month: a.month, note: a.note, rows: items });
+  }
+
+  // ---------- PYC modal logic ----------
+  openPyc(id) {
+    const db = this.state.db;
+    const pid = this.curProjId(db);
+    if (id) {
+      const r = db.requests.find(x => x.id === id);
+      this.setState({ pyc: { id, code: r.code, type: r.type, name: r.name, est: r.est ? String(r.est) : '', locked: String(r.locked), deadline: r.deadline || '', status: r.status, requester: r.requester || '', link: r.link || '', err: '' } });
+    } else {
+      const n = db.requests.filter(r => r.proj === pid).length + 1;
+      this.setState({ pyc: { id: null, code: 'PYC-' + String(n).padStart(3, '0'), type: 'CR', name: '', est: '', locked: '10.0', deadline: '2026-12-31', status: 'NEW', requester: '', link: '', err: '' } });
+    }
+  }
+  savePyc() {
+    const p = this.state.pyc, db0 = this.state.db;
+    const pid = this.curProjId(db0);
+    const bad = (m) => this.setState({ pyc: { ...p, err: m } });
+    const code = p.code.trim(), name = p.name.trim();
+    if (!code || !name) { bad('Vui lòng nhập đủ Mã PYC và Tên PYC.'); return; }
+    if (db0.requests.some(r => !r.del && r.proj === pid && r.code.toLowerCase() === code.toLowerCase() && r.id !== p.id)) { bad('BR-05: Mã PYC "' + code + '" đã tồn tại trong dự án này.'); return; }
+    if (!this.step(p.locked) || Number(p.locked) < 0) { bad('BR-07: Nỗ lực chốt phải theo bước 0.1 md.'); return; }
+    if (p.est !== '' && !this.step(p.est)) { bad('BR-07: Nỗ lực ước tính phải theo bước 0.1 md.'); return; }
+    if (p.id) {
+      const allocated = this.allocOf(db0, p.id);
+      if (Number(p.locked) < allocated) { bad('BR-02: Nỗ lực chốt mới (' + this.f1(p.locked) + ' md) không được nhỏ hơn tổng đã phân bổ (' + this.f1(allocated) + ' md).'); return; }
+    }
+    this.mut(db => {
+      if (p.id) {
+        const r = db.requests.find(x => x.id === p.id);
+        const old = r.locked;
+        Object.assign(r, { code, name, type: p.type, est: p.est === '' ? 0 : this.r1(p.est), locked: this.r1(p.locked), deadline: p.deadline, status: p.status, requester: p.requester.trim(), link: p.link.trim() });
+        if (old !== r.locked) this.log(db, 'REQUEST', code, 'UPDATE', 'locked_md', this.f1(old) + ' → ' + this.f1(r.locked) + ' md');
+      } else {
+        db.requests.push({ id: Date.now(), proj: pid, code, name, type: p.type, deadline: p.deadline, status: p.status, requester: p.requester.trim(), link: p.link.trim(), est: p.est === '' ? 0 : this.r1(p.est), locked: this.r1(p.locked), del: false });
+        this.log(db, 'REQUEST', code, 'INSERT', 'locked_md', 'Tạo mới PYC, chốt ' + this.f1(p.locked) + ' md');
+      }
+    });
+    this.setState({ pyc: null });
+    this.toast((p.id ? 'Đã cập nhật ' : 'Đã thêm ') + code + '.', 'ok');
+    const payload = { proj: pid, code, name, type: p.type, est: p.est, locked: p.locked, deadline: p.deadline, status: p.status, requester: p.requester, link: p.link };
+    if (p.id) this.callApi('PUT', '/requests/' + p.id, payload);
+    else this.callApi('POST', '/requests', payload);
+  }
+
+  // ---------- doc / bbnt / excel / personnel modal logic ----------
+  openDoc() { this.setState({ doc: { title: '', type: 'Tài liệu chung', req: null, url: '', note: '', err: '' } }); }
+  saveDoc() {
+    const d = this.state.doc, pid = this.curProjId(this.state.db);
+    if (!d.title.trim() || !d.url.trim()) { this.setState({ doc: { ...d, err: 'Vui lòng nhập tiêu đề và liên kết.' } }); return; }
+    this.mut(db => {
+      db.docs.push({ id: Date.now(), proj: pid, req: d.req, title: d.title.trim(), type: d.type.trim() || 'Tài liệu', url: d.url.trim(), note: d.note.trim(), del: false });
+      this.log(db, 'DOCUMENT', d.title.trim(), 'INSERT', 'title', d.title.trim());
+    });
+    this.setState({ doc: null });
+    this.toast('Đã thêm hồ sơ.', 'ok');
+    this.callApi('POST', '/documents', { proj: pid, req: d.req, title: d.title, type: d.type, url: d.url, note: d.note });
+  }
+  openBbnt() {
+    const db = this.state.db, pid = this.curProjId(db);
+    const reqs = db.requests.filter(r => !r.del && r.proj === pid);
+    if (!reqs.length) { this.toast('Dự án chưa có PYC nào để gắn biên bản.', 'warn'); return; }
+    const n = db.bbnt.length + 1;
+    this.setState({ bbntModal: { code: 'BBNT-' + String(n).padStart(2, '0'), title: '', req: reqs[0].id, url: '', status: 'NOT_SENT', err: '' } });
+  }
+  saveBbnt() {
+    const b = this.state.bbntModal;
+    if (!b.code.trim() || !b.title.trim() || !b.url.trim()) {
+      this.setState({ bbntModal: { ...b, err: 'Vui lòng nhập đủ Mã BBNT, Tiêu đề và Liên kết file.' } });
+      return;
+    }
+    const sent = b.status === 'SENT' ? '2026-11-02' : null;
+    this.mut(db => {
+      db.bbnt.push({ id: Date.now(), req: b.req, code: b.code.trim(), title: b.title.trim(), url: b.url.trim(), status: b.status, sent, del: false });
+      this.log(db, 'ACCEPTANCE_RECORD', b.code.trim(), 'INSERT', 'record_code', 'Tạo mới biên bản ' + b.code.trim());
+    });
+    this.setState({ bbntModal: null });
+    this.toast('Đã thêm biên bản ' + b.code.trim() + '.', 'ok');
+    this.callApi('POST', '/acceptance-records', { req: b.req, code: b.code, title: b.title, url: b.url, status: b.status, sent });
+  }
+  openExcel() {
+    const curProjCode = (this.state.db.projects.find(p => p.id === this.curProjId(this.state.db)) || {}).code || 'DA-01';
+    const sampleRows = [
+      { row: 2, key: curProjCode + ' / PYC-001 (Chốt: 30.0 md)', mode: 'UPDATE', status: 'VALID', message: 'Hợp lệ (Upsert: Cập nhật thông tin, không tạo trùng)' },
+      { row: 3, key: curProjCode + ' / PYC-003 (Chốt: 15.0 md)', mode: 'INSERT', status: 'VALID', message: 'Hợp lệ (Tạo mới PYC-003: Tích hợp cổng thanh toán QR)' },
+      { row: 4, key: curProjCode + ' / PYC-004 (Chốt: 1.25 md)', mode: 'ERROR', status: 'ERROR', message: 'Bị chặn (BR-07: Nỗ lực chốt 1.25 sai bước nhảy 0.1 md)' },
+      { row: 5, key: curProjCode + ' / PYC-001 (Chốt: 20.0 md)', mode: 'ERROR', status: 'ERROR', message: 'Bị chặn (BR-02: Số chốt mới 20.0 md < 28.0 md đã phân bổ)' }
+    ];
+    this.setState({ excelModal: { rows: sampleRows } });
+  }
+  exportExcel(type) {
+    const pid = this.curProjId(this.state.db);
+    if (this.state.apiConnected) {
+      window.open(this.apiBase + '/excel/export/' + type + '?projectId=' + pid, '_blank');
+      this.toast('Đang tải file CSV/Excel (' + type + ')...', 'ok');
+      return;
+    }
+    const db = this.state.db;
+    const esc = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    const lines = [];
+    if (type === 'requests') {
+      lines.push(['Ma_PYC', 'Ten_PYC', 'Loai', 'Han_Hoan_Thanh', 'Uoc_Tinh_MD', 'Chot_MD', 'Da_Phan_Bo_MD', 'Con_Lai_MD'].map(esc).join(','));
+      db.requests.filter(r => !r.del && r.proj === pid).forEach(r => {
+        const a = this.allocOf(db, r.id);
+        lines.push([r.code, r.name, r.type, r.deadline, this.f1(r.est), this.f1(r.locked), this.f1(a), this.f1(this.r1(r.locked - a))].map(esc).join(','));
+      });
+    } else if (type === 'personnel') {
+      lines.push(['Ma_NV', 'Ho_Ten', 'Vai_Tro', 'Trang_Thai', 'Ghi_Chu'].map(esc).join(','));
+      db.personnel.filter(p => !p.del).forEach(p => lines.push([p.code, p.name, p.role, p.status, p.note].map(esc).join(',')));
+    } else if (type === 'bbnt') {
+      lines.push(['Ma_BBNT', 'Tieu_De', 'Trang_Thai', 'Ngay_Gui', 'Link'].map(esc).join(','));
+      db.bbnt.filter(b => !b.del).forEach(b => lines.push([b.code, b.title, b.status, b.sent || '', b.url].map(esc).join(',')));
+    } else {
+      lines.push(['Thang', 'Ma_PYC', 'Tong_MD'].map(esc).join(','));
+      db.batches.filter(b => !b.del).forEach(b => {
+        const rq = db.requests.find(r => r.id === b.req);
+        const s = this.r1(db.items.filter(i => i.batch === b.id && !i.del).reduce((x, i) => x + Number(i.md), 0));
+        lines.push([b.month, rq ? rq.code : '', this.f1(s)].map(esc).join(','));
+      });
+    }
+    const blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'OutsourcePM_' + type + '_2026-11-02.csv';
+    a.click();
+    this.toast('Đã xuất file Excel/CSV (' + type + ').', 'ok');
+  }
+  commitExcel() {
+    const pid = this.curProjId(this.state.db);
+    const proj = this.state.db.projects.find(p => p.id === pid);
+    const pCode = proj ? proj.code : 'DA-01';
+    this.mut(db => {
+      const existing = db.requests.find(r => !r.del && r.proj === pid && r.code === 'PYC-003');
+      if (existing) {
+        existing.name = 'Tích hợp cổng thanh toán QR (Upsert)';
+        this.log(db, 'REQUEST', 'PYC-003', 'UPDATE', 'excel_upsert', 'Cập nhật qua Import Excel (Không tạo trùng)');
+      } else {
+        db.requests.push({ id: Date.now(), proj: pid, code: 'PYC-003', name: 'Tích hợp cổng thanh toán QR', type: 'NEW_FEATURE', deadline: '2026-12-25', status: 'NEW', requester: 'Ban Ngân hàng số', link: 'https://jira.example.com/browse/PYC-003', est: 14, locked: 15, del: false });
+        this.log(db, 'REQUEST', 'PYC-003', 'INSERT', 'excel_import', 'Import Excel thành công PYC-003 (Chốt 15.0 md)');
+      }
+    });
+    this.setState({ excelModal: null });
+    this.toast('Đã nạp các dòng hợp lệ (Upsert PYC-001 & PYC-003).', 'ok');
+    this.callApi('POST', '/excel/import', {
+      type: 'requests',
+      dryRun: false,
+      rows: [
+        { Ma_Du_An: pCode, Ma_PYC: 'PYC-003', Ten_PYC: 'Tích hợp cổng thanh toán QR', Loai_PYC: 'NEW_FEATURE', Han_Hoan_Thanh: '2026-12-25', No_Luc_Uoc_Tinh: 14, No_Luc_Chot: 15, Nguoi_Yeu_Cau: 'Ban Ngân hàng số', Link_Ngoai: 'https://jira.example.com/browse/PYC-003' }
+      ]
+    });
+  }
+  openPers(id) {
+    const db = this.state.db;
+    if (id) {
+      const p = db.personnel.find(x => x.id === id);
+      this.setState({ pers: { id, code: p.code, name: p.name, role: p.role, status: p.status, note: p.note || '', err: '' } });
+    } else {
+      this.setState({ pers: { id: null, code: 'NS0' + (db.personnel.length + 1), name: '', role: 'Dev', status: 'ACTIVE', note: '', err: '' } });
+    }
+  }
+  savePers() {
+    const p = this.state.pers, db0 = this.state.db;
+    if (!p.code.trim() || !p.name.trim()) { this.setState({ pers: { ...p, err: 'Vui lòng nhập mã và họ tên.' } }); return; }
+    if (db0.personnel.some(x => !x.del && x.code.toLowerCase() === p.code.trim().toLowerCase() && x.id !== p.id)) { this.setState({ pers: { ...p, err: 'Mã nhân sự đã tồn tại.' } }); return; }
+    this.mut(db => {
+      if (p.id) {
+        const x = db.personnel.find(y => y.id === p.id);
+        Object.assign(x, { code: p.code.trim(), name: p.name.trim(), role: p.role.trim(), status: p.status, note: p.note.trim() });
+        this.log(db, 'PERSONNEL', x.code, 'UPDATE', 'info', 'Cập nhật nhân sự ' + x.name);
+      } else {
+        db.personnel.push({ id: Date.now(), code: p.code.trim(), name: p.name.trim(), role: p.role.trim(), status: p.status, note: p.note.trim(), del: false });
+        this.log(db, 'PERSONNEL', p.code.trim(), 'INSERT', 'code', 'Thêm mới ' + p.name.trim());
+      }
+    });
+    this.setState({ pers: null });
+    this.toast('Đã lưu nhân sự ' + p.name.trim() + '.', 'ok');
+    if (p.id) this.callApi('PUT', '/personnel/' + p.id, p);
+    else this.callApi('POST', '/personnel', p);
+  }
+  togglePers(id) {
+    let msg = '';
+    this.mut(db => {
+      const p = db.personnel.find(x => x.id === id);
+      const old = p.status;
+      p.status = old === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+      this.log(db, 'PERSONNEL', p.code, 'UPDATE', 'status', old + ' → ' + p.status);
+      msg = p.status === 'INACTIVE' ? p.name + ' đã nghỉ: giữ phân bổ lịch sử, chặn phân bổ mới.' : p.name + ' đã hoạt động trở lại.';
+    });
+    this.toast(msg, 'ok');
+    this.callApi('PATCH', '/personnel/' + id + '/toggle');
+  }
+
+  // ---------- assign member ----------
+  assign(reqId, persId, role) {
+    if (!persId) return;
+    let name = '', code = '';
+    this.mut(db => {
+      const p = db.personnel.find(x => x.id === persId);
+      const rq = db.requests.find(r => r.id === reqId);
+      name = p.name; code = rq.code;
+      db.members.push({ id: Date.now(), req: reqId, pers: persId, role: role || p.role, del: false });
+      this.log(db, 'REQUEST_MEMBER', rq.code + ' - ' + p.code, 'INSERT', 'personnel_id', 'Gán ' + p.name + ' (' + (role || p.role) + ')');
+    });
+    this.setState({ assignPers: 0, assignRole: '' });
+    this.toast('Đã gán ' + name + ' vào ' + code + '.', 'ok');
+    this.callApi('POST', '/members', { reqId, persId, role });
+  }
+
+  // ---------- confirm / delete / restore ----------
+  ask(kind, id, title, body, okLabel, danger) {
+    this.setState({ confirm: { kind, id, title, body, okLabel, danger: !!danger } });
+  }
+  doConfirm() {
+    const c = this.state.confirm;
+    if (!c) return;
+    this.setState({ confirm: null });
+    const k = c.kind, id = c.id;
+    const collOf = { delProj: 'projects', delPyc: 'requests', delBatch: 'batches', delBbnt: 'bbnt', delDoc: 'docs', rmMember: 'members' };
+    if (collOf[k]) {
+      const coll = collOf[k];
+      let label = '';
+      this.mut(db => {
+        const it = db[coll].find(x => x.id === id);
+        it.del = true;
+        if (coll === 'batches') db.items.forEach(i => { if (i.batch === id) i.del = true; });
+        const m = this.meta(coll, it, db);
+        label = m.rec;
+        let note = 'false → true';
+        if (coll === 'batches') {
+          const rq = db.requests.find(r => r.id === it.req);
+          note += ' (Còn lại của ' + rq.code + ' tăng lên ' + this.f1(this.r1(rq.locked - this.allocOf(db, rq.id))) + ' md)';
+        }
+        this.log(db, m.table, m.rec, 'SOFT_DELETE', 'is_deleted', note);
+      });
+      this.toast('Đã chuyển "' + label + '" vào Thùng rác.', 'warn', () => this.undoDel(coll, id));
+      this.callApi('DELETE', '/trash/' + coll + '/' + id);
+      return;
+    }
+    if (k === 'sendBbnt' || k === 'unsendBbnt') {
+      let code = '';
+      this.mut(db => {
+        const b = db.bbnt.find(x => x.id === id);
+        code = b.code;
+        if (k === 'sendBbnt') { b.status = 'SENT'; b.sent = '2026-11-02'; this.log(db, 'ACCEPTANCE_RECORD', b.code, 'UPDATE', 'delivery_status', 'NOT_SENT → SENT (Ngày gửi: 2026-11-02)'); }
+        else { b.status = 'NOT_SENT'; b.sent = null; this.log(db, 'ACCEPTANCE_RECORD', b.code, 'UPDATE', 'delivery_status', 'SENT → NOT_SENT'); }
+      });
+      this.toast(k === 'sendBbnt' ? code + ' đã gửi khách, ghi nhận ngày 02/11/2026 (BR-09).' : code + ' chuyển về chưa gửi.', 'ok');
+      this.callApi('PATCH', '/acceptance-records/' + id + '/status', { send: k === 'sendBbnt', sentDate: '2026-11-02' });
+    }
+  }
+  undoDel(coll, id) {
+    this.mut(db => {
+      const it = db[coll].find(x => x.id === id);
+      it.del = false;
+      if (coll === 'batches') db.items.forEach(i => { if (i.batch === id) i.del = false; });
+      const m = this.meta(coll, it, db);
+      this.log(db, m.table, m.rec, 'RESTORE', 'is_deleted', 'true → false');
+    });
+    this.setState({ toast: null });
+    this.toast('Đã hoàn tác.', 'ok');
+    this.callApi('POST', '/trash/' + coll + '/' + id + '/restore');
+  }
+  restore(coll, id) {
+    const db0 = this.state.db;
+    if (coll === 'requests') {
+      const rq = db0.requests.find(r => r.id === id);
+      const pr = db0.projects.find(p => p.id === rq.proj);
+      if (pr && pr.del) { this.toast('Không thể khôi phục PYC: Dự án cha (' + pr.code + ') đang ở Thùng rác.', 'bad'); return; }
+    }
+    if (coll === 'batches') {
+      const b = db0.batches.find(x => x.id === id);
+      const rq = db0.requests.find(r => r.id === b.req);
+      if (rq.del) { this.toast('Không thể khôi phục đợt: ' + rq.code + ' đang ở Thùng rác. Hãy khôi phục PYC trước.', 'bad'); return; }
+      const sum = this.r1(db0.items.filter(i => i.batch === id).reduce((a, i) => a + Number(i.md), 0));
+      const cur = this.allocOf(db0, rq.id);
+      if (this.r1(cur + sum) > rq.locked) { this.toast('BR-04: Sau khôi phục tổng ' + this.f1(this.r1(cur + sum)) + ' md vượt nỗ lực chốt ' + this.f1(rq.locked) + ' md.', 'bad'); return; }
+    }
+    this.mut(db => {
+      const it = db[coll].find(x => x.id === id);
+      it.del = false;
+      if (coll === 'batches') db.items.forEach(i => { if (i.batch === id) i.del = false; });
+      const m = this.meta(coll, it, db);
+      this.log(db, m.table, m.rec, 'RESTORE', 'is_deleted', 'true → false');
+    });
+    this.toast('Đã khôi phục bản ghi.', 'ok');
+    this.callApi('POST', '/trash/' + coll + '/' + id + '/restore');
+  }
+
+  // ---------- render ----------
+  renderVals() {
+    const s = this.state, db = s.db, T = '2026-11-02';
+    const TONE = {
+      ok: ['#E2F3E8', '#11633A'], warn: ['#FBEFD0', '#7A4F00'], bad: ['#FBE3E1', '#9B1F24'],
+      info: ['#E2EEF9', '#1B4A82'], neutral: ['#ECEAE4', '#444C55']
+    };
+    const chip = (t) => 'background:' + TONE[t][0] + ';color:' + TONE[t][1];
+    const ACTIVE = 'background:#0B5563;color:#fff;border-color:#0B5563';
+    const STATUS = { NEW: ['Mới nhận', 'neutral'], IN_PROGRESS: ['Đang làm', 'info'], DELIVERED: ['Đã bàn giao', 'warn'], ACCEPTED: ['Đã nghiệm thu', 'ok'], CLOSED: ['Đã đóng', 'neutral'] };
+    const PROJ_ST = { ACTIVE: ['Đang hoạt động', 'ok'], ON_HOLD: ['Tạm dừng', 'warn'], COMPLETED: ['Đã đóng', 'neutral'] };
+    const closedSt = ['DELIVERED', 'ACCEPTED', 'CLOSED'];
+    const seg = (on, pick) => ({ on, pick, style: on ? ACTIVE : '' });
+
+    const projs = db.projects.filter(p => !p.del);
+    const pid = this.curProjId(db);
+    const curProjObj = projs.find(p => p.id === pid) || { id: 1, code: 'DA-01', name: 'Dự án', customer: 'Nội bộ', status: 'ACTIVE' };
+    const pst = PROJ_ST[curProjObj.status] || PROJ_ST.ACTIVE;
+    const curProj = { code: curProjObj.code, name: curProjObj.name, customer: curProjObj.customer || 'Nội bộ', statusLabel: pst[0], chip: chip(pst[1]) };
+    const projOpts = projs.map(p => ({ label: p.code + ' · ' + p.name, ...seg(p.id === pid, () => this.setState({ curProj: p.id, allocFilter: 'ALL', assignPers: 0, assignRole: '' })) }));
+
+    // Scoped to current project for Projects screen; all active projects for Dashboard
+    const allActiveProjIds = projs.map(p => p.id);
+    const allReqs = db.requests.filter(r => !r.del && allActiveProjIds.includes(r.proj));
+    const reqs = db.requests.filter(r => !r.del && r.proj === pid);
+    const pers = db.personnel.filter(p => !p.del);
+    const reqIds = reqs.map(r => r.id);
+    const allReqIds = allReqs.map(r => r.id);
+
+    const buildRm = (list) => list.map(r => {
+      const a = this.allocOf(db, r.id);
+      const rem = this.r1(r.locked - a);
+      const pct = r.locked > 0 ? Math.min(100, Math.round(a / r.locked * 100)) : 0;
+      const overdue = !!(r.deadline && r.deadline < T && !closedSt.includes(r.status));
+      return { r, a, rem, pct, overdue };
+    });
+    const rm = buildRm(reqs);
+    const allRm = buildRm(allReqs);
+
+    // Project stats (current project)
+    const totLocked = this.r1(reqs.reduce((x, r) => x + Number(r.locked), 0));
+    const totAlloc = this.r1(rm.reduce((x, m) => x + m.a, 0));
+    const totRem = this.r1(totLocked - totAlloc);
+    const totPct = totLocked > 0 ? Math.round(totAlloc / totLocked * 100) : 0;
+    const unsent = db.bbnt.filter(b => !b.del && b.status === 'NOT_SENT' && reqIds.includes(b.req));
+
+    // Dashboard stats (across all active projects)
+    const dLocked = this.r1(allReqs.reduce((x, r) => x + Number(r.locked), 0));
+    const dAlloc = this.r1(allRm.reduce((x, m) => x + m.a, 0));
+    const dRem = this.r1(dLocked - dAlloc);
+    const dPct = dLocked > 0 ? Math.round(dAlloc / dLocked * 100) : 0;
+    const dUnsent = db.bbnt.filter(b => !b.del && b.status === 'NOT_SENT' && allReqIds.includes(b.req));
+
+    // ----- nav -----
+    const trashCount = db.projects.filter(x => x.del).length + db.requests.filter(x => x.del).length + db.batches.filter(x => x.del).length + db.bbnt.filter(x => x.del).length + db.docs.filter(x => x.del).length + db.members.filter(x => x.del).length;
+    const navDef = [
+      ['dashboard', 'Tổng quan', 'M3 3h7v9H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 16h7v5H3z', 0, 'neutral'],
+      ['projects', 'Dự án và PYC', 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z', projs.length, 'neutral'],
+      ['personnel', 'Nhân sự', 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75', 0, 'neutral'],
+      ['audit', 'Nhật ký thay đổi', 'M12 8v4l3 2M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5', db.audit.length, 'neutral'],
+      ['trash', 'Thùng rác', 'M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6', trashCount, 'bad']
+    ];
+    const nav = navDef.map(n => ({
+      label: n[1], icon: n[2], badge: n[3], hasBadge: n[3] > 0,
+      badgeStyle: n[4] === 'bad' ? 'background:#F2B8B5;color:#5C1215' : 'background:#2A4252;color:#E6EEF2',
+      current: s.screen === n[0] ? 'page' : 'false',
+      style: s.screen === n[0] ? 'background:#1E3744;color:#fff;box-shadow:inset 3px 0 0 #5CC8C0' : '',
+      go: () => this.setState({ screen: n[0] })
+    }));
+
+    // ----- dashboard -----
+    const kpis = [
+      { label: 'Tổng nỗ lực chốt', value: this.f1(dLocked), unit: 'md', sub: this.mm(dLocked) + ' man-month · ' + projs.length + ' dự án', subStyle: 'color:#0B5563', hasBar: false, pct: 0 },
+      { label: 'Đã phân bổ lũy kế', value: this.f1(dAlloc), unit: 'md', sub: this.mm(dAlloc) + ' mm · ' + dPct + '%', subStyle: 'color:#11633A', hasBar: true, pct: dPct },
+      { label: 'Còn lại chưa phân bổ', value: this.f1(dRem), unit: 'md', sub: this.mm(dRem) + ' man-month', subStyle: 'color:#7A4F00', hasBar: false, pct: 0 }
+    ];
+    const alerts = [];
+    allRm.forEach(m => { if (m.overdue) alerts.push({ sev: 0, tag: 'Trễ hạn', tone: 'bad', text: m.r.code + ' quá hạn hoàn thành (' + this.fmtDate(m.r.deadline) + ')', actLabel: 'Mở PYC', act: () => this.setState({ screen: 'projects', curProj: m.r.proj, tab: 'pyc' }) }); });
+    allRm.forEach(m => { if (m.r.locked > 0 && m.rem === 0 && !db.bbnt.some(b => b.req === m.r.id && !b.del)) alerts.push({ sev: 0, tag: 'Thiếu biên bản', tone: 'bad', text: m.r.code + ' đã phân bổ 100% (' + this.f1(m.r.locked) + ' md) nhưng chưa có BBNT', actLabel: 'Thêm biên bản', act: () => this.setState({ screen: 'projects', curProj: m.r.proj, tab: 'bbnt' }) }); });
+    dUnsent.forEach(b => { const rq = db.requests.find(r => r.id === b.req); alerts.push({ sev: 1, tag: 'Chưa gửi khách', tone: 'warn', text: 'Biên bản ' + b.code + ' (' + (rq ? rq.code : '') + ') chưa gửi khách hàng', actLabel: 'Đánh dấu đã gửi', act: () => this.ask('sendBbnt', b.id, 'Đánh dấu ' + b.code + ' đã gửi khách?', 'Hệ thống sẽ ghi nhận ngày gửi là 02/11/2026 (BR-09).', 'Đánh dấu đã gửi') }); });
+    allRm.forEach(m => { if (m.rem > 0 && m.r.status !== 'CLOSED') alerts.push({ sev: 2, tag: 'Còn nỗ lực', tone: 'info', text: m.r.code + ' còn ' + this.f1(m.rem) + ' md (' + this.mm(m.rem) + ' mm) chưa phân bổ', actLabel: 'Phân bổ', act: () => { this.setState({ curProj: m.r.proj }); this.openAlloc(m.r.id); } }); });
+    alerts.sort((x, y) => x.sev - y.sev);
+    kpis.push({ label: 'Cần xử lý', value: String(alerts.length), unit: 'mục', sub: dUnsent.length + ' biên bản chờ gửi', subStyle: 'color:#9B1F24', hasBar: false, pct: 0 });
+    const alertsV = alerts.map(a => ({ tag: a.tag, chip: chip(a.tone), text: a.text, actLabel: a.actLabel, act: a.act }));
+
+    const allValidBatches = db.batches.filter(b => !b.del && allReqIds.includes(b.req));
+    const allValidIds = allValidBatches.map(b => b.id);
+    const persReport = pers.map(p => {
+      const its = db.items.filter(i => allValidIds.includes(i.batch) && i.pers === p.id && !i.del);
+      const md = this.r1(its.reduce((x, i) => x + Number(i.md), 0));
+      const pycs = new Set(its.map(i => (db.batches.find(b => b.id === i.batch) || {}).req)).size;
+      return { name: p.code + ' · ' + p.name, role: p.role, pycs, md: this.f1(md), mm: this.mm(md) };
+    });
+
+    const months = Array.from(new Set(allValidBatches.map(b => b.month))).sort();
+    const monthTot = {}; months.forEach(m => { monthTot[m] = 0; });
+    const matrixRows = allRm.map(m => {
+      const pr = db.projects.find(p => p.id === m.r.proj);
+      const cells = months.map(mo => {
+        const b = allValidBatches.find(x => x.req === m.r.id && x.month === mo);
+        const sum = b ? this.r1(db.items.filter(i => i.batch === b.id && !i.del).reduce((x, i) => x + Number(i.md), 0)) : 0;
+        monthTot[mo] = this.r1(monthTot[mo] + sum);
+        return { text: sum > 0 ? this.f1(sum) : '·', style: sum > 0 ? 'font-weight:600' : 'color:#8C9096' };
+      });
+      return { code: (pr ? pr.code + ' / ' : '') + m.r.code, name: m.r.name, locked: this.f1(m.r.locked) + ' md', lockedMm: this.mm(m.r.locked), cells,
+        alloc: this.f1(m.a) + ' md', allocMm: this.mm(m.a), pct: m.pct, barColor: m.rem === 0 ? '#11633A' : '#0B5563',
+        rem: this.f1(m.rem) + ' md', remMm: this.mm(m.rem), remStyle: m.rem > 0 ? 'color:#7A4F00' : 'color:#55606C' };
+    });
+    const matrix = {
+      cols: 'minmax(200px,2fr) 110px ' + months.map(() => '90px').join(' ') + (months.length ? ' ' : '') + 'minmax(170px,1.2fr) 110px',
+      minW: 560 + months.length * 100,
+      months: months.map(m => ({ label: m.slice(5) + '/' + m.slice(0, 4) })), rows: matrixRows,
+      totLocked: this.f1(dLocked) + ' md', totMonths: months.map(m => ({ text: this.f1(monthTot[m]) })),
+      totAlloc: this.f1(dAlloc) + ' md (' + this.mm(dAlloc) + ' mm)', totRem: this.f1(dRem) + ' md'
+    };
+
+    const validBatches = db.batches.filter(b => !b.del && reqIds.includes(b.req));
+
+    // ----- projects -----
+    const tabsDef = [['pyc', '1. Danh sách PYC'], ['members', '2. Nhân sự tham gia'], ['alloc', '3. Phân bổ cuối tháng'], ['docs', '4. Hồ sơ dự án'], ['bbnt', '5. Biên bản nghiệm thu']];
+    const tabs = tabsDef.map(t => ({ label: t[1], on: s.tab === t[0], pick: () => this.setState({ tab: t[0] }),
+      style: s.tab === t[0] ? 'color:#0B5563;background:#fff;box-shadow:inset 0 -3px 0 #0B5563' : '' }));
+    const projStats = [
+      { label: 'Số PYC', value: String(reqs.length), sub: 'đang hoạt động', style: '' },
+      { label: 'Tổng chốt', value: this.f1(totLocked) + ' md', sub: this.mm(totLocked) + ' mm', style: 'color:#0B5563' },
+      { label: 'Đã phân bổ', value: this.f1(totAlloc) + ' md', sub: this.mm(totAlloc) + ' mm', style: 'color:#11633A' },
+      { label: 'Còn lại', value: this.f1(totRem) + ' md', sub: this.mm(totRem) + ' mm', style: 'color:#7A4F00' }
+    ];
+
+    const pycRows = rm.map(m => {
+      const r = m.r, st = STATUS[r.status];
+      return { code: r.code, name: r.name, requester: r.requester || '--', type: r.type,
+        deadline: this.fmtDate(r.deadline), overdue: m.overdue, dlStyle: m.overdue ? 'color:#9B1F24;font-weight:600' : '',
+        alloc: this.f1(m.a), locked: this.f1(r.locked), pct: m.pct, barColor: m.rem === 0 ? '#11633A' : '#0B5563',
+        rem: this.f1(m.rem), remStyle: m.rem > 0 ? 'color:#7A4F00' : 'color:#11633A', lockedMm: this.mm(r.locked),
+        est: r.est ? this.f1(r.est) + ' md' : '--', statusLabel: st[0], statusChip: chip(st[1]),
+        allocate: () => this.openAlloc(r.id), edit: () => this.openPyc(r.id),
+        del: () => this.ask('delPyc', r.id, 'Xóa ' + r.code + '?', 'PYC được chuyển vào Thùng rác (xóa mềm) và không còn tính vào tổng nỗ lực. Bạn có thể hoàn tác ngay hoặc khôi phục sau.', 'Xóa mềm', true) };
+    });
+
+    // members tab
+    const mReq = reqs.find(r => r.id === s.memberReq) ? s.memberReq : (reqs[0] ? reqs[0].id : 0);
+    const mReqObj = reqs.find(r => r.id === mReq);
+    const memberReqOpts = reqs.map(r => seg(r.id === mReq, () => this.setState({ memberReq: r.id, assignPers: 0, assignRole: '' })));
+    memberReqOpts.forEach((o, i) => { o.label = reqs[i].code; });
+    const memberIds = db.members.filter(m => m.req === mReq && !m.del).map(m => m.pers);
+    const avail = pers.filter(p => p.status === 'ACTIVE' && !memberIds.includes(p.id));
+    const assignPersId = avail.find(p => p.id === s.assignPers) ? s.assignPers : (avail[0] ? avail[0].id : 0);
+    const assignPersObj = avail.find(p => p.id === assignPersId);
+    const assignRoleVal = s.assignRole !== '' ? s.assignRole : (assignPersObj ? assignPersObj.role : '');
+    const availOpts = avail.map(p => ({ label: p.code + ' · ' + p.name + ' (' + p.role + ')', ...seg(p.id === assignPersId, () => this.setState({ assignPers: p.id, assignRole: '' })) }));
+    const bIds = db.batches.filter(b => b.req === mReq && !b.del).map(b => b.id);
+    const memberRows = db.members.filter(m => m.req === mReq && !m.del).map(m => {
+      const p = db.personnel.find(x => x.id === m.pers);
+      const md = this.r1(db.items.filter(i => bIds.includes(i.batch) && i.pers === m.pers && !i.del).reduce((x, i) => x + Number(i.md), 0));
+      return { code: p.code, name: p.name, role: p.role, roleIn: m.role,
+        statusLabel: p.status === 'ACTIVE' ? 'Đang làm' : 'Đã nghỉ', chip: chip(p.status === 'ACTIVE' ? 'ok' : 'bad'),
+        md: this.f1(md), mm: this.mm(md),
+        remove: () => this.ask('rmMember', m.id, 'Gỡ ' + p.name + ' khỏi ' + (mReqObj ? mReqObj.code : 'PYC') + '?', 'Phân bổ lịch sử được giữ nguyên. Nhân sự sẽ không còn được chọn trong đợt phân bổ mới.', 'Gỡ khỏi PYC', true) };
+    });
+
+    // allocations tab
+    const allocFilterOpts = [{ label: 'Tất cả', ...seg(s.allocFilter === 'ALL', () => this.setState({ allocFilter: 'ALL' })) }]
+      .concat(reqs.map(r => ({ label: r.code, ...seg(s.allocFilter === r.id, () => this.setState({ allocFilter: r.id })) })));
+    const batchCards = validBatches.filter(b => s.allocFilter === 'ALL' || b.req === s.allocFilter)
+      .sort((x, y) => y.month.localeCompare(x.month)).map(b => {
+        const rq = db.requests.find(r => r.id === b.req);
+        const its = db.items.filter(i => i.batch === b.id && !i.del);
+        const total = this.r1(its.reduce((x, i) => x + Number(i.md), 0));
+        return { month: b.month, code: rq.code, name: rq.name, note: b.note || '', total: this.f1(total), totalMm: this.mm(total),
+          items: its.map(i => { const p = db.personnel.find(x => x.id === i.pers); return { who: p ? p.code + ' · ' + p.name : 'N/A', md: this.f1(i.md), note: i.note || '' }; }),
+          edit: () => this.openAlloc(rq.id, b.id),
+          del: () => this.ask('delBatch', b.id, 'Xóa đợt phân bổ T' + b.month + ' của ' + rq.code + '?', 'Đợt chuyển vào Thùng rác; nỗ lực còn lại của PYC sẽ tăng thêm ' + this.f1(total) + ' md.', 'Xóa mềm đợt', true) };
+      });
+
+    // docs
+    const docRows = db.docs.filter(d => !d.del && d.proj === pid && (d.req === null || reqIds.includes(d.req))).map(d => {
+      const rq = db.requests.find(r => r.id === d.req);
+      return { title: d.title, type: d.type, scope: rq ? rq.code : 'Chung dự án', url: d.url, note: d.note || '',
+        del: () => this.ask('delDoc', d.id, 'Xóa hồ sơ "' + d.title + '"?', 'Hồ sơ được chuyển vào Thùng rác.', 'Xóa mềm', true) };
+    });
+
+    // bbnt
+    const bbntRows = db.bbnt.filter(b => !b.del && reqIds.includes(b.req)).map(b => {
+      const rq = db.requests.find(r => r.id === b.req), sent = b.status === 'SENT';
+      return { code: b.code, title: b.title, req: rq ? rq.code : '', url: b.url,
+        label: sent ? 'Đã gửi ' + this.fmtDate(b.sent) : 'Chưa gửi', chip: chip(sent ? 'ok' : 'warn'),
+        toggleLabel: sent ? 'Hoàn tác gửi' : 'Đánh dấu đã gửi',
+        toggle: () => sent
+          ? this.ask('unsendBbnt', b.id, 'Chuyển ' + b.code + ' về chưa gửi?', 'Ngày gửi ' + this.fmtDate(b.sent) + ' sẽ bị xóa.', 'Chuyển về chưa gửi')
+          : this.ask('sendBbnt', b.id, 'Đánh dấu ' + b.code + ' đã gửi khách?', 'Hệ thống sẽ ghi nhận ngày gửi là 02/11/2026 (BR-09).', 'Đánh dấu đã gửi'),
+        del: () => this.ask('delBbnt', b.id, 'Xóa biên bản ' + b.code + '?', 'Biên bản được chuyển vào Thùng rác.', 'Xóa mềm', true) };
+    });
+
+    // ----- personnel / audit / trash -----
+    const persRows = pers.map(p => ({ code: p.code, name: p.name, role: p.role, note: p.note || '',
+      statusLabel: p.status === 'ACTIVE' ? '● Đang làm' : '○ Đã nghỉ', chip: chip(p.status === 'ACTIVE' ? 'ok' : 'bad'),
+      count: db.members.filter(m => m.pers === p.id && !m.del).length,
+      toggle: () => this.togglePers(p.id), edit: () => this.openPers(p.id) }));
+
+    const ACT = { INSERT: ['Thêm mới', 'ok'], UPDATE: ['Cập nhật', 'info'], SOFT_DELETE: ['Xóa mềm', 'bad'], RESTORE: ['Khôi phục', 'warn'] };
+    const auditFilterOpts = [['ALL', 'Tất cả']].concat(Object.keys(ACT).map(k => [k, ACT[k][0]]))
+      .map(a => ({ label: a[1], ...seg(s.auditFilter === a[0], () => this.setState({ auditFilter: a[0] })) }));
+    const auditRows = db.audit.filter(l => s.auditFilter === 'ALL' || l.action === s.auditFilter).map(l => {
+      const a = ACT[l.action] || [l.action, 'neutral'];
+      return { time: l.time, table: l.table, record: l.record, label: a[0], chip: chip(a[1]), field: l.field, change: l.change };
+    });
+
+    const trash = [];
+    db.projects.filter(x => x.del).forEach(p => trash.push({ kind: 'Dự án', tone: 'info', title: p.code + ' · ' + p.name, impact: 'Khách hàng: ' + (p.customer || 'Nội bộ'), restore: () => this.restore('projects', p.id) }));
+    db.requests.filter(x => x.del).forEach(r => trash.push({ kind: 'PYC', tone: 'neutral', title: r.code + ' · ' + r.name, impact: 'Nỗ lực chốt ' + this.f1(r.locked) + ' md', restore: () => this.restore('requests', r.id) }));
+    db.batches.filter(x => x.del).forEach(b => {
+      const rq = db.requests.find(r => r.id === b.req);
+      const sum = this.r1(db.items.filter(i => i.batch === b.id).reduce((x, i) => x + Number(i.md), 0));
+      trash.push({ kind: 'Đợt phân bổ', tone: 'info', title: 'T' + b.month + ' của ' + (rq ? rq.code : ''), impact: 'Khôi phục sẽ cộng lại ' + this.f1(sum) + ' md (kiểm tra BR-04)', restore: () => this.restore('batches', b.id) });
+    });
+    db.bbnt.filter(x => x.del).forEach(b => trash.push({ kind: 'Biên bản NT', tone: 'warn', title: b.code + ' · ' + b.title, impact: 'Không ảnh hưởng nỗ lực', restore: () => this.restore('bbnt', b.id) }));
+    db.docs.filter(x => x.del).forEach(d => trash.push({ kind: 'Hồ sơ', tone: 'neutral', title: d.title, impact: 'Không ảnh hưởng nỗ lực', restore: () => this.restore('docs', d.id) }));
+    db.members.filter(x => x.del).forEach(m => {
+      const p = db.personnel.find(x => x.id === m.pers), rq = db.requests.find(r => r.id === m.req);
+      trash.push({ kind: 'Gán nhân sự', tone: 'neutral', title: (p ? p.name : '') + ' trong ' + (rq ? rq.code : ''), impact: 'Không ảnh hưởng nỗ lực', restore: () => this.restore('members', m.id) });
+    });
+    const trashRows = trash.map(t => ({ kind: t.kind, chip: chip(t.tone), title: t.title, impact: t.impact, restore: t.restore }));
+
+    // ----- modals -----
+    let av = { open: false, title: '', reqOpts: [], month: '', note: '', A: '', B: '', C: '', rem: '', remStyle: '', pill: '', pillStyle: '', boxStyle: '', bPct: 0, cPct: 0, cColor: '', barLabel: '', banner: '', hasBanner: false, rows: [], noMembers: false, canAdd: false, cantSave: true, close: () => {}, save: () => {}, addRow: () => {}, onMonth: () => {}, onNote: () => {} };
+    if (s.alloc) {
+      const a = s.alloc, chk = this.allocCheck(db, a);
+      const allowed = this.allowed(db, a.req);
+      const rowsV = a.rows.map((r, i) => {
+        const opts = allowed.slice();
+        const cur = db.personnel.find(p => p.id === r.pers);
+        if (cur && !opts.some(p => p.id === cur.id)) opts.push(cur);
+        const e = chk.rows[i].err;
+        return { md: r.md, note: r.note, err: e, hasErr: !!e, border: e ? '#9B1F24' : '#8C9096',
+          options: opts.map(p => ({ label: p.code + ' · ' + p.name + (p.status === 'ACTIVE' ? '' : ' (đã nghỉ)'), ...seg(p.id === r.pers, () => this.rowSet(r.key, { pers: p.id })) })),
+          onMd: (ev) => this.rowSet(r.key, { md: ev.target.value.replace(',', '.') }),
+          onNote: (ev) => this.rowSet(r.key, { note: ev.target.value }),
+          onRemove: () => this.setState({ alloc: { ...this.state.alloc, rows: this.state.alloc.rows.filter(x => x.key !== r.key) } }) };
+      });
+      let pill = 'Hợp lệ', tone = 'ok', banner = '';
+      if (chk.stepBad) { pill = 'Sai bước 0.1 (BR-07)'; tone = 'bad'; banner = 'Có dòng nhập sai bước 0.1 md. Xem lỗi ở từng dòng bên dưới.'; }
+      else if (chk.over) { pill = 'Vượt nỗ lực chốt (BR-01)'; tone = 'bad'; banner = 'Tổng phân bổ ' + this.f1(this.r1(chk.B + chk.C)) + ' md vượt nỗ lực chốt ' + this.f1(chk.A) + ' md của ' + chk.req.code + '. Muốn vượt, hãy tăng số chốt trước.'; }
+      else if (chk.dupBad) { pill = 'Trùng nhân sự'; tone = 'bad'; banner = 'Mỗi nhân sự chỉ có một dòng trong cùng một đợt.'; }
+      else if (chk.monthDup) { pill = 'Tháng đã có đợt'; tone = 'bad'; banner = chk.req.code + ' đã có đợt phân bổ tháng ' + a.month + '. Mỗi PYC tối đa một đợt mỗi tháng.'; }
+      else if (chk.C === 0) { pill = 'Chưa nhập nỗ lực'; tone = 'neutral'; }
+      else if (chk.rem === 0) { pill = 'Phân bổ hết 100%'; tone = 'ok'; }
+      const bad = tone === 'bad';
+      const bPct = chk.A > 0 ? Math.min(100, chk.B / chk.A * 100) : 0;
+      const cPct = chk.A > 0 ? Math.max(0, Math.min(100 - bPct, chk.C / chk.A * 100)) : 0;
+      av = { open: true, title: a.edit ? 'Sửa đợt phân bổ tháng ' + a.month : 'Tạo đợt phân bổ cuối tháng',
+        reqOpts: reqs.map(r => ({ label: r.code + ' · ' + r.name, on: r.id === a.req, style: r.id === a.req ? ACTIVE : (a.edit ? 'opacity:.5;cursor:not-allowed' : ''),
+          pick: () => { if (!a.edit) this.setState({ alloc: { ...a, req: r.id, rows: [this.blankRow(r.id)] } }); } })),
+        month: a.month, note: a.note,
+        onMonth: (ev) => this.setState({ alloc: { ...this.state.alloc, month: ev.target.value } }),
+        onNote: (ev) => this.setState({ alloc: { ...this.state.alloc, note: ev.target.value } }),
+        A: this.f1(chk.A) + ' md', B: this.f1(chk.B) + ' md', C: this.f1(chk.C) + ' md', rem: this.f1(chk.rem) + ' md',
+        remStyle: bad || chk.over ? 'color:#9B1F24' : 'color:#11633A',
+        pill, pillStyle: chip(tone),
+        boxStyle: bad ? 'border:2px solid #C9514F;background:#FDF1F0' : 'border:2px solid #B5D3D7;background:#EEF5F6',
+        bPct, cPct: chk.over ? 100 - bPct : cPct, cColor: bad ? '#9B1F24' : '#0B5563',
+        barLabel: 'Đã phân bổ khác ' + this.f1(chk.B) + ', đợt này ' + this.f1(chk.C) + ' trên tổng chốt ' + this.f1(chk.A) + ' md',
+        banner, hasBanner: !!banner, rows: rowsV, noMembers: allowed.length === 0, canAdd: allowed.length > 0,
+        cantSave: bad || chk.C === 0 || !a.rows.length || chk.emptyRow || !a.month,
+        close: () => this.setState({ alloc: null }), save: () => this.saveAlloc(),
+        addRow: () => this.setState({ alloc: { ...this.state.alloc, rows: this.state.alloc.rows.concat([this.blankRow(a.req)]) } }) };
+    }
+
+    let pv = { open: false, title: '', on: {}, typeOpts: [], statusOpts: [], hasErr: false, err: '', close: () => {}, save: () => {}, code: '', name: '', est: '', locked: '', deadline: '', requester: '', link: '' };
+    if (s.pyc) {
+      const p = s.pyc;
+      const TYPES = [['CR', 'CR · Yêu cầu thay đổi'], ['BUG', 'BUG · Sửa lỗi'], ['NEW_FEATURE', 'Tính năng mới'], ['SUPPORT', 'Hỗ trợ vận hành']];
+      pv = { open: true, title: p.id ? 'Sửa PYC ' + p.code : 'Thêm PYC mới', ...p, hasErr: !!p.err,
+        on: { code: this.field('pyc', 'code'), name: this.field('pyc', 'name'), est: this.field('pyc', 'est'), locked: this.field('pyc', 'locked'), deadline: this.field('pyc', 'deadline'), requester: this.field('pyc', 'requester'), link: this.field('pyc', 'link') },
+        typeOpts: TYPES.map(t => ({ label: t[1], ...seg(p.type === t[0], () => this.setState({ pyc: { ...this.state.pyc, type: t[0] } })) })),
+        statusOpts: Object.keys(STATUS).map(k => ({ label: STATUS[k][0], ...seg(p.status === k, () => this.setState({ pyc: { ...this.state.pyc, status: k } })) })),
+        close: () => this.setState({ pyc: null }), save: () => this.savePyc() };
+    }
+
+    let dv = { open: false, on: {}, scopeOpts: [], hasErr: false, err: '', title: '', type: '', url: '', note: '', close: () => {}, save: () => {} };
+    if (s.doc) {
+      const d = s.doc;
+      dv = { open: true, ...d, hasErr: !!d.err,
+        on: { title: this.field('doc', 'title'), type: this.field('doc', 'type'), url: this.field('doc', 'url'), note: this.field('doc', 'note') },
+        scopeOpts: [{ label: 'Chung dự án', ...seg(d.req === null, () => this.setState({ doc: { ...this.state.doc, req: null } })) }]
+          .concat(reqs.map(r => ({ label: r.code, ...seg(d.req === r.id, () => this.setState({ doc: { ...this.state.doc, req: r.id } })) }))),
+        close: () => this.setState({ doc: null }), save: () => this.saveDoc() };
+    }
+
+    let nv = { open: false, on: {}, statusOpts: [], hasErr: false, err: '', title: '', code: '', name: '', role: '', note: '', close: () => {}, save: () => {} };
+    if (s.pers) {
+      const p = s.pers;
+      nv = { open: true, title: p.id ? 'Sửa nhân sự ' + p.code : 'Thêm nhân sự', ...p, hasErr: !!p.err,
+        on: { code: this.field('pers', 'code'), name: this.field('pers', 'name'), role: this.field('pers', 'role'), note: this.field('pers', 'note') },
+        statusOpts: [['ACTIVE', 'Đang làm'], ['INACTIVE', 'Đã nghỉ']].map(o => ({ label: o[1], ...seg(p.status === o[0], () => this.setState({ pers: { ...this.state.pers, status: o[0] } })) })),
+        close: () => this.setState({ pers: null }), save: () => this.savePers() };
+    }
+
+    let mj = { open: false, on: {}, statusOpts: [], hasErr: false, err: '', title: '', code: '', name: '', customer: '', close: () => {}, save: () => {} };
+    if (s.proj) {
+      const p = s.proj;
+      mj = { open: true, title: p.id ? 'Sửa dự án ' + p.code : 'Thêm dự án mới', ...p, hasErr: !!p.err,
+        on: { code: this.field('proj', 'code'), name: this.field('proj', 'name'), customer: this.field('proj', 'customer') },
+        statusOpts: Object.keys(PROJ_ST).map(k => ({ label: PROJ_ST[k][0], ...seg(p.status === k, () => this.setState({ proj: { ...this.state.proj, status: k } })) })),
+        close: () => this.setState({ proj: null }), save: () => this.saveProj() };
+    }
+
+    let bv = { open: false, on: {}, reqOpts: [], statusOpts: [], hasErr: false, err: '', code: '', title: '', url: '', close: () => {}, save: () => {} };
+    if (s.bbntModal) {
+      const b = s.bbntModal;
+      bv = { open: true, ...b, hasErr: !!b.err,
+        on: { code: this.field('bbntModal', 'code'), title: this.field('bbntModal', 'title'), url: this.field('bbntModal', 'url') },
+        reqOpts: reqs.map(r => ({ label: r.code + ' · ' + r.name, ...seg(b.req === r.id, () => this.setState({ bbntModal: { ...this.state.bbntModal, req: r.id } })) })),
+        statusOpts: [['NOT_SENT', 'Chưa gửi'], ['SENT', 'Đã gửi (02/11/2026)']].map(o => ({ label: o[1], ...seg(b.status === o[0], () => this.setState({ bbntModal: { ...this.state.bbntModal, status: o[0] } })) })),
+        close: () => this.setState({ bbntModal: null }), save: () => this.saveBbnt() };
+    }
+
+    let xv = { open: false, rows: [], close: () => {}, runSample: () => {}, commit: () => {}, expPyc: () => {}, expAlloc: () => {}, expBbnt: () => {}, expPers: () => {} };
+    if (s.excelModal) {
+      xv = {
+        open: true,
+        rows: s.excelModal.rows.map(r => ({
+          row: r.row, key: r.key, mode: r.mode, message: r.message,
+          chip: chip(r.status === 'VALID' ? (r.mode === 'INSERT' ? 'ok' : 'info') : 'bad'),
+          msgStyle: r.status === 'VALID' ? 'color:#11633A;font-weight:600' : 'color:#9B1F24;font-weight:600'
+        })),
+        close: () => this.setState({ excelModal: null }),
+        runSample: () => this.openExcel(),
+        commit: () => this.commitExcel(),
+        expPyc: () => this.exportExcel('requests'),
+        expAlloc: () => this.exportExcel('allocations'),
+        expBbnt: () => this.exportExcel('bbnt'),
+        expPers: () => this.exportExcel('personnel')
+      };
+    }
+
+    const c = s.confirm;
+    const cv = c ? { open: true, title: c.title, body: c.body, okLabel: c.okLabel, okStyle: c.danger ? 'background:#9B1F24;border-color:#9B1F24' : '', cancel: () => this.setState({ confirm: null }), ok: () => this.doConfirm() }
+      : { open: false, title: '', body: '', okLabel: '', okStyle: '', cancel: () => {}, ok: () => {} };
+
+    const t = s.toast;
+    const TST = { ok: 'background:#10202A;color:#fff', warn: 'background:#7A4F00;color:#fff', bad: 'background:#9B1F24;color:#fff' };
+    const tv = t ? { open: true, msg: t.msg, style: TST[t.tone] || TST.ok, hasUndo: !!t.undo, undo: () => { const u = t.undo; if (u) u(); }, close: () => this.setState({ toast: null }) }
+      : { open: false, msg: '', style: '', hasUndo: false, undo: () => {}, close: () => {} };
+
+    return {
+      nav, isDash: s.screen === 'dashboard', isProj: s.screen === 'projects', isPers: s.screen === 'personnel', isAudit: s.screen === 'audit', isTrash: s.screen === 'trash',
+      dbBadge: s.apiConnected ? '● SQLite Online' : '○ Local Mode',
+      dbBadgeStyle: s.apiConnected ? 'background:#11633A;color:#fff;font-size:10.5px' : 'background:#2A404D;color:#C7D2D9;font-size:10.5px',
+      curProj, projOpts, newProj: () => this.openProj(null), editCurProj: () => this.openProj(pid), openExcel: () => this.openExcel(),
+      canDelProj: projs.length > 1,
+      delCurProj: () => this.ask('delProj', pid, 'Xóa dự án ' + curProjObj.code + '?', 'Dự án được chuyển vào Thùng rác (xóa mềm). Bạn có thể khôi phục lại từ Thùng rác.', 'Xóa mềm dự án', true),
+      kpis, alerts: alertsV, noAlerts: alertsV.length === 0, persReport, matrix,
+      projStats, projPct: totPct, tabs, tabPyc: s.tab === 'pyc', tabMembers: s.tab === 'members', tabAlloc: s.tab === 'alloc', tabDocs: s.tab === 'docs', tabBbnt: s.tab === 'bbnt',
+      pycRows, noPyc: pycRows.length === 0, newPyc: () => this.openPyc(null),
+      memberReqOpts, memberReqCode: mReqObj ? mReqObj.code : '', hasAvail: avail.length > 0, noAvail: avail.length === 0, availOpts, assignRoleVal,
+      onAssignRole: (e) => this.setState({ assignRole: e.target.value }),
+      assign: () => this.assign(mReq, assignPersId, assignRoleVal.trim()),
+      memberRows, noMembers: memberRows.length === 0,
+      allocFilterOpts, batchCards, noBatches: batchCards.length === 0, newAlloc: () => this.openAlloc(s.allocFilter === 'ALL' ? null : s.allocFilter),
+      docRows, noDocs: docRows.length === 0, newDoc: () => this.openDoc(),
+      bbntRows, noBbnt: bbntRows.length === 0, unsentCount: unsent.length, newBbnt: () => this.openBbnt(),
+      persRows, newPers: () => this.openPers(null),
+      auditFilterOpts, auditRows, noAudit: auditRows.length === 0,
+      trashRows, noTrash: trashRows.length === 0,
+      av, pv, dv, nv, mj, bv, xv, cv, tv
+    };
+  }
+}
+</script>
+</body>
+</html>

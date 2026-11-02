@@ -1,0 +1,9 @@
+{
+  "name": "outsource-pm",
+  "version": "1.0.0",
+  "description": "Hệ thống Quản lý Dự án Outsource Nội bộ (MVP - SQLite + Angular/Web UI)",
+  "scripts": {
+    "start": "node backend/server.js",
+    "test": "node backend/test-rules.js"
+  }
+}
