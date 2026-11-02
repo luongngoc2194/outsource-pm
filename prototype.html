@@ -401,7 +401,7 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
               <span role="cell"><span class="chip" style="background:#ECEAE4;color:#444C55">{{d.type}}</span></span>
               <span role="cell" class="mono" style="font-size:12.5px;font-weight:600;color:var(--pri)">{{d.scope}}</span>
               <span role="cell" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
-                <a class="btn btn-sm" href="{{d.url}}" target="_blank" rel="noopener" style="text-decoration:none">Mở xem ↗</a>
+                <button class="btn btn-sm" onClick="{{d.preview}}">👁 Mở xem</button>
                 <a class="btn btn-sm btn-pri" href="{{d.downloadUrl}}" download="{{d.fileName}}" target="_blank" rel="noopener" style="text-decoration:none">⬇ Tải về</a>
               </span>
               <span role="cell" class="sub">{{d.note}}</span>
@@ -446,7 +446,7 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
               </span>
               <span role="cell" class="mono" style="color:var(--pri);font-weight:600">{{b.req}}</span>
               <span role="cell" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
-                <a class="btn btn-sm" href="{{b.url}}" target="_blank" rel="noopener" style="text-decoration:none">Mở xem ↗</a>
+                <button class="btn btn-sm" onClick="{{b.preview}}">👁 Mở xem</button>
                 <a class="btn btn-sm btn-pri" href="{{b.downloadUrl}}" download="{{b.fileName}}" target="_blank" rel="noopener" style="text-decoration:none">⬇ Tải về</a>
               </span>
               <span role="cell" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
@@ -883,6 +883,27 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
 </div>
 </sc-if>
 
+<!-- ============ MODAL: PREVIEW ============ -->
+<sc-if value="{{wv.open}}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;background:rgba(16,32,42,.68);display:flex;align-items:center;justify-content:center;padding:16px;z-index:55">
+  <div role="dialog" aria-modal="true" aria-label="{{wv.title}}" class="card" style="width:94%;max-width:1180px;height:88vh;display:flex;flex-direction:column;border-radius:16px;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,.35)">
+    <div style="padding:14px 20px;background:#10202A;color:#fff;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0">
+        <span class="chip" style="background:#0B5563;color:#E2F3E8;font-size:11px">XEM TRƯỚC</span>
+        <h3 style="font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{wv.title}}</h3>
+        <span class="mono" style="font-size:12px;color:#9FB0BA">({{wv.fileName}})</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <a class="btn btn-sm" href="{{wv.fullUrl}}" target="_blank" rel="noopener" style="background:transparent;color:#fff;border-color:#445664;text-decoration:none">Mở tab mới ↗</a>
+        <a class="btn btn-sm btn-pri" href="{{wv.downloadUrl}}" download="{{wv.fileName}}" target="_blank" rel="noopener" style="text-decoration:none">⬇ Tải về</a>
+        <button class="btn btn-sm" onClick="{{wv.close}}" style="background:transparent;color:#fff;border-color:#445664">Đóng</button>
+      </div>
+    </div>
+    <iframe src="{{wv.embedUrl}}" title="{{wv.title}}" style="width:100%;flex:1;border:none;background:#E9ECEF"></iframe>
+  </div>
+</div>
+</sc-if>
+
 <!-- ============ DIALOG: CONFIRM ============ -->
 <sc-if value="{{cv.open}}" hint-placeholder-val="{{ false }}">
 <div style="position:fixed;inset:0;background:rgba(16,32,42,.58);display:flex;align-items:center;justify-content:center;padding:16px;z-index:60">
@@ -956,7 +977,7 @@ class Component extends DCLogic {
     return {
       screen: 'projects', tab: 'pyc', curProj: 1, memberReq: 1, allocFilter: 'ALL', docFilter: 'ALL', bbntFilter: 'ALL', auditFilter: 'ALL',
       assignPers: 0, assignRole: '', apiConnected: false,
-      alloc: null, pyc: null, doc: null, pers: null, proj: null, bbntModal: null, excelModal: null, confirm: null, toast: null,
+      alloc: null, pyc: null, doc: null, pers: null, proj: null, bbntModal: null, excelModal: null, previewModal: null, confirm: null, toast: null,
       db: {
         projects: [
           { id: 1, code: 'DA-01', name: 'Cổng thông tin khách hàng', customer: 'Viettel / Khối CNTT', status: 'ACTIVE', del: false }
@@ -1258,6 +1279,24 @@ class Component extends DCLogic {
     }
     if (String(url).startsWith('data:')) return 'File đính kèm cục bộ';
     return '';
+  }
+  openPreview(title, url) {
+    if (!url) return;
+    if (String(url).startsWith('/uploads/') || String(url).startsWith('data:')) {
+      const fName = this.fileLabelOf(url) || title;
+      const isUp = String(url).startsWith('/uploads/');
+      this.setState({
+        previewModal: {
+          title,
+          fileName: fName,
+          embedUrl: isUp ? url + '?embed=1' : url,
+          fullUrl: url,
+          downloadUrl: isUp ? url + '?download=1' : url
+        }
+      });
+    } else {
+      window.open(url, '_blank', 'noopener');
+    }
   }
   pickAndUpload(multiple, onDone) {
     const inp = document.createElement('input');
@@ -1867,6 +1906,7 @@ class Component extends DCLogic {
         const dlUrl = String(d.url || '').startsWith('/uploads/') ? d.url + '?download=1' : d.url;
         return { title: d.title, type: d.type, scope: rq ? rq.code : 'Chung dự án', url: d.url, downloadUrl: dlUrl,
           isFile, fileName: fLabel || (d.title + '.file'), note: d.note || '',
+          preview: () => this.openPreview(d.title, d.url),
           edit: () => this.openDoc(d.id),
           del: () => this.ask('delDoc', d.id, 'Xóa hồ sơ "' + d.title + '"?', 'Hồ sơ được chuyển vào Thùng rác.', 'Xóa mềm', true) };
       });
@@ -1888,6 +1928,7 @@ class Component extends DCLogic {
           toggle: () => sent
             ? this.ask('unsendBbnt', b.id, 'Chuyển ' + b.code + ' về chưa gửi?', 'Ngày gửi ' + this.fmtDate(b.sent) + ' sẽ bị xóa.', 'Chuyển về chưa gửi')
             : this.ask('sendBbnt', b.id, 'Đánh dấu ' + b.code + ' đã gửi khách?', 'Hệ thống sẽ ghi nhận ngày gửi là 02/11/2026 (BR-09).', 'Đánh dấu đã gửi'),
+          preview: () => this.openPreview(b.code + ' · ' + b.title, b.url),
           edit: () => this.openBbnt(b.id),
           del: () => this.ask('delBbnt', b.id, 'Xóa biên bản ' + b.code + '?', 'Biên bản được chuyển vào Thùng rác.', 'Xóa mềm', true) };
       });
@@ -2045,6 +2086,16 @@ class Component extends DCLogic {
       };
     }
 
+    const wv = s.previewModal ? {
+      open: true,
+      title: s.previewModal.title,
+      fileName: s.previewModal.fileName,
+      embedUrl: s.previewModal.embedUrl,
+      fullUrl: s.previewModal.fullUrl,
+      downloadUrl: s.previewModal.downloadUrl,
+      close: () => this.setState({ previewModal: null })
+    } : { open: false, title: '', fileName: '', embedUrl: '', fullUrl: '', downloadUrl: '', close: () => {} };
+
     const c = s.confirm;
     const cv = c ? { open: true, title: c.title, body: c.body, okLabel: c.okLabel, okStyle: c.danger ? 'background:#9B1F24;border-color:#9B1F24' : '', cancel: () => this.setState({ confirm: null }), ok: () => this.doConfirm() }
       : { open: false, title: '', body: '', okLabel: '', okStyle: '', cancel: () => {}, ok: () => {} };
@@ -2074,7 +2125,7 @@ class Component extends DCLogic {
       persRows, newPers: () => this.openPers(null),
       auditFilterOpts, auditRows, noAudit: auditRows.length === 0,
       trashRows, noTrash: trashRows.length === 0,
-      av, pv, dv, nv, mj, bv, xv, cv, tv
+      av, pv, dv, nv, mj, bv, xv, wv, cv, tv
     };
   }
 }
