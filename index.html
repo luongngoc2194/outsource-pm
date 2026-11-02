@@ -302,8 +302,15 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
               <button class="seg" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button>
             </sc-for>
           </div>
-          <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
-            <label class="field" style="flex:1 1 220px">Vai trò trong PYC<input class="inp" type="text" value="{{assignRoleVal}}" onInput="{{onAssignRole}}" placeholder="VD: Backend Dev, Tester, BA"></label>
+          <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between">
+            <div style="display:flex;flex-direction:column;gap:6px" role="radiogroup" aria-label="Vai trò trong PYC">
+              <span class="sub" style="font-weight:600">Vai trò trong PYC</span>
+              <div style="display:flex;flex-wrap:wrap;gap:6px">
+                <sc-for list="{{assignRoleOpts}}" as="ro" hint-placeholder-count="7">
+                  <button class="seg" role="radio" aria-checked="{{ro.on}}" onClick="{{ro.pick}}" style="{{ro.style}}">{{ro.label}}</button>
+                </sc-for>
+              </div>
+            </div>
             <button class="btn btn-pri" onClick="{{assign}}">Gán vào PYC</button>
           </div>
         </sc-if>
@@ -678,7 +685,12 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
         <label class="field" style="flex:1 1 120px">Mã nhân sự<input class="inp mono" type="text" value="{{nv.code}}" onInput="{{nv.on.code}}"></label>
         <label class="field" style="flex:3 1 240px">Họ và tên<input class="inp" type="text" value="{{nv.name}}" onInput="{{nv.on.name}}"></label>
       </div>
-      <label class="field">Vai trò chính<input class="inp" type="text" value="{{nv.role}}" onInput="{{nv.on.role}}" placeholder="Frontend / Backend / Tester / BA / PM / Leader / UIUX"></label>
+      <div style="display:flex;flex-direction:column;gap:8px" role="radiogroup" aria-label="Vai trò chính">
+        <span class="sub" style="font-weight:600">Vai trò chính</span>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <sc-for list="{{nv.roleOpts}}" as="o" hint-placeholder-count="7"><button class="seg" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button></sc-for>
+        </div>
+      </div>
       <div style="display:flex;flex-wrap:wrap;gap:14px">
         <label class="field" style="flex:3 1 220px">Email<input class="inp mono" type="email" value="{{nv.email}}" onInput="{{nv.on.email}}" placeholder="ten@lifesup.com.vn"></label>
         <label class="field" style="flex:2 1 150px">Số điện thoại<input class="inp mono tn" type="text" value="{{nv.phone}}" onInput="{{nv.on.phone}}" placeholder="09xxxxxxxx"></label>
@@ -899,35 +911,31 @@ class Component extends DCLogic {
           { id: 2, proj: 1, code: 'PYC-002', name: 'Sửa lỗi xuất Excel', type: 'BUG', deadline: '2026-11-10', status: 'IN_PROGRESS', requester: 'Chị Hương - Vận hành', link: 'https://jira.example.com/browse/PYC-002', est: 8, locked: 10, del: false }
         ],
         personnel: [
-          { id: 1, code: 'NS01', name: 'Nguyễn Văn An', role: 'Dev', email: 'an.nguyen@lifesup.com.vn', phone: '0901112233', status: 'ACTIVE', note: 'Backend Core', del: false },
-          { id: 2, code: 'NS02', name: 'Trần Văn Bình', role: 'Dev', email: 'binh.tran@lifesup.com.vn', phone: '0902223344', status: 'ACTIVE', note: 'Frontend Angular', del: false },
-          { id: 3, code: 'NS03', name: 'Lê Thị Chi', role: 'Tester', email: 'chi.le@lifesup.com.vn', phone: '0903334455', status: 'ACTIVE', note: 'QA / Tester', del: false },
-          { id: 4, code: 'NS04', name: 'Phạm Văn Dũng', role: 'BA', email: 'dung.pham@lifesup.com.vn', phone: '0904445566', status: 'INACTIVE', note: 'Đã nghỉ việc từ T09/2026', del: false },
-          { id: 5, code: 'NS05', name: 'Lê Thị Kim Chung', role: 'Tester', email: 'chung.le@lifesup.com', phone: '+84 901234567', status: 'ACTIVE', note: 'Gia nhập: 2/11/2026', del: false },
-          { id: 6, code: 'NS06', name: 'Le Quang Minh', role: 'Frontend', email: 'minh.le@lifesup.com.vn', phone: 'N/A', status: 'ACTIVE', note: 'Gia nhập: 10/9/2026', del: false },
-          { id: 7, code: 'NS07', name: 'Do Tuan Long', role: 'Frontend', email: 'long.do@lifesup.com.vn', phone: 'N/A', status: 'ACTIVE', note: 'Gia nhập: 10/9/2026', del: false },
-          { id: 8, code: 'NS08', name: 'Nguyễn Trọng Nam', role: 'PM', email: 'nam.nguyen@lifesup.com.vn', phone: 'N/A', status: 'ACTIVE', note: 'Gia nhập: 10/9/2026', del: false },
-          { id: 9, code: 'NS09', name: 'KHánh Trinh', role: 'Frontend', email: 'luong_ngoc21@yahoo.com', phone: '+84 901234567', status: 'ACTIVE', note: 'Gia nhập: 30/7/2026', del: false },
-          { id: 10, code: 'NS10', name: 'Vương Sơn Tùng', role: 'Frontend', email: 'tung.vuong@lifesup.com.vn', phone: '+84 901234567', status: 'ACTIVE', note: 'Gia nhập: 30/7/2026', del: false },
-          { id: 11, code: 'NS11', name: 'Đỗ Công Hòa', role: 'Frontend', email: 'hoa.do@lifesup.com.vn', phone: '+84 901234567', status: 'ACTIVE', note: 'Gia nhập: 30/7/2026', del: false },
-          { id: 12, code: 'NS12', name: 'Hoàng Thị Huyền Trang', role: 'Tester', email: 'trang.hoang01@lifesup.com.vn', phone: '+84 901234567', status: 'ACTIVE', note: 'Gia nhập: 30/7/2026', del: false },
-          { id: 13, code: 'NS13', name: 'Dương Tuấn Vũ', role: 'Leader', email: 'vu.duong@lifesup.com.vn', phone: '+84 901234567', status: 'ACTIVE', note: 'Technical Leader · Gia nhập: 30/7/2026', del: false },
-          { id: 14, code: 'NS14', name: 'Nguyễn Đức Thắng', role: 'Frontend', email: 'nguyenducthang.neu@gmail.com', phone: '0356851332', status: 'ACTIVE', note: 'Lập trình viên Frontend (FE) · Gia nhập: 29/7/2026', del: false },
-          { id: 15, code: 'NS15', name: 'Lương Bá Ngọc', role: 'Leader', email: 'luongngoc2194@gmail.com', phone: '0379394690', status: 'ACTIVE', note: 'FE Lead hệ thống · Gia nhập: 29/7/2026', del: false },
-          { id: 16, code: 'NS16', name: 'Nguyễn Hồng Thơm', role: 'BA', email: 'thom.nh96@gmail.com', phone: '0971047982', status: 'ACTIVE', note: 'Chuyên viên Phân tích Nghiệp vụ (BA) · Gia nhập: 29/7/2026', del: false },
-          { id: 17, code: 'NS17', name: 'Trần Ngọc Phú', role: 'Backend', email: 'tranphuth0609@gmail.com', phone: '0376395844', status: 'ACTIVE', note: 'Lập trình viên Backend (BE) · Gia nhập: 29/7/2026', del: false },
-          { id: 18, code: 'NS18', name: 'Nguyễn Thị Hà', role: 'Tester', email: 'nguyenha.k9d@gmail.com', phone: '0985286441', status: 'ACTIVE', note: 'Chuyên viên Kiểm thử (Tester) · Gia nhập: 29/7/2026', del: false },
-          { id: 19, code: 'NS19', name: 'Tô Thị Mai Quy', role: 'BA', email: 'toquy2k2@gmail.com.vn', phone: '0932235082', status: 'ACTIVE', note: 'Chuyên viên Phân tích Nghiệp vụ (BA) · Gia nhập: 29/7/2026', del: false },
-          { id: 20, code: 'NS20', name: 'Nguyễn Quý Giang', role: 'Frontend', email: 'giangquy2706@gmail.com.vn', phone: '0366608023', status: 'ACTIVE', note: 'Lập trình viên Frontend (FE) · Gia nhập: 29/7/2026', del: false },
-          { id: 21, code: 'NS21', name: 'Đỗ Văn Trung', role: 'Frontend', email: 'dvant24102003@gmail.com', phone: '0876043542', status: 'ACTIVE', note: 'Lập trình viên Frontend (FE) · Gia nhập: 29/7/2026', del: false },
-          { id: 22, code: 'NS22', name: 'Nguyễn Viết Hoàng', role: 'UIUX', email: 'hoang17102003.work@gmail.com', phone: '0868229726', status: 'ACTIVE', note: 'Thiết kế Giao diện UI/UX Designer · Gia nhập: 29/7/2026', del: false },
-          { id: 23, code: 'NS23', name: 'Đinh Đức Hải', role: 'Backend', email: 'hdtht198@gmail.com', phone: '0347577771', status: 'ACTIVE', note: 'Lập trình viên DEV BE · Gia nhập: 29/7/2026', del: false }
+          { id: 1, code: 'NS01', name: 'Lê Thị Kim Chung', role: 'Tester', email: 'chung.le@lifesup.com', phone: '+84 901234567', status: 'ACTIVE', note: 'Gia nhập: 2/11/2026', del: false },
+          { id: 2, code: 'NS02', name: 'Le Quang Minh', role: 'Frontend', email: 'minh.le@lifesup.com.vn', phone: 'N/A', status: 'ACTIVE', note: 'Gia nhập: 10/9/2026', del: false },
+          { id: 3, code: 'NS03', name: 'Do Tuan Long', role: 'Frontend', email: 'long.do@lifesup.com.vn', phone: 'N/A', status: 'ACTIVE', note: 'Gia nhập: 10/9/2026', del: false },
+          { id: 4, code: 'NS04', name: 'Nguyễn Trọng Nam', role: 'PM', email: 'nam.nguyen@lifesup.com.vn', phone: 'N/A', status: 'ACTIVE', note: 'Gia nhập: 10/9/2026', del: false },
+          { id: 5, code: 'NS05', name: 'KHánh Trinh', role: 'Frontend', email: 'luong_ngoc21@yahoo.com', phone: '+84 901234567', status: 'ACTIVE', note: 'Gia nhập: 30/7/2026', del: false },
+          { id: 6, code: 'NS06', name: 'Vương Sơn Tùng', role: 'Frontend', email: 'tung.vuong@lifesup.com.vn', phone: '+84 901234567', status: 'ACTIVE', note: 'Gia nhập: 30/7/2026', del: false },
+          { id: 7, code: 'NS07', name: 'Đỗ Công Hòa', role: 'Frontend', email: 'hoa.do@lifesup.com.vn', phone: '+84 901234567', status: 'ACTIVE', note: 'Gia nhập: 30/7/2026', del: false },
+          { id: 8, code: 'NS08', name: 'Hoàng Thị Huyền Trang', role: 'Tester', email: 'trang.hoang01@lifesup.com.vn', phone: '+84 901234567', status: 'ACTIVE', note: 'Gia nhập: 30/7/2026', del: false },
+          { id: 9, code: 'NS09', name: 'Dương Tuấn Vũ', role: 'Leader', email: 'vu.duong@lifesup.com.vn', phone: '+84 901234567', status: 'ACTIVE', note: 'Technical Leader · Gia nhập: 30/7/2026', del: false },
+          { id: 10, code: 'NS10', name: 'Nguyễn Đức Thắng', role: 'Frontend', email: 'nguyenducthang.neu@gmail.com', phone: '0356851332', status: 'ACTIVE', note: 'Lập trình viên Frontend (FE) · Gia nhập: 29/7/2026', del: false },
+          { id: 11, code: 'NS11', name: 'Lương Bá Ngọc', role: 'Leader', email: 'luongngoc2194@gmail.com', phone: '0379394690', status: 'ACTIVE', note: 'FE Lead hệ thống · Gia nhập: 29/7/2026', del: false },
+          { id: 12, code: 'NS12', name: 'Nguyễn Hồng Thơm', role: 'BA', email: 'thom.nh96@gmail.com', phone: '0971047982', status: 'ACTIVE', note: 'Chuyên viên Phân tích Nghiệp vụ (BA) · Gia nhập: 29/7/2026', del: false },
+          { id: 13, code: 'NS13', name: 'Trần Ngọc Phú', role: 'Backend', email: 'tranphuth0609@gmail.com', phone: '0376395844', status: 'ACTIVE', note: 'Lập trình viên Backend (BE) · Gia nhập: 29/7/2026', del: false },
+          { id: 14, code: 'NS14', name: 'Nguyễn Thị Hà', role: 'Tester', email: 'nguyenha.k9d@gmail.com', phone: '0985286441', status: 'ACTIVE', note: 'Chuyên viên Kiểm thử (Tester) · Gia nhập: 29/7/2026', del: false },
+          { id: 15, code: 'NS15', name: 'Tô Thị Mai Quy', role: 'BA', email: 'toquy2k2@gmail.com.vn', phone: '0932235082', status: 'ACTIVE', note: 'Chuyên viên Phân tích Nghiệp vụ (BA) · Gia nhập: 29/7/2026', del: false },
+          { id: 16, code: 'NS16', name: 'Nguyễn Quý Giang', role: 'Frontend', email: 'giangquy2706@gmail.com.vn', phone: '0366608023', status: 'ACTIVE', note: 'Lập trình viên Frontend (FE) · Gia nhập: 29/7/2026', del: false },
+          { id: 17, code: 'NS17', name: 'Đỗ Văn Trung', role: 'Frontend', email: 'dvant24102003@gmail.com', phone: '0876043542', status: 'ACTIVE', note: 'Lập trình viên Frontend (FE) · Gia nhập: 29/7/2026', del: false },
+          { id: 18, code: 'NS18', name: 'Nguyễn Viết Hoàng', role: 'UIUX', email: 'hoang17102003.work@gmail.com', phone: '0868229726', status: 'ACTIVE', note: 'Thiết kế Giao diện UI/UX Designer · Gia nhập: 29/7/2026', del: false },
+          { id: 19, code: 'NS19', name: 'Đinh Đức Hải', role: 'Backend', email: 'hdtht198@gmail.com', phone: '0347577771', status: 'ACTIVE', note: 'Lập trình viên DEV BE · Gia nhập: 29/7/2026', del: false }
         ],
         members: [
-          { id: 1, req: 1, pers: 1, role: 'Backend Dev', del: false },
-          { id: 2, req: 1, pers: 2, role: 'Frontend Dev', del: false },
-          { id: 3, req: 1, pers: 3, role: 'Tester', del: false },
-          { id: 4, req: 2, pers: 2, role: 'Frontend Dev', del: false }
+          { id: 1, req: 1, pers: 1, role: 'Tester', del: false },
+          { id: 2, req: 1, pers: 2, role: 'Frontend', del: false },
+          { id: 3, req: 1, pers: 3, role: 'Frontend', del: false },
+          { id: 4, req: 2, pers: 2, role: 'Frontend', del: false }
         ],
         batches: [
           { id: 1, req: 1, month: '2026-10', note: 'Phân bổ nỗ lực đợt cuối T10/2026', del: false },
@@ -1438,7 +1446,8 @@ class Component extends DCLogic {
     const allActiveProjIds = projs.map(p => p.id);
     const allReqs = db.requests.filter(r => !r.del && allActiveProjIds.includes(r.proj));
     const reqs = db.requests.filter(r => !r.del && r.proj === pid);
-    const pers = db.personnel.filter(p => !p.del);
+    const pers = db.personnel.filter(p => !p.del).slice().sort((a, b) => (a.status === 'ACTIVE' ? 0 : 1) - (b.status === 'ACTIVE' ? 0 : 1) || a.id - b.id);
+    const ROLES = ['Frontend', 'Backend', 'Tester', 'BA', 'PM', 'Leader', 'UIUX', 'DevOps'];
     const reqIds = reqs.map(r => r.id);
     const allReqIds = allReqs.map(r => r.id);
 
@@ -1562,7 +1571,8 @@ class Component extends DCLogic {
     const avail = pers.filter(p => p.status === 'ACTIVE' && !memberIds.includes(p.id));
     const assignPersId = avail.find(p => p.id === s.assignPers) ? s.assignPers : (avail[0] ? avail[0].id : 0);
     const assignPersObj = avail.find(p => p.id === assignPersId);
-    const assignRoleVal = s.assignRole !== '' ? s.assignRole : (assignPersObj ? assignPersObj.role : '');
+    const assignRoleVal = s.assignRole !== '' ? s.assignRole : (assignPersObj ? assignPersObj.role : 'Frontend');
+    const assignRoleOpts = ROLES.map(r => ({ label: r, ...seg(assignRoleVal === r, () => this.setState({ assignRole: r })) }));
     const availOpts = avail.map(p => ({ label: p.code + ' · ' + p.name + ' (' + p.role + ')', ...seg(p.id === assignPersId, () => this.setState({ assignPers: p.id, assignRole: '' })) }));
     const bIds = db.batches.filter(b => b.req === mReq && !b.del).map(b => b.id);
     const memberRows = db.members.filter(m => m.req === mReq && !m.del).map(m => {
@@ -1702,11 +1712,13 @@ class Component extends DCLogic {
         close: () => this.setState({ doc: null }), save: () => this.saveDoc() };
     }
 
-    let nv = { open: false, on: {}, statusOpts: [], hasErr: false, err: '', title: '', code: '', name: '', role: '', email: '', phone: '', note: '', close: () => {}, save: () => {} };
+    let nv = { open: false, on: {}, roleOpts: [], statusOpts: [], hasErr: false, err: '', title: '', code: '', name: '', role: '', email: '', phone: '', note: '', close: () => {}, save: () => {} };
     if (s.pers) {
       const p = s.pers;
+      const roleList = ROLES.includes(p.role) ? ROLES : [p.role].concat(ROLES);
       nv = { open: true, title: p.id ? 'Sửa nhân sự ' + p.code : 'Thêm nhân sự', ...p, hasErr: !!p.err,
-        on: { code: this.field('pers', 'code'), name: this.field('pers', 'name'), role: this.field('pers', 'role'), email: this.field('pers', 'email'), phone: this.field('pers', 'phone'), note: this.field('pers', 'note') },
+        on: { code: this.field('pers', 'code'), name: this.field('pers', 'name'), email: this.field('pers', 'email'), phone: this.field('pers', 'phone'), note: this.field('pers', 'note') },
+        roleOpts: roleList.map(r => ({ label: r, ...seg(p.role === r, () => this.setState({ pers: { ...this.state.pers, role: r } })) })),
         statusOpts: [['ACTIVE', 'Đang làm'], ['INACTIVE', 'Đã nghỉ']].map(o => ({ label: o[1], ...seg(p.status === o[0], () => this.setState({ pers: { ...this.state.pers, status: o[0] } })) })),
         close: () => this.setState({ pers: null }), save: () => this.savePers() };
     }
@@ -1768,7 +1780,7 @@ class Component extends DCLogic {
       kpis, alerts: alertsV, noAlerts: alertsV.length === 0, persReport, matrix,
       projStats, projPct: totPct, tabs, tabPyc: s.tab === 'pyc', tabMembers: s.tab === 'members', tabAlloc: s.tab === 'alloc', tabDocs: s.tab === 'docs', tabBbnt: s.tab === 'bbnt',
       pycRows, noPyc: pycRows.length === 0, newPyc: () => this.openPyc(null),
-      memberReqOpts, memberReqCode: mReqObj ? mReqObj.code : '', hasAvail: avail.length > 0, noAvail: avail.length === 0, availOpts, assignRoleVal,
+      memberReqOpts, memberReqCode: mReqObj ? mReqObj.code : '', hasAvail: avail.length > 0, noAvail: avail.length === 0, availOpts, assignRoleVal, assignRoleOpts,
       onAssignRole: (e) => this.setState({ assignRole: e.target.value }),
       assign: () => this.assign(mReq, assignPersId, assignRoleVal.trim()),
       memberRows, noMembers: memberRows.length === 0,

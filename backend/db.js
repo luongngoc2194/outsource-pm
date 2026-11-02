@@ -153,40 +153,43 @@ function createDatabase(dbPath) {
 }
 
 const IMAGE_PERSONNEL = [
-  ['NS05', 'Lê Thị Kim Chung', 'Tester', 'chung.le@lifesup.com', '+84 901234567', 'ACTIVE', 'Gia nhập: 2/11/2026'],
-  ['NS06', 'Le Quang Minh', 'Frontend', 'minh.le@lifesup.com.vn', 'N/A', 'ACTIVE', 'Gia nhập: 10/9/2026'],
-  ['NS07', 'Do Tuan Long', 'Frontend', 'long.do@lifesup.com.vn', 'N/A', 'ACTIVE', 'Gia nhập: 10/9/2026'],
-  ['NS08', 'Nguyễn Trọng Nam', 'PM', 'nam.nguyen@lifesup.com.vn', 'N/A', 'ACTIVE', 'Gia nhập: 10/9/2026'],
-  ['NS09', 'KHánh Trinh', 'Frontend', 'luong_ngoc21@yahoo.com', '+84 901234567', 'ACTIVE', 'Gia nhập: 30/7/2026'],
-  ['NS10', 'Vương Sơn Tùng', 'Frontend', 'tung.vuong@lifesup.com.vn', '+84 901234567', 'ACTIVE', 'Gia nhập: 30/7/2026'],
-  ['NS11', 'Đỗ Công Hòa', 'Frontend', 'hoa.do@lifesup.com.vn', '+84 901234567', 'ACTIVE', 'Gia nhập: 30/7/2026'],
-  ['NS12', 'Hoàng Thị Huyền Trang', 'Tester', 'trang.hoang01@lifesup.com.vn', '+84 901234567', 'ACTIVE', 'Gia nhập: 30/7/2026'],
-  ['NS13', 'Dương Tuấn Vũ', 'Leader', 'vu.duong@lifesup.com.vn', '+84 901234567', 'ACTIVE', 'Technical Leader · Gia nhập: 30/7/2026'],
-  ['NS14', 'Nguyễn Đức Thắng', 'Frontend', 'nguyenducthang.neu@gmail.com', '0356851332', 'ACTIVE', 'Lập trình viên Frontend (FE) · Gia nhập: 29/7/2026'],
-  ['NS15', 'Lương Bá Ngọc', 'Leader', 'luongngoc2194@gmail.com', '0379394690', 'ACTIVE', 'FE Lead hệ thống · Gia nhập: 29/7/2026'],
-  ['NS16', 'Nguyễn Hồng Thơm', 'BA', 'thom.nh96@gmail.com', '0971047982', 'ACTIVE', 'Chuyên viên Phân tích Nghiệp vụ (BA) · Gia nhập: 29/7/2026'],
-  ['NS17', 'Trần Ngọc Phú', 'Backend', 'tranphuth0609@gmail.com', '0376395844', 'ACTIVE', 'Lập trình viên Backend (BE) · Gia nhập: 29/7/2026'],
-  ['NS18', 'Nguyễn Thị Hà', 'Tester', 'nguyenha.k9d@gmail.com', '0985286441', 'ACTIVE', 'Chuyên viên Kiểm thử (Tester) · Gia nhập: 29/7/2026'],
-  ['NS19', 'Tô Thị Mai Quy', 'BA', 'toquy2k2@gmail.com.vn', '0932235082', 'ACTIVE', 'Chuyên viên Phân tích Nghiệp vụ (BA) · Gia nhập: 29/7/2026'],
-  ['NS20', 'Nguyễn Quý Giang', 'Frontend', 'giangquy2706@gmail.com.vn', '0366608023', 'ACTIVE', 'Lập trình viên Frontend (FE) · Gia nhập: 29/7/2026'],
-  ['NS21', 'Đỗ Văn Trung', 'Frontend', 'dvant24102003@gmail.com', '0876043542', 'ACTIVE', 'Lập trình viên Frontend (FE) · Gia nhập: 29/7/2026'],
-  ['NS22', 'Nguyễn Viết Hoàng', 'UIUX', 'hoang17102003.work@gmail.com', '0868229726', 'ACTIVE', 'Thiết kế Giao diện UI/UX Designer · Gia nhập: 29/7/2026'],
-  ['NS23', 'Đinh Đức Hải', 'Backend', 'hdtht198@gmail.com', '0347577771', 'ACTIVE', 'Lập trình viên DEV BE · Gia nhập: 29/7/2026']
+  [1, 'NS01', 'Lê Thị Kim Chung', 'Tester', 'chung.le@lifesup.com', '+84 901234567', 'ACTIVE', 'Gia nhập: 2/11/2026'],
+  [2, 'NS02', 'Le Quang Minh', 'Frontend', 'minh.le@lifesup.com.vn', 'N/A', 'ACTIVE', 'Gia nhập: 10/9/2026'],
+  [3, 'NS03', 'Do Tuan Long', 'Frontend', 'long.do@lifesup.com.vn', 'N/A', 'ACTIVE', 'Gia nhập: 10/9/2026'],
+  [4, 'NS04', 'Nguyễn Trọng Nam', 'PM', 'nam.nguyen@lifesup.com.vn', 'N/A', 'ACTIVE', 'Gia nhập: 10/9/2026'],
+  [5, 'NS05', 'KHánh Trinh', 'Frontend', 'luong_ngoc21@yahoo.com', '+84 901234567', 'ACTIVE', 'Gia nhập: 30/7/2026'],
+  [6, 'NS06', 'Vương Sơn Tùng', 'Frontend', 'tung.vuong@lifesup.com.vn', '+84 901234567', 'ACTIVE', 'Gia nhập: 30/7/2026'],
+  [7, 'NS07', 'Đỗ Công Hòa', 'Frontend', 'hoa.do@lifesup.com.vn', '+84 901234567', 'ACTIVE', 'Gia nhập: 30/7/2026'],
+  [8, 'NS08', 'Hoàng Thị Huyền Trang', 'Tester', 'trang.hoang01@lifesup.com.vn', '+84 901234567', 'ACTIVE', 'Gia nhập: 30/7/2026'],
+  [9, 'NS09', 'Dương Tuấn Vũ', 'Leader', 'vu.duong@lifesup.com.vn', '+84 901234567', 'ACTIVE', 'Technical Leader · Gia nhập: 30/7/2026'],
+  [10, 'NS10', 'Nguyễn Đức Thắng', 'Frontend', 'nguyenducthang.neu@gmail.com', '0356851332', 'ACTIVE', 'Lập trình viên Frontend (FE) · Gia nhập: 29/7/2026'],
+  [11, 'NS11', 'Lương Bá Ngọc', 'Leader', 'luongngoc2194@gmail.com', '0379394690', 'ACTIVE', 'FE Lead hệ thống · Gia nhập: 29/7/2026'],
+  [12, 'NS12', 'Nguyễn Hồng Thơm', 'BA', 'thom.nh96@gmail.com', '0971047982', 'ACTIVE', 'Chuyên viên Phân tích Nghiệp vụ (BA) · Gia nhập: 29/7/2026'],
+  [13, 'NS13', 'Trần Ngọc Phú', 'Backend', 'tranphuth0609@gmail.com', '0376395844', 'ACTIVE', 'Lập trình viên Backend (BE) · Gia nhập: 29/7/2026'],
+  [14, 'NS14', 'Nguyễn Thị Hà', 'Tester', 'nguyenha.k9d@gmail.com', '0985286441', 'ACTIVE', 'Chuyên viên Kiểm thử (Tester) · Gia nhập: 29/7/2026'],
+  [15, 'NS15', 'Tô Thị Mai Quy', 'BA', 'toquy2k2@gmail.com.vn', '0932235082', 'ACTIVE', 'Chuyên viên Phân tích Nghiệp vụ (BA) · Gia nhập: 29/7/2026'],
+  [16, 'NS16', 'Nguyễn Quý Giang', 'Frontend', 'giangquy2706@gmail.com.vn', '0366608023', 'ACTIVE', 'Lập trình viên Frontend (FE) · Gia nhập: 29/7/2026'],
+  [17, 'NS17', 'Đỗ Văn Trung', 'Frontend', 'dvant24102003@gmail.com', '0876043542', 'ACTIVE', 'Lập trình viên Frontend (FE) · Gia nhập: 29/7/2026'],
+  [18, 'NS18', 'Nguyễn Viết Hoàng', 'UIUX', 'hoang17102003.work@gmail.com', '0868229726', 'ACTIVE', 'Thiết kế Giao diện UI/UX Designer · Gia nhập: 29/7/2026'],
+  [19, 'NS19', 'Đinh Đức Hải', 'Backend', 'hdtht198@gmail.com', '0347577771', 'ACTIVE', 'Lập trình viên DEV BE · Gia nhập: 29/7/2026']
 ];
 
 function ensureImagePersonnel(db) {
-  db.exec(`
-    UPDATE PERSONNEL SET email = 'an.nguyen@lifesup.com.vn', phone = '0901112233' WHERE code = 'NS01' AND (email IS NULL OR email = '');
-    UPDATE PERSONNEL SET email = 'binh.tran@lifesup.com.vn', phone = '0902223344' WHERE code = 'NS02' AND (email IS NULL OR email = '');
-    UPDATE PERSONNEL SET email = 'chi.le@lifesup.com.vn', phone = '0903334455' WHERE code = 'NS03' AND (email IS NULL OR email = '');
-    UPDATE PERSONNEL SET email = 'dung.pham@lifesup.com.vn', phone = '0904445566' WHERE code = 'NS04' AND (email IS NULL OR email = '');
-  `);
-  const check = db.prepare('SELECT id FROM PERSONNEL WHERE code = ?');
-  const ins = db.prepare('INSERT INTO PERSONNEL (code, full_name, default_role, email, phone, status, note, is_deleted) VALUES (?, ?, ?, ?, ?, ?, ?, 0)');
-  for (const row of IMAGE_PERSONNEL) {
-    if (!check.get(row[0])) {
+  const hasFake = db.prepare("SELECT id FROM PERSONNEL WHERE full_name IN ('Nguyễn Văn An', 'Trần Văn Bình', 'Lê Thị Chi', 'Phạm Văn Dũng')").get();
+  if (hasFake) {
+    db.exec('PRAGMA foreign_keys = OFF;');
+    db.exec('DELETE FROM PERSONNEL;');
+    const ins = db.prepare('INSERT INTO PERSONNEL (id, code, full_name, default_role, email, phone, status, note, is_deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)');
+    for (const row of IMAGE_PERSONNEL) {
       ins.run(...row);
     }
+    db.exec(`
+      UPDATE REQUEST_MEMBER SET role_in_request = 'Tester' WHERE id = 1;
+      UPDATE REQUEST_MEMBER SET role_in_request = 'Frontend' WHERE id = 2;
+      UPDATE REQUEST_MEMBER SET role_in_request = 'Frontend' WHERE id = 3;
+      UPDATE REQUEST_MEMBER SET role_in_request = 'Frontend' WHERE id = 4;
+    `);
+    db.exec('PRAGMA foreign_keys = ON;');
   }
 }
 
@@ -194,12 +197,12 @@ function seedDatabase(db) {
   db.exec(`
     INSERT INTO PROJECT (id, code, name, customer_name, status, is_deleted) VALUES
       (1, 'DA-01', 'Cổng thông tin khách hàng', 'Viettel / Khối CNTT', 'ACTIVE', 0);
-
-    INSERT INTO PERSONNEL (id, code, full_name, default_role, email, phone, status, note, is_deleted) VALUES
-      (1, 'NS01', 'Nguyễn Văn An', 'Dev', 'an.nguyen@lifesup.com.vn', '0901112233', 'ACTIVE', 'Backend Core', 0),
-      (2, 'NS02', 'Trần Văn Bình', 'Dev', 'binh.tran@lifesup.com.vn', '0902223344', 'ACTIVE', 'Frontend Angular', 0),
-      (3, 'NS03', 'Lê Thị Chi', 'Tester', 'chi.le@lifesup.com.vn', '0903334455', 'ACTIVE', 'QA / Tester', 0),
-      (4, 'NS04', 'Phạm Văn Dũng', 'BA', 'dung.pham@lifesup.com.vn', '0904445566', 'INACTIVE', 'Đã nghỉ việc từ T09/2026', 0);
+  `);
+  const ins = db.prepare('INSERT INTO PERSONNEL (id, code, full_name, default_role, email, phone, status, note, is_deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)');
+  for (const row of IMAGE_PERSONNEL) {
+    ins.run(...row);
+  }
+  db.exec(`
 
     INSERT INTO REQUEST (id, project_id, code, name, type, deadline, status, customer_requester, external_link, estimated_md, locked_md, is_deleted) VALUES
       (1, 1, 'PYC-001', 'Thêm báo cáo doanh thu', 'CR', '2026-12-15', 'IN_PROGRESS', 'Anh Nam - P.Kế toán', 'https://jira.example.com/browse/PYC-001', 28.0, 30.0, 0),
@@ -285,7 +288,7 @@ class PMRepository {
     const projects = this.db.prepare('SELECT * FROM PROJECT ORDER BY id ASC').all().map(p => ({
       id: p.id, code: p.code, name: p.name, customer: p.customer_name || 'Nội bộ', status: p.status, del: !!p.is_deleted
     }));
-    const personnel = this.db.prepare('SELECT * FROM PERSONNEL ORDER BY id ASC').all().map(p => ({
+    const personnel = this.db.prepare("SELECT * FROM PERSONNEL ORDER BY CASE WHEN status = 'ACTIVE' THEN 0 ELSE 1 END, id ASC").all().map(p => ({
       id: p.id, code: p.code, name: p.full_name, role: p.default_role, email: p.email || '', phone: p.phone || '', status: p.status, note: p.note || '', del: !!p.is_deleted
     }));
     const requests = this.db.prepare('SELECT * FROM REQUEST ORDER BY id ASC').all().map(r => {
