@@ -1552,14 +1552,26 @@ class Component extends DCLogic {
     const validBatches = db.batches.filter(b => !b.del && reqIds.includes(b.req));
 
     // ----- projects -----
+    const mReq = reqs.find(r => r.id === s.memberReq) ? s.memberReq : (reqs[0] ? reqs[0].id : 0);
+    const mReqObj = reqs.find(r => r.id === mReq);
+    const filterReqId = (s.tab === 'alloc' && s.allocFilter !== 'ALL') ? s.allocFilter : (s.tab === 'members' ? mReq : null);
+    const filterReqObj = filterReqId ? reqs.find(r => r.id === filterReqId) : null;
+    const statRm = filterReqObj ? rm.filter(m => m.r.id === filterReqObj.id) : rm;
+    const statLocked = this.r1(statRm.reduce((x, m) => x + Number(m.r.locked), 0));
+    const statAlloc = this.r1(statRm.reduce((x, m) => x + m.a, 0));
+    const statRem = this.r1(statRm.reduce((x, m) => x + m.rem, 0));
+    const statPct = statLocked > 0 ? Math.min(100, Math.round(statAlloc / statLocked * 100)) : 0;
+
     const tabsDef = [['pyc', '1. Danh sách PYC'], ['members', '2. Nhân sự tham gia'], ['alloc', '3. Phân bổ cuối tháng'], ['docs', '4. Hồ sơ dự án'], ['bbnt', '5. Biên bản nghiệm thu']];
     const tabs = tabsDef.map(t => ({ label: t[1], on: s.tab === t[0], pick: () => this.setState({ tab: t[0] }),
       style: s.tab === t[0] ? 'color:#0B5563;background:#fff;box-shadow:inset 0 -3px 0 #0B5563' : '' }));
     const projStats = [
-      { label: 'Số PYC', value: String(reqs.length), sub: 'đang hoạt động', style: '' },
-      { label: 'Tổng chốt', value: this.f1(totLocked) + ' MM', sub: this.mm(totLocked) + ' MD', style: 'color:#0B5563' },
-      { label: 'Đã phân bổ', value: this.f1(totAlloc) + ' MM', sub: this.mm(totAlloc) + ' MD', style: 'color:#11633A' },
-      { label: 'Còn lại', value: this.f1(totRem) + ' MM', sub: this.mm(totRem) + ' MD', style: 'color:#7A4F00' }
+      filterReqObj
+        ? { label: 'Đang lọc PYC', value: filterReqObj.code, sub: filterReqObj.name, style: 'color:#0B5563' }
+        : { label: 'Số PYC', value: String(reqs.length), sub: 'đang hoạt động', style: '' },
+      { label: 'Tổng chốt', value: (filterReqObj && Number(filterReqObj.locked) === 0) ? 'Chưa chốt' : this.f1(statLocked) + ' MM', sub: (filterReqObj && Number(filterReqObj.locked) === 0) ? 'Nhập khi đóng PYC' : this.mm(statLocked) + ' MD', style: 'color:#0B5563' },
+      { label: 'Đã phân bổ', value: this.f1(statAlloc) + ' MM', sub: this.mm(statAlloc) + ' MD', style: 'color:#11633A' },
+      { label: 'Còn lại', value: (filterReqObj && Number(filterReqObj.locked) === 0) ? 'Chưa chốt' : this.f1(statRem) + ' MM', sub: (filterReqObj && Number(filterReqObj.locked) === 0) ? '--' : this.mm(statRem) + ' MD', style: 'color:#7A4F00' }
     ];
 
     const TYPE_MAP = { CR: ['CR · Thay đổi', 'info'], BUG: ['Bug · Sửa lỗi', 'bad'], NEW_FEATURE: ['Tính năng mới', 'ok'], SUPPORT: ['Hỗ trợ', 'warn'] };
@@ -1579,8 +1591,6 @@ class Component extends DCLogic {
     });
 
     // members tab
-    const mReq = reqs.find(r => r.id === s.memberReq) ? s.memberReq : (reqs[0] ? reqs[0].id : 0);
-    const mReqObj = reqs.find(r => r.id === mReq);
     const memberReqOpts = reqs.map(r => seg(r.id === mReq, () => this.setState({ memberReq: r.id, assignPers: 0, assignRole: '' })));
     memberReqOpts.forEach((o, i) => { o.label = reqs[i].code; });
     const memberIds = db.members.filter(m => m.req === mReq && !m.del).map(m => m.pers);
@@ -1794,7 +1804,7 @@ class Component extends DCLogic {
       canDelProj: projs.length > 1,
       delCurProj: () => this.ask('delProj', pid, 'Xóa dự án ' + curProjObj.code + '?', 'Dự án được chuyển vào Thùng rác (xóa mềm). Bạn có thể khôi phục lại từ Thùng rác.', 'Xóa mềm dự án', true),
       kpis, alerts: alertsV, noAlerts: alertsV.length === 0, persReport, matrix,
-      projStats, projPct: totPct, tabs, tabPyc: s.tab === 'pyc', tabMembers: s.tab === 'members', tabAlloc: s.tab === 'alloc', tabDocs: s.tab === 'docs', tabBbnt: s.tab === 'bbnt',
+      projStats, projPct: statPct, tabs, tabPyc: s.tab === 'pyc', tabMembers: s.tab === 'members', tabAlloc: s.tab === 'alloc', tabDocs: s.tab === 'docs', tabBbnt: s.tab === 'bbnt',
       pycRows, noPyc: pycRows.length === 0, newPyc: () => this.openPyc(null),
       memberReqOpts, memberReqCode: mReqObj ? mReqObj.code : '', hasAvail: avail.length > 0, noAvail: avail.length === 0, availOpts, assignRoleVal, assignRoleOpts,
       onAssignRole: (e) => this.setState({ assignRole: e.target.value }),
