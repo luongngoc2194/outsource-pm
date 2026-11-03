@@ -134,14 +134,26 @@ async function execPipeline(statements, customCfg) {
   });
   requests.push({ type: 'close' });
 
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${cfg.token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ requests })
-  });
+  let res;
+  let lastErr;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${cfg.token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ requests })
+      });
+      break;
+    } catch (e) {
+      const cause = e.cause ? (e.cause.code || e.cause.message) : '';
+      lastErr = new Error(`Không kết nối được Turso (${e.message}${cause ? ': ' + cause : ''}). Kiểm tra mạng/VPN/proxy.`);
+      if (attempt < 3) await new Promise(r => setTimeout(r, 1500 * attempt));
+    }
+  }
+  if (!res) throw lastErr;
 
   if (!res.ok) {
     const errText = await res.text();
