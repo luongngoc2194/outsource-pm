@@ -393,11 +393,27 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
           <button class="btn btn-pri" onClick="{{newDoc}}">+ Thêm hồ sơ</button>
         </div>
       </div>
+      <sc-if value="{{hasSelectedDocs}}" hint-placeholder-val="{{ false }}">
+        <div style="background:#EBF5F7;border:1px solid #9FD1D9;border-radius:8px;padding:10px 16px;margin:0 16px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span style="font-weight:600;color:var(--pri)">Đã chọn {{selectedDocsCount}} hồ sơ</span>
+            <button class="btn btn-sm" onClick="{{clearSelectedDocs}}" style="background:transparent;border:0;text-decoration:underline;color:var(--mute);cursor:pointer;padding:0">Bỏ chọn</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <button class="btn btn-sm btn-pri" onClick="{{batchDownloadDocs}}">⬇ Tải về đã chọn (ZIP)</button>
+            <button class="btn btn-sm btn-bad" onClick="{{batchDeleteDocs}}">🗑 Xóa đã chọn</button>
+          </div>
+        </div>
+      </sc-if>
       <div style="overflow-x:auto">
-        <div role="table" aria-label="Hồ sơ dự án" style="--cols:minmax(220px,2fr) 140px 120px minmax(210px,1.5fr) minmax(130px,1fr) 130px;min-width:1020px">
-          <div class="thead" role="row"><span role="columnheader">Tiêu đề</span><span role="columnheader">Loại</span><span role="columnheader">Gắn với</span><span role="columnheader">File / Liên kết</span><span role="columnheader">Ghi chú</span><span role="columnheader" class="r">Thao tác</span></div>
+        <div role="table" aria-label="Hồ sơ dự án" style="--cols:38px minmax(220px,2fr) 140px 120px minmax(210px,1.5fr) minmax(130px,1fr) 130px;min-width:1060px">
+          <div class="thead" role="row">
+            <span role="columnheader" style="display:flex;align-items:center;justify-content:center"><input type="checkbox" checked="{{allDocsSelected}}" onChange="{{toggleSelectAllDocs}}" title="Chọn tất cả" style="cursor:pointer;width:16px;height:16px;accent-color:var(--pri)" /></span>
+            <span role="columnheader">Tiêu đề</span><span role="columnheader">Loại</span><span role="columnheader">Gắn với</span><span role="columnheader">File / Liên kết</span><span role="columnheader">Ghi chú</span><span role="columnheader" class="r">Thao tác</span>
+          </div>
           <sc-for list="{{docRows}}" as="d" hint-placeholder-count="2">
-            <div class="trow" role="row">
+            <div class="trow" role="row" style="{{d.rowStyle}}">
+              <span role="cell" style="display:flex;align-items:center;justify-content:center"><input type="checkbox" checked="{{d.selected}}" onChange="{{d.toggleSelect}}" style="cursor:pointer;width:16px;height:16px;accent-color:var(--pri)" /></span>
               <span role="cell">
                 <div style="font-weight:600">{{d.title}}</div>
                 <sc-if value="{{d.isFile}}" hint-placeholder-val="{{ false }}"><div class="sub mono" style="font-size:11.5px;color:var(--pri)">📄 {{d.fileName}}</div></sc-if>
@@ -439,11 +455,29 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
           <button class="btn btn-pri" onClick="{{newBbnt}}">+ Thêm biên bản</button>
         </div>
       </div>
+      <sc-if value="{{hasSelectedBbnt}}" hint-placeholder-val="{{ false }}">
+        <div style="background:#EBF5F7;border:1px solid #9FD1D9;border-radius:8px;padding:10px 16px;margin:0 16px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span style="font-weight:600;color:var(--pri)">Đã chọn {{selectedBbntCount}} biên bản</span>
+            <button class="btn btn-sm" onClick="{{clearSelectedBbnt}}" style="background:transparent;border:0;text-decoration:underline;color:var(--mute);cursor:pointer;padding:0">Bỏ chọn</button>
+          </div>
+          <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px">
+            <button class="btn btn-sm" onClick="{{batchSendBbnt}}" style="background:#11633A;color:#fff;border-color:#11633A">✓ Đánh dấu đã gửi</button>
+            <button class="btn btn-sm" onClick="{{batchUnsendBbnt}}" style="background:#fff;border-color:var(--line);color:var(--ink)">↩ Chuyển về chưa gửi</button>
+            <button class="btn btn-sm btn-pri" onClick="{{batchDownloadBbnt}}">⬇ Tải về đã chọn (ZIP)</button>
+            <button class="btn btn-sm btn-bad" onClick="{{batchDeleteBbnt}}">🗑 Xóa đã chọn</button>
+          </div>
+        </div>
+      </sc-if>
       <div style="overflow-x:auto">
-        <div role="table" aria-label="Biên bản nghiệm thu" style="--cols:100px minmax(200px,1.8fr) 100px 180px 230px 130px;min-width:1020px">
-          <div class="thead" role="row"><span role="columnheader">Mã BBNT</span><span role="columnheader">Tiêu đề</span><span role="columnheader">PYC</span><span role="columnheader">File / Liên kết</span><span role="columnheader">Gửi khách</span><span role="columnheader" class="r">Thao tác</span></div>
+        <div role="table" aria-label="Biên bản nghiệm thu" style="--cols:38px 100px minmax(200px,1.8fr) 100px 180px 230px 130px;min-width:1060px">
+          <div class="thead" role="row">
+            <span role="columnheader" style="display:flex;align-items:center;justify-content:center"><input type="checkbox" checked="{{allBbntSelected}}" onChange="{{toggleSelectAllBbnt}}" title="Chọn tất cả" style="cursor:pointer;width:16px;height:16px;accent-color:var(--pri)" /></span>
+            <span role="columnheader">Mã BBNT</span><span role="columnheader">Tiêu đề</span><span role="columnheader">PYC</span><span role="columnheader">File / Liên kết</span><span role="columnheader">Gửi khách</span><span role="columnheader" class="r">Thao tác</span>
+          </div>
           <sc-for list="{{bbntRows}}" as="b" hint-placeholder-count="2">
-            <div class="trow" role="row">
+            <div class="trow" role="row" style="{{b.rowStyle}}">
+              <span role="cell" style="display:flex;align-items:center;justify-content:center"><input type="checkbox" checked="{{b.selected}}" onChange="{{b.toggleSelect}}" style="cursor:pointer;width:16px;height:16px;accent-color:var(--pri)" /></span>
               <span role="cell" class="mono" style="font-weight:600">{{b.code}}</span>
               <span role="cell">
                 <div style="font-weight:600">{{b.title}}</div>
@@ -1073,6 +1107,7 @@ class Component extends DCLogic {
     return {
       screen: 'projects', tab: 'pyc', curProj: 1, memberReq: 1, allocFilter: 'ALL', docFilter: 'ALL', bbntFilter: 'ALL', auditFilter: 'ALL',
       assignPers: 0, assignRole: '', apiConnected: false,
+      selectedDocs: {}, selectedBbnt: {},
       alloc: null, pyc: null, doc: null, pers: null, proj: null, bbntModal: null, excelModal: null, previewModal: null, tursoModal: null, cloneModal: null, confirm: null, toast: null,
       db: {
         projects: [
@@ -1840,15 +1875,198 @@ class Component extends DCLogic {
     this.callApi('POST', '/members', { reqId, persId, role });
   }
 
+  // ---------- batch selection & actions (docs & bbnt) ----------
+  toggleSelectDoc(id) {
+    this.setState(s => {
+      const sel = { ...(s.selectedDocs || {}) };
+      if (sel[id]) delete sel[id];
+      else sel[id] = true;
+      return { selectedDocs: sel };
+    });
+  }
+  toggleSelectAllDocs(visibleIds) {
+    this.setState(s => {
+      const sel = { ...(s.selectedDocs || {}) };
+      const allSelected = visibleIds.length > 0 && visibleIds.every(id => sel[id]);
+      if (allSelected) {
+        visibleIds.forEach(id => delete sel[id]);
+      } else {
+        visibleIds.forEach(id => { sel[id] = true; });
+      }
+      return { selectedDocs: sel };
+    });
+  }
+  clearSelectedDocs() {
+    this.setState({ selectedDocs: {} });
+  }
+  batchDeleteDocs(ids) {
+    if (!ids || !ids.length) return;
+    this.ask('batchDelDoc', null, 'Xóa ' + ids.length + ' hồ sơ đã chọn?', 'Các hồ sơ được chọn sẽ được chuyển vào Thùng rác (xóa mềm).', 'Xóa ' + ids.length + ' mục', true, ids);
+  }
+  async batchDownloadDocs(urls) {
+    if (!urls || !urls.length) {
+      this.toast('Không có file nào để tải.', 'warn');
+      return;
+    }
+    const localUrls = urls.filter(u => u && String(u).startsWith('/uploads/'));
+    if (!localUrls.length) {
+      this.toast('Các hồ sơ đã chọn không có file đính kèm cục bộ (chỉ có link liên kết bên ngoài).', 'warn');
+      return;
+    }
+    this.toast('Đang nén ' + localUrls.length + ' file hồ sơ...', 'ok');
+    try {
+      const res = await fetch(this.apiBase + '/uploads/zip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ urls: localUrls })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Lỗi nén file ZIP');
+      }
+      const blob = await res.blob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'OutsourcePM_HoSo_' + new Date().toISOString().slice(0, 10) + '.zip';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(a.href);
+      this.toast('Đã tải xuống file ZIP (' + localUrls.length + ' file) thành công!', 'ok');
+    } catch (e) {
+      this.toast('Tải ZIP thất bại: ' + e.message, 'bad');
+    }
+  }
+
+  toggleSelectBbnt(id) {
+    this.setState(s => {
+      const sel = { ...(s.selectedBbnt || {}) };
+      if (sel[id]) delete sel[id];
+      else sel[id] = true;
+      return { selectedBbnt: sel };
+    });
+  }
+  toggleSelectAllBbnt(visibleIds) {
+    this.setState(s => {
+      const sel = { ...(s.selectedBbnt || {}) };
+      const allSelected = visibleIds.length > 0 && visibleIds.every(id => sel[id]);
+      if (allSelected) {
+        visibleIds.forEach(id => delete sel[id]);
+      } else {
+        visibleIds.forEach(id => { sel[id] = true; });
+      }
+      return { selectedBbnt: sel };
+    });
+  }
+  clearSelectedBbnt() {
+    this.setState({ selectedBbnt: {} });
+  }
+  batchDeleteBbnt(ids) {
+    if (!ids || !ids.length) return;
+    this.ask('batchDelBbnt', null, 'Xóa ' + ids.length + ' biên bản đã chọn?', 'Các biên bản được chọn sẽ được chuyển vào Thùng rác (xóa mềm).', 'Xóa ' + ids.length + ' mục', true, ids);
+  }
+  async batchSetBbntStatus(send, ids) {
+    if (!ids || !ids.length) return;
+    const sentDate = '2026-11-02';
+    this.mut(db => {
+      ids.forEach(bbntId => {
+        const b = db.bbnt.find(x => x.id === bbntId);
+        if (b) {
+          if (send) {
+            b.status = 'SENT';
+            b.sent = sentDate;
+            this.log(db, 'ACCEPTANCE_RECORD', b.code, 'UPDATE', 'delivery_status', 'NOT_SENT → SENT (Hàng loạt: 2026-11-02)');
+          } else {
+            b.status = 'NOT_SENT';
+            b.sent = null;
+            this.log(db, 'ACCEPTANCE_RECORD', b.code, 'UPDATE', 'delivery_status', 'SENT → NOT_SENT (Hàng loạt)');
+          }
+        }
+      });
+    });
+    this.toast(send ? 'Đã đánh dấu ' + ids.length + ' biên bản là ĐÃ GỬI.' : 'Đã chuyển ' + ids.length + ' biên bản về CHƯA GỬI.', 'ok');
+    this.callApi('POST', '/acceptance-records/batch-status', { ids, send, sentDate });
+  }
+  async batchDownloadBbnt(urls) {
+    if (!urls || !urls.length) {
+      this.toast('Không có file nào để tải.', 'warn');
+      return;
+    }
+    const localUrls = urls.filter(u => u && String(u).startsWith('/uploads/'));
+    if (!localUrls.length) {
+      this.toast('Các biên bản đã chọn không có file đính kèm cục bộ (chỉ có link liên kết bên ngoài).', 'warn');
+      return;
+    }
+    this.toast('Đang nén ' + localUrls.length + ' file biên bản...', 'ok');
+    try {
+      const res = await fetch(this.apiBase + '/uploads/zip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ urls: localUrls })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Lỗi nén file ZIP');
+      }
+      const blob = await res.blob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'OutsourcePM_BBNT_' + new Date().toISOString().slice(0, 10) + '.zip';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(a.href);
+      this.toast('Đã tải xuống file ZIP (' + localUrls.length + ' file) thành công!', 'ok');
+    } catch (e) {
+      this.toast('Tải ZIP thất bại: ' + e.message, 'bad');
+    }
+  }
+
   // ---------- confirm / delete / restore ----------
-  ask(kind, id, title, body, okLabel, danger) {
-    this.setState({ confirm: { kind, id, title, body, okLabel, danger: !!danger } });
+  ask(kind, id, title, body, okLabel, danger, ids) {
+    this.setState({ confirm: { kind, id, ids, title, body, okLabel, danger: !!danger } });
   }
   doConfirm() {
     const c = this.state.confirm;
     if (!c) return;
     this.setState({ confirm: null });
     const k = c.kind, id = c.id;
+    if (k === 'batchDelDoc') {
+      const ids = c.ids || [];
+      if (!ids.length) return;
+      this.mut(db => {
+        ids.forEach(docId => {
+          const it = db.docs.find(x => x.id === docId);
+          if (it) {
+            it.del = true;
+            const m = this.meta('docs', it, db);
+            this.log(db, m.table, m.rec, 'SOFT_DELETE', 'is_deleted', 'false → true (Xóa hàng loạt)');
+          }
+        });
+      });
+      this.setState({ selectedDocs: {} });
+      this.toast('Đã chuyển ' + ids.length + ' hồ sơ vào Thùng rác.', 'warn');
+      this.callApi('POST', '/trash/batch-delete', { coll: 'docs', ids });
+      return;
+    }
+    if (k === 'batchDelBbnt') {
+      const ids = c.ids || [];
+      if (!ids.length) return;
+      this.mut(db => {
+        ids.forEach(bbntId => {
+          const it = db.bbnt.find(x => x.id === bbntId);
+          if (it) {
+            it.del = true;
+            const m = this.meta('bbnt', it, db);
+            this.log(db, m.table, m.rec, 'SOFT_DELETE', 'is_deleted', 'false → true (Xóa hàng loạt)');
+          }
+        });
+      });
+      this.setState({ selectedBbnt: {} });
+      this.toast('Đã chuyển ' + ids.length + ' biên bản vào Thùng rác.', 'warn');
+      this.callApi('POST', '/trash/batch-delete', { coll: 'bbnt', ids });
+      return;
+    }
     const collOf = { delProj: 'projects', delPyc: 'requests', delBatch: 'batches', delBbnt: 'bbnt', delDoc: 'docs', rmMember: 'members' };
     if (collOf[k]) {
       const coll = collOf[k];
@@ -1866,6 +2084,8 @@ class Component extends DCLogic {
         }
         this.log(db, m.table, m.rec, 'SOFT_DELETE', 'is_deleted', note);
       });
+      if (k === 'delDoc') this.setState(s => { const sel = { ...(s.selectedDocs || {}) }; delete sel[id]; return { selectedDocs: sel }; });
+      if (k === 'delBbnt') this.setState(s => { const sel = { ...(s.selectedBbnt || {}) }; delete sel[id]; return { selectedBbnt: sel }; });
       this.toast('Đã chuyển "' + label + '" vào Thùng rác.', 'warn', () => this.undoDel(coll, id));
       this.callApi('DELETE', '/trash/' + coll + '/' + id);
       return;
@@ -1939,7 +2159,7 @@ class Component extends DCLogic {
     const curProjObj = projs.find(p => p.id === pid) || { id: 1, code: 'DA-01', name: 'Dự án', customer: 'Nội bộ', status: 'ACTIVE' };
     const pst = PROJ_ST[curProjObj.status] || PROJ_ST.ACTIVE;
     const curProj = { code: curProjObj.code, name: curProjObj.name, customer: curProjObj.customer || 'Nội bộ', statusLabel: pst[0], chip: chip(pst[1]) };
-    const projOpts = projs.map(p => ({ label: p.code + ' · ' + p.name, ...seg(p.id === pid, () => this.setState({ curProj: p.id, allocFilter: 'ALL', docFilter: 'ALL', bbntFilter: 'ALL', assignPers: 0, assignRole: '' })) }));
+    const projOpts = projs.map(p => ({ label: p.code + ' · ' + p.name, ...seg(p.id === pid, () => this.setState({ curProj: p.id, allocFilter: 'ALL', docFilter: 'ALL', bbntFilter: 'ALL', assignPers: 0, assignRole: '', selectedDocs: {}, selectedBbnt: {} })) }));
 
     // Scoped to current project for Projects screen; all active projects for Dashboard
     const allActiveProjIds = projs.map(p => p.id);
@@ -2056,7 +2276,7 @@ class Component extends DCLogic {
     const statPct = statLocked > 0 ? Math.min(100, Math.round(statAlloc / statLocked * 100)) : 0;
 
     const tabsDef = [['pyc', '1. Danh sách PYC'], ['members', '2. Nhân sự tham gia'], ['alloc', '3. Phân bổ cuối tháng'], ['docs', '4. Hồ sơ dự án'], ['bbnt', '5. Biên bản nghiệm thu']];
-    const tabs = tabsDef.map(t => ({ label: t[1], on: s.tab === t[0], pick: () => this.setState({ tab: t[0] }),
+    const tabs = tabsDef.map(t => ({ label: t[1], on: s.tab === t[0], pick: () => this.setState({ tab: t[0], selectedDocs: {}, selectedBbnt: {} }),
       style: s.tab === t[0] ? 'color:#0B5563;background:#fff;box-shadow:inset 0 -3px 0 #0B5563' : '' }));
     const projStats = [
       filterReqObj
@@ -2124,41 +2344,67 @@ class Component extends DCLogic {
       { label: 'Tất cả', ...seg(s.docFilter === 'ALL', () => this.setState({ docFilter: 'ALL' })) },
       { label: 'Chung dự án', ...seg(s.docFilter === 'COMMON', () => this.setState({ docFilter: 'COMMON' })) }
     ].concat(reqs.map(r => ({ label: r.code, ...seg(s.docFilter === r.id, () => this.setState({ docFilter: r.id })) })));
-    const docRows = db.docs.filter(d => !d.del && d.proj === pid && (d.req === null || reqIds.includes(d.req)))
-      .filter(d => s.docFilter === 'ALL' ? true : (s.docFilter === 'COMMON' ? d.req === null : d.req === s.docFilter))
-      .map(d => {
-        const rq = db.requests.find(r => r.id === d.req);
-        const fLabel = this.fileLabelOf(d.url);
-        const isFile = !!fLabel;
-        const dlUrl = String(d.url || '').startsWith('/uploads/') ? d.url + '?download=1' : d.url;
-        return { title: d.title, type: d.type, scope: rq ? rq.code : 'Chung dự án', url: d.url, downloadUrl: dlUrl,
-          isFile, fileName: fLabel || (d.title + '.file'), note: d.note || '',
-          preview: () => this.openPreview(d.title, d.url),
-          edit: () => this.openDoc(d.id),
-          del: () => this.ask('delDoc', d.id, 'Xóa hồ sơ "' + d.title + '"?', 'Hồ sơ được chuyển vào Thùng rác.', 'Xóa mềm', true) };
-      });
+
+    const selDocs = s.selectedDocs || {};
+    const filteredDocs = db.docs.filter(d => !d.del && d.proj === pid && (d.req === null || reqIds.includes(d.req)))
+      .filter(d => s.docFilter === 'ALL' ? true : (s.docFilter === 'COMMON' ? d.req === null : d.req === s.docFilter));
+    const visibleDocIds = filteredDocs.map(d => d.id);
+    const selectedDocIds = visibleDocIds.filter(id => selDocs[id]);
+    const selectedDocsCount = selectedDocIds.length;
+    const hasSelectedDocs = selectedDocsCount > 0;
+    const allDocsSelected = visibleDocIds.length > 0 && selectedDocIds.length === visibleDocIds.length;
+    const selectedDocUrls = filteredDocs.filter(d => selDocs[d.id] && d.url).map(d => d.url);
+
+    const docRows = filteredDocs.map(d => {
+      const rq = db.requests.find(r => r.id === d.req);
+      const fLabel = this.fileLabelOf(d.url);
+      const isFile = !!fLabel;
+      const dlUrl = String(d.url || '').startsWith('/uploads/') ? d.url + '?download=1' : d.url;
+      const isSelected = !!selDocs[d.id];
+      return { id: d.id, title: d.title, type: d.type, scope: rq ? rq.code : 'Chung dự án', url: d.url, downloadUrl: dlUrl,
+        isFile, fileName: fLabel || (d.title + '.file'), note: d.note || '',
+        selected: isSelected,
+        rowStyle: isSelected ? 'background:#F0F8FA' : '',
+        toggleSelect: () => this.toggleSelectDoc(d.id),
+        preview: () => this.openPreview(d.title, d.url),
+        edit: () => this.openDoc(d.id),
+        del: () => this.ask('delDoc', d.id, 'Xóa hồ sơ "' + d.title + '"?', 'Hồ sơ được chuyển vào Thùng rác.', 'Xóa mềm', true) };
+    });
 
     // bbnt
     const bbntFilterOpts = [{ label: 'Tất cả', ...seg(s.bbntFilter === 'ALL', () => this.setState({ bbntFilter: 'ALL' })) }]
       .concat(reqs.map(r => ({ label: r.code, ...seg(s.bbntFilter === r.id, () => this.setState({ bbntFilter: r.id })) })));
-    const bbntRows = db.bbnt.filter(b => !b.del && reqIds.includes(b.req))
-      .filter(b => s.bbntFilter === 'ALL' || b.req === s.bbntFilter)
-      .map(b => {
-        const rq = db.requests.find(r => r.id === b.req), sent = b.status === 'SENT';
-        const fLabel = this.fileLabelOf(b.url);
-        const isFile = !!fLabel;
-        const dlUrl = String(b.url || '').startsWith('/uploads/') ? b.url + '?download=1' : b.url;
-        return { code: b.code, title: b.title, req: rq ? rq.code : '', url: b.url, downloadUrl: dlUrl,
-          isFile, fileName: fLabel || (b.code + '.pdf'),
-          label: sent ? 'Đã gửi ' + this.fmtDate(b.sent) : 'Chưa gửi', chip: chip(sent ? 'ok' : 'warn'),
-          toggleLabel: sent ? 'Hoàn tác gửi' : 'Đánh dấu đã gửi',
-          toggle: () => sent
-            ? this.ask('unsendBbnt', b.id, 'Chuyển ' + b.code + ' về chưa gửi?', 'Ngày gửi ' + this.fmtDate(b.sent) + ' sẽ bị xóa.', 'Chuyển về chưa gửi')
-            : this.ask('sendBbnt', b.id, 'Đánh dấu ' + b.code + ' đã gửi khách?', 'Hệ thống sẽ ghi nhận ngày gửi là 02/11/2026 (BR-09).', 'Đánh dấu đã gửi'),
-          preview: () => this.openPreview(b.code + ' · ' + b.title, b.url),
-          edit: () => this.openBbnt(b.id),
-          del: () => this.ask('delBbnt', b.id, 'Xóa biên bản ' + b.code + '?', 'Biên bản được chuyển vào Thùng rác.', 'Xóa mềm', true) };
-      });
+
+    const selBbnt = s.selectedBbnt || {};
+    const filteredBbnt = db.bbnt.filter(b => !b.del && reqIds.includes(b.req))
+      .filter(b => s.bbntFilter === 'ALL' || b.req === s.bbntFilter);
+    const visibleBbntIds = filteredBbnt.map(b => b.id);
+    const selectedBbntIds = visibleBbntIds.filter(id => selBbnt[id]);
+    const selectedBbntCount = selectedBbntIds.length;
+    const hasSelectedBbnt = selectedBbntCount > 0;
+    const allBbntSelected = visibleBbntIds.length > 0 && selectedBbntIds.length === visibleBbntIds.length;
+    const selectedBbntUrls = filteredBbnt.filter(b => selBbnt[b.id] && b.url).map(b => b.url);
+
+    const bbntRows = filteredBbnt.map(b => {
+      const rq = db.requests.find(r => r.id === b.req), sent = b.status === 'SENT';
+      const fLabel = this.fileLabelOf(b.url);
+      const isFile = !!fLabel;
+      const dlUrl = String(b.url || '').startsWith('/uploads/') ? b.url + '?download=1' : b.url;
+      const isSelected = !!selBbnt[b.id];
+      return { id: b.id, code: b.code, title: b.title, req: rq ? rq.code : '', url: b.url, downloadUrl: dlUrl,
+        isFile, fileName: fLabel || (b.code + '.pdf'),
+        selected: isSelected,
+        rowStyle: isSelected ? 'background:#F0F8FA' : '',
+        toggleSelect: () => this.toggleSelectBbnt(b.id),
+        label: sent ? 'Đã gửi ' + this.fmtDate(b.sent) : 'Chưa gửi', chip: chip(sent ? 'ok' : 'warn'),
+        toggleLabel: sent ? 'Hoàn tác gửi' : 'Đánh dấu đã gửi',
+        toggle: () => sent
+          ? this.ask('unsendBbnt', b.id, 'Chuyển ' + b.code + ' về chưa gửi?', 'Ngày gửi ' + this.fmtDate(b.sent) + ' sẽ bị xóa.', 'Chuyển về chưa gửi')
+          : this.ask('sendBbnt', b.id, 'Đánh dấu ' + b.code + ' đã gửi khách?', 'Hệ thống sẽ ghi nhận ngày gửi là 02/11/2026 (BR-09).', 'Đánh dấu đã gửi'),
+        preview: () => this.openPreview(b.code + ' · ' + b.title, b.url),
+        edit: () => this.openBbnt(b.id),
+        del: () => this.ask('delBbnt', b.id, 'Xóa biên bản ' + b.code + '?', 'Biên bản được chuyển vào Thùng rác.', 'Xóa mềm', true) };
+    });
 
     // ----- personnel / audit / trash -----
     const persRows = pers.map(p => ({ code: p.code, name: p.name, role: p.role, email: p.email || '--', phone: p.phone || 'N/A', note: p.note || '',
@@ -2395,7 +2641,20 @@ class Component extends DCLogic {
       memberRows, noMembers: memberRows.length === 0,
       allocFilterOpts, batchCards, noBatches: batchCards.length === 0, newAlloc: () => this.openAlloc(s.allocFilter === 'ALL' ? null : s.allocFilter),
       docFilterOpts, docRows, noDocs: docRows.length === 0, newDoc: () => this.openDoc(null), importDocFiles: () => this.importDocFiles(), expDocs: () => this.exportExcel('docs'),
+      hasSelectedDocs, selectedDocsCount, allDocsSelected,
+      toggleSelectAllDocs: () => this.toggleSelectAllDocs(visibleDocIds),
+      clearSelectedDocs: () => this.clearSelectedDocs(),
+      batchDeleteDocs: () => this.batchDeleteDocs(selectedDocIds),
+      batchDownloadDocs: () => this.batchDownloadDocs(selectedDocUrls),
+
       bbntFilterOpts, bbntRows, noBbnt: bbntRows.length === 0, unsentCount: unsent.length, newBbnt: () => this.openBbnt(null), importBbntFiles: () => this.importBbntFiles(), expBbnt: () => this.exportExcel('bbnt'),
+      hasSelectedBbnt, selectedBbntCount, allBbntSelected,
+      toggleSelectAllBbnt: () => this.toggleSelectAllBbnt(visibleBbntIds),
+      clearSelectedBbnt: () => this.clearSelectedBbnt(),
+      batchDeleteBbnt: () => this.batchDeleteBbnt(selectedBbntIds),
+      batchDownloadBbnt: () => this.batchDownloadBbnt(selectedBbntUrls),
+      batchSendBbnt: () => this.batchSetBbntStatus(true, selectedBbntIds),
+      batchUnsendBbnt: () => this.batchSetBbntStatus(false, selectedBbntIds),
       persRows, newPers: () => this.openPers(null),
       auditFilterOpts, auditRows, noAudit: auditRows.length === 0,
       trashRows, noTrash: trashRows.length === 0,

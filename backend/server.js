@@ -429,6 +429,36 @@ const server = http.createServer(async (req, res) => {
         return sendJson(res, 201, { results, db: getStateWithCloud() });
       }
 
+      // POST /api/uploads/zip -> bundle several uploaded files into one zip download
+      if (req.method === 'POST' && pathname === '/api/uploads/zip') {
+        const body = await readJsonBody(req);
+        const urls = Array.isArray(body.urls) ? body.urls : [];
+        const uploadDir = path.resolve(__dirname, '..', 'uploads');
+        const zip = new (require('jszip'))();
+        const used = new Set();
+        let count = 0;
+        for (const u of urls) {
+          if (!String(u).startsWith('/uploads/')) continue;
+          const stored = path.basename(decodeURIComponent(String(u).slice('/uploads/'.length).split('?')[0]));
+          const p = path.join(uploadDir, stored);
+          if (!fs.existsSync(p)) continue;
+          let name = stored.replace(/^\d+_/, '');
+          let n = 1;
+          while (used.has(name)) { const e = path.extname(stored); name = stored.replace(/^\d+_/, '').slice(0, -e.length || undefined) + ` (${++n})` + e; }
+          used.add(name);
+          zip.file(name, fs.readFileSync(p));
+          count++;
+        }
+        if (!count) throw new BusinessError('VALIDATION', 'Không có file đính kèm nào để tải.');
+        const buf = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
+        res.writeHead(200, {
+          'Content-Type': 'application/zip',
+          'Content-Disposition': 'attachment; filename="OutsourcePM_files.zip"',
+          'Access-Control-Allow-Origin': '*'
+        });
+        return res.end(buf);
+      }
+
       // POST /api/documents & PUT /api/documents/:id
       if (req.method === 'POST' && pathname === '/api/documents') {
         const body = await readJsonBody(req);
@@ -464,6 +494,33 @@ const server = http.createServer(async (req, res) => {
         repo.toggleBbntStatus(id, !!body.send, body.sentDate);
         bgPushTurso();
         return sendJson(res, 200, { id, db: getStateWithCloud() });
+      }
+
+      // POST /api/acceptance-records/batch-status -> toggle delivery status for multiple acceptance records
+      if (req.method === 'POST' && pathname === '/api/acceptance-records/batch-status') {
+        const body = await readJsonBody(req);
+        const ids = Array.isArray(body.ids) ? body.ids.map(Number) : [];
+        if (!ids.length) throw new BusinessError('VALIDATION', 'Danh sách biên bản trống.');
+        const send = !!body.send;
+        const sentDate = body.sentDate || '2026-11-02';
+        for (const id of ids) {
+          try { repo.toggleBbntStatus(id, send, sentDate); } catch (_) {}
+        }
+        bgPushTurso();
+        return sendJson(res, 200, { count: ids.length, db: getStateWithCloud() });
+      }
+
+      // POST /api/trash/batch-delete -> soft delete multiple items in a collection
+      if (req.method === 'POST' && pathname === '/api/trash/batch-delete') {
+        const body = await readJsonBody(req);
+        const coll = String(body.coll || '');
+        const ids = Array.isArray(body.ids) ? body.ids.map(Number) : [];
+        if (!ids.length) throw new BusinessError('VALIDATION', 'Danh sách cần xóa trống.');
+        for (const id of ids) {
+          try { repo.softDelete(coll, id); } catch (_) {}
+        }
+        bgPushTurso();
+        return sendJson(res, 200, { count: ids.length, db: getStateWithCloud() });
       }
 
       // DELETE /api/trash/:coll/:id (Soft delete) & POST /api/trash/:coll/:id/restore
