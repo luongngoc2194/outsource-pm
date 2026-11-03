@@ -722,6 +722,98 @@ class PMRepository {
     return recLabel;
   }
 
+  // ==================== CLEANUP: AUDIT & TRASH ====================
+  clearAudit(keepDays = null) {
+    let res;
+    if (keepDays && Number(keepDays) > 0) {
+      res = this.db.prepare("DELETE FROM AUDIT_LOG WHERE datetime(created_at) < datetime('now', '-' || ? || ' days')").run(Number(keepDays));
+    } else {
+      res = this.db.prepare("DELETE FROM AUDIT_LOG").run();
+    }
+    return Number(res.changes || 0);
+  }
+
+  emptyTrash() {
+    let count = 0;
+    const run = (sql) => {
+      const r = this.db.prepare(sql).run();
+      count += Number(r.changes || 0);
+    };
+
+    // Dependent items of soft-deleted batches
+    run('DELETE FROM ALLOCATION_ITEM WHERE is_deleted = 1 OR batch_id IN (SELECT id FROM ALLOCATION_BATCH WHERE is_deleted = 1)');
+    run('DELETE FROM ALLOCATION_BATCH WHERE is_deleted = 1');
+    run('DELETE FROM REQUEST_MEMBER WHERE is_deleted = 1');
+    run('DELETE FROM ACCEPTANCE_RECORD WHERE is_deleted = 1');
+    run('DELETE FROM DOCUMENT WHERE is_deleted = 1');
+
+    // Dependent items of soft-deleted requests
+    run('DELETE FROM ALLOCATION_ITEM WHERE batch_id IN (SELECT id FROM ALLOCATION_BATCH WHERE request_id IN (SELECT id FROM REQUEST WHERE is_deleted = 1))');
+    run('DELETE FROM ALLOCATION_BATCH WHERE request_id IN (SELECT id FROM REQUEST WHERE is_deleted = 1)');
+    run('DELETE FROM REQUEST_MEMBER WHERE request_id IN (SELECT id FROM REQUEST WHERE is_deleted = 1)');
+    run('DELETE FROM ACCEPTANCE_RECORD WHERE request_id IN (SELECT id FROM REQUEST WHERE is_deleted = 1)');
+    run('DELETE FROM DOCUMENT WHERE request_id IN (SELECT id FROM REQUEST WHERE is_deleted = 1)');
+    run('DELETE FROM REQUEST WHERE is_deleted = 1');
+
+    // Dependent items of soft-deleted projects
+    run('DELETE FROM DOCUMENT WHERE project_id IN (SELECT id FROM PROJECT WHERE is_deleted = 1)');
+    run('DELETE FROM REQUEST WHERE project_id IN (SELECT id FROM PROJECT WHERE is_deleted = 1)');
+    run('DELETE FROM PROJECT WHERE is_deleted = 1');
+    run('DELETE FROM PERSONNEL WHERE is_deleted = 1');
+
+    this.logAudit('TRASH', 'ALL', 'PURGE', 'trash', `Dọn sạch thùng rác: đã xóa vĩnh viễn ${count} mục`);
+    return count;
+  }
+
+  permanentDelete(coll, id) {
+    const map = {
+      projects: { table: 'PROJECT', label: (r) => r.code },
+      requests: { table: 'REQUEST', label: (r) => r.code },
+      batches: { table: 'ALLOCATION_BATCH', label: (r) => `${r.month_period}` },
+      bbnt: { table: 'ACCEPTANCE_RECORD', label: (r) => r.record_code },
+      docs: { table: 'DOCUMENT', label: (r) => r.title },
+      members: { table: 'REQUEST_MEMBER', label: (r) => `#${r.id}` },
+      personnel: { table: 'PERSONNEL', label: (r) => r.code }
+    };
+    const cfg = map[coll];
+    if (!cfg) throw new BusinessError('VALIDATION', 'Loại dữ liệu không hợp lệ.');
+
+    const row = this.db.prepare(`SELECT * FROM ${cfg.table} WHERE id = ?`).get(id);
+    if (!row) throw new BusinessError('NOT_FOUND', 'Không tìm thấy bản ghi.');
+    const label = cfg.label(row);
+
+    if (coll === 'projects') {
+      const reqIds = this.db.prepare('SELECT id FROM REQUEST WHERE project_id = ?').all(id).map(r => r.id);
+      for (const rqId of reqIds) {
+        const batchIds = this.db.prepare('SELECT id FROM ALLOCATION_BATCH WHERE request_id = ?').all(rqId).map(b => b.id);
+        for (const bId of batchIds) {
+          this.db.prepare('DELETE FROM ALLOCATION_ITEM WHERE batch_id = ?').run(bId);
+        }
+        this.db.prepare('DELETE FROM ALLOCATION_BATCH WHERE request_id = ?').run(rqId);
+        this.db.prepare('DELETE FROM REQUEST_MEMBER WHERE request_id = ?').run(rqId);
+        this.db.prepare('DELETE FROM ACCEPTANCE_RECORD WHERE request_id = ?').run(rqId);
+        this.db.prepare('DELETE FROM DOCUMENT WHERE request_id = ?').run(rqId);
+      }
+      this.db.prepare('DELETE FROM DOCUMENT WHERE project_id = ?').run(id);
+      this.db.prepare('DELETE FROM REQUEST WHERE project_id = ?').run(id);
+    } else if (coll === 'requests') {
+      const batchIds = this.db.prepare('SELECT id FROM ALLOCATION_BATCH WHERE request_id = ?').all(id).map(b => b.id);
+      for (const bId of batchIds) {
+        this.db.prepare('DELETE FROM ALLOCATION_ITEM WHERE batch_id = ?').run(bId);
+      }
+      this.db.prepare('DELETE FROM ALLOCATION_BATCH WHERE request_id = ?').run(id);
+      this.db.prepare('DELETE FROM REQUEST_MEMBER WHERE request_id = ?').run(id);
+      this.db.prepare('DELETE FROM ACCEPTANCE_RECORD WHERE request_id = ?').run(id);
+      this.db.prepare('DELETE FROM DOCUMENT WHERE request_id = ?').run(id);
+    } else if (coll === 'batches') {
+      this.db.prepare('DELETE FROM ALLOCATION_ITEM WHERE batch_id = ?').run(id);
+    }
+
+    this.db.prepare(`DELETE FROM ${cfg.table} WHERE id = ?`).run(id);
+    this.logAudit(cfg.table, label, 'PERMANENT_DELETE', 'id', 'Xóa vĩnh viễn khỏi Thùng rác');
+    return label;
+  }
+
   // ==================== EXCEL IMPORT (DRY-RUN & UPSERT) ====================
   importData({ type, rows, dryRun = true, autoAssign = true }) {
     if (!Array.isArray(rows)) throw new BusinessError('VALIDATION', 'Dữ liệu import không hợp lệ.');

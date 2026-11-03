@@ -523,6 +523,29 @@ const server = http.createServer(async (req, res) => {
         return sendJson(res, 200, { count: ids.length, db: getStateWithCloud() });
       }
 
+      // POST or DELETE /api/audit/clear -> empty audit log
+      if ((req.method === 'POST' || req.method === 'DELETE') && pathname === '/api/audit/clear') {
+        const body = req.method === 'POST' ? await readJsonBody(req).catch(() => ({})) : {};
+        const count = repo.clearAudit(body.keepDays);
+        bgPushTurso();
+        return sendJson(res, 200, { cleared: count, db: getStateWithCloud() });
+      }
+
+      // POST or DELETE /api/trash/empty -> empty entire trash (permanent delete all)
+      if ((req.method === 'POST' || req.method === 'DELETE') && pathname === '/api/trash/empty') {
+        const count = repo.emptyTrash();
+        bgPushTurso();
+        return sendJson(res, 200, { deleted: count, db: getStateWithCloud() });
+      }
+
+      // DELETE /api/trash/:coll/:id/permanent -> permanently delete single item
+      const permMatch = pathname.match(/^\/api\/trash\/([a-z]+)\/(\d+)\/permanent$/);
+      if (req.method === 'DELETE' && permMatch) {
+        const label = repo.permanentDelete(permMatch[1], Number(permMatch[2]));
+        bgPushTurso();
+        return sendJson(res, 200, { label, db: getStateWithCloud() });
+      }
+
       // DELETE /api/trash/:coll/:id (Soft delete) & POST /api/trash/:coll/:id/restore
       const delMatch = pathname.match(/^\/api\/trash\/([a-z]+)\/(\d+)$/);
       if (req.method === 'DELETE' && delMatch) {

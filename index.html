@@ -543,9 +543,14 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
 <!-- ======== AUDIT ======== -->
 <sc-if value="{{isAudit}}" hint-placeholder-val="{{ false }}">
 <div style="display:flex;flex-direction:column;gap:18px">
-  <header>
-    <h1 style="font-size:26px;letter-spacing:-.01em">Nhật ký thay đổi</h1>
-    <p style="margin-top:4px;color:var(--mute)">Tự động ghi mọi thao tác thêm mới, cập nhật, xóa mềm và khôi phục.</p>
+  <header style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px">
+    <div>
+      <h1 style="font-size:26px;letter-spacing:-.01em">Nhật ký thay đổi</h1>
+      <p style="margin-top:4px;color:var(--mute)">Tự động ghi mọi thao tác thêm mới, cập nhật, xóa mềm và khôi phục.</p>
+    </div>
+    <sc-if value="{{hasAudit}}" hint-placeholder-val="{{ false }}">
+      <button class="btn btn-sm btn-bad" onClick="{{clearAudit}}">🗑 Dọn dẹp nhật ký</button>
+    </sc-if>
   </header>
   <div style="display:flex;flex-wrap:wrap;gap:8px" role="radiogroup" aria-label="Lọc hành động">
     <sc-for list="{{auditFilterOpts}}" as="o" hint-placeholder-count="5">
@@ -576,20 +581,28 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
 <!-- ======== TRASH ======== -->
 <sc-if value="{{isTrash}}" hint-placeholder-val="{{ false }}">
 <div style="display:flex;flex-direction:column;gap:18px">
-  <header>
-    <h1 style="font-size:26px;letter-spacing:-.01em">Thùng rác</h1>
-    <p style="margin-top:4px;color:var(--mute)">Bản ghi xóa mềm không tính vào tổng nỗ lực. Khi khôi phục đợt phân bổ, hệ thống kiểm tra lại trần nỗ lực chốt (BR-04).</p>
+  <header style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px">
+    <div>
+      <h1 style="font-size:26px;letter-spacing:-.01em">Thùng rác</h1>
+      <p style="margin-top:4px;color:var(--mute)">Bản ghi xóa mềm không tính vào tổng nỗ lực. Khi khôi phục đợt phân bổ, hệ thống kiểm tra lại trần nỗ lực chốt (BR-04).</p>
+    </div>
+    <sc-if value="{{hasTrash}}" hint-placeholder-val="{{ false }}">
+      <button class="btn btn-sm btn-bad" onClick="{{emptyTrash}}">🗑 Dọn sạch thùng rác</button>
+    </sc-if>
   </header>
   <section class="card" style="overflow:hidden">
     <div style="overflow-x:auto">
-      <div role="table" aria-label="Bản ghi đã xóa mềm" style="--cols:140px minmax(220px,2fr) minmax(160px,1.4fr) 130px;min-width:720px">
+      <div role="table" aria-label="Bản ghi đã xóa mềm" style="--cols:130px minmax(200px,2fr) minmax(160px,1.4fr) 210px;min-width:760px">
         <div class="thead" role="row"><span role="columnheader">Loại</span><span role="columnheader">Bản ghi</span><span role="columnheader">Tác động nỗ lực</span><span role="columnheader" class="r">Thao tác</span></div>
         <sc-for list="{{trashRows}}" as="t" hint-placeholder-count="2">
           <div class="trow" role="row">
             <span role="cell"><span class="chip" style="{{t.chip}}">{{t.kind}}</span></span>
             <span role="cell" style="font-weight:600">{{t.title}}</span>
             <span role="cell" class="sub">{{t.impact}}</span>
-            <span role="cell" class="r"><button class="btn btn-sm btn-pri" onClick="{{t.restore}}">Khôi phục</button></span>
+            <span role="cell" class="r" style="display:flex;gap:6px;justify-content:flex-end">
+              <button class="btn btn-sm btn-pri" onClick="{{t.restore}}">Khôi phục</button>
+              <button class="btn btn-sm btn-bad" onClick="{{t.permanentDelete}}">Xóa vĩnh viễn</button>
+            </span>
           </div>
         </sc-for>
         <sc-if value="{{noTrash}}" hint-placeholder-val="{{ true }}"><div style="padding:40px;text-align:center;color:var(--mute)">Thùng rác trống.</div></sc-if>
@@ -2023,14 +2036,78 @@ class Component extends DCLogic {
   }
 
   // ---------- confirm / delete / restore ----------
-  ask(kind, id, title, body, okLabel, danger, ids) {
-    this.setState({ confirm: { kind, id, ids, title, body, okLabel, danger: !!danger } });
+  ask(kind, id, title, body, okLabel, danger, ids, coll) {
+    this.setState({ confirm: { kind, id, ids, coll, title, body, okLabel, danger: !!danger } });
+  }
+  clearAudit() {
+    this.ask('clearAudit', null, 'Dọn dẹp toàn bộ Nhật ký thay đổi?', 'Tất cả các bản ghi nhật ký thao tác (Audit Log) sẽ bị xóa vĩnh viễn khỏi hệ thống.', 'Dọn sạch nhật ký', true);
+  }
+  emptyTrash() {
+    this.ask('emptyTrash', null, 'Dọn sạch toàn bộ Thùng rác?', 'Tất cả các bản ghi đã xóa mềm trong Thùng rác sẽ bị XÓA VĨNH VIỄN khỏi cơ sở dữ liệu. Thao tác này KHÔNG THỂ HOÀN TÁC.', 'Dọn sạch thùng rác', true);
   }
   doConfirm() {
     const c = this.state.confirm;
     if (!c) return;
     this.setState({ confirm: null });
     const k = c.kind, id = c.id;
+    if (k === 'clearAudit') {
+      this.mut(db => {
+        db.audit = [];
+      });
+      this.toast('Đã dọn sạch toàn bộ Nhật ký thay đổi.', 'ok');
+      this.callApi('POST', '/audit/clear');
+      return;
+    }
+    if (k === 'emptyTrash') {
+      this.mut(db => {
+        db.projects = db.projects.filter(x => !x.del);
+        db.requests = db.requests.filter(x => !x.del);
+        db.batches = db.batches.filter(x => !x.del);
+        db.items = db.items.filter(x => !x.del);
+        db.docs = db.docs.filter(x => !x.del);
+        db.bbnt = db.bbnt.filter(x => !x.del);
+        db.members = db.members.filter(x => !x.del);
+        if (db.personnel) db.personnel = db.personnel.filter(x => !x.del);
+        this.log(db, 'TRASH', 'ALL', 'PURGE', 'trash', 'Dọn sạch thùng rác (Xóa vĩnh viễn)');
+      });
+      this.toast('Đã dọn sạch toàn bộ Thùng rác.', 'ok');
+      this.callApi('POST', '/trash/empty');
+      return;
+    }
+    if (k === 'permanentDel') {
+      const coll = c.coll;
+      if (!coll || !id) return;
+      this.mut(db => {
+        if (coll === 'projects') {
+          db.projects = db.projects.filter(x => x.id !== id);
+          const reqIds = db.requests.filter(r => r.proj === id).map(r => r.id);
+          db.requests = db.requests.filter(r => r.proj !== id);
+          const bIds = db.batches.filter(b => reqIds.includes(b.req)).map(b => b.id);
+          db.batches = db.batches.filter(b => !reqIds.includes(b.req));
+          db.items = db.items.filter(i => !bIds.includes(i.batch));
+          db.members = db.members.filter(m => !reqIds.includes(m.req));
+          db.bbnt = db.bbnt.filter(b => !reqIds.includes(b.req));
+          db.docs = db.docs.filter(d => d.proj !== id && !reqIds.includes(d.req));
+        } else if (coll === 'requests') {
+          db.requests = db.requests.filter(x => x.id !== id);
+          const bIds = db.batches.filter(b => b.req === id).map(b => b.id);
+          db.batches = db.batches.filter(b => b.req !== id);
+          db.items = db.items.filter(i => !bIds.includes(i.batch));
+          db.members = db.members.filter(m => m.req !== id);
+          db.bbnt = db.bbnt.filter(b => b.req !== id);
+          db.docs = db.docs.filter(d => d.req !== id);
+        } else if (coll === 'batches') {
+          db.batches = db.batches.filter(x => x.id !== id);
+          db.items = db.items.filter(i => i.batch !== id);
+        } else if (db[coll]) {
+          db[coll] = db[coll].filter(x => x.id !== id);
+        }
+        this.log(db, coll.toUpperCase(), '#' + id, 'PERMANENT_DELETE', 'id', 'Xóa vĩnh viễn khỏi Thùng rác');
+      });
+      this.toast('Đã xóa vĩnh viễn bản ghi khỏi cơ sở dữ liệu.', 'ok');
+      this.callApi('DELETE', '/trash/' + coll + '/' + id + '/permanent');
+      return;
+    }
     if (k === 'batchDelDoc') {
       const ids = c.ids || [];
       if (!ids.length) return;
@@ -2421,20 +2498,24 @@ class Component extends DCLogic {
     });
 
     const trash = [];
-    db.projects.filter(x => x.del).forEach(p => trash.push({ kind: 'Dự án', tone: 'info', title: p.code + ' · ' + p.name, impact: 'Khách hàng: ' + (p.customer || 'Nội bộ'), restore: () => this.restore('projects', p.id) }));
-    db.requests.filter(x => x.del).forEach(r => trash.push({ kind: 'PYC', tone: 'neutral', title: r.code + ' · ' + r.name, impact: 'Nỗ lực chốt ' + this.f1(r.locked) + ' MM', restore: () => this.restore('requests', r.id) }));
+    db.projects.filter(x => x.del).forEach(p => trash.push({ coll: 'projects', id: p.id, kind: 'Dự án', tone: 'info', title: p.code + ' · ' + p.name, impact: 'Khách hàng: ' + (p.customer || 'Nội bộ'), restore: () => this.restore('projects', p.id) }));
+    db.requests.filter(x => x.del).forEach(r => trash.push({ coll: 'requests', id: r.id, kind: 'PYC', tone: 'neutral', title: r.code + ' · ' + r.name, impact: 'Nỗ lực chốt ' + this.f1(r.locked) + ' MM', restore: () => this.restore('requests', r.id) }));
     db.batches.filter(x => x.del).forEach(b => {
       const rq = db.requests.find(r => r.id === b.req);
       const sum = this.r1(db.items.filter(i => i.batch === b.id).reduce((x, i) => x + Number(i.md), 0));
-      trash.push({ kind: 'Đợt phân bổ', tone: 'info', title: 'T' + b.month + ' của ' + (rq ? rq.code : ''), impact: 'Khôi phục sẽ cộng lại ' + this.f1(sum) + ' MM (kiểm tra BR-04)', restore: () => this.restore('batches', b.id) });
+      trash.push({ coll: 'batches', id: b.id, kind: 'Đợt phân bổ', tone: 'info', title: 'T' + b.month + ' của ' + (rq ? rq.code : ''), impact: 'Khôi phục sẽ cộng lại ' + this.f1(sum) + ' MM (kiểm tra BR-04)', restore: () => this.restore('batches', b.id) });
     });
-    db.bbnt.filter(x => x.del).forEach(b => trash.push({ kind: 'Biên bản NT', tone: 'warn', title: b.code + ' · ' + b.title, impact: 'Không ảnh hưởng nỗ lực', restore: () => this.restore('bbnt', b.id) }));
-    db.docs.filter(x => x.del).forEach(d => trash.push({ kind: 'Hồ sơ', tone: 'neutral', title: d.title, impact: 'Không ảnh hưởng nỗ lực', restore: () => this.restore('docs', d.id) }));
+    db.bbnt.filter(x => x.del).forEach(b => trash.push({ coll: 'bbnt', id: b.id, kind: 'Biên bản NT', tone: 'warn', title: b.code + ' · ' + b.title, impact: 'Không ảnh hưởng nỗ lực', restore: () => this.restore('bbnt', b.id) }));
+    db.docs.filter(x => x.del).forEach(d => trash.push({ coll: 'docs', id: d.id, kind: 'Hồ sơ', tone: 'neutral', title: d.title, impact: 'Không ảnh hưởng nỗ lực', restore: () => this.restore('docs', d.id) }));
     db.members.filter(x => x.del).forEach(m => {
       const p = db.personnel.find(x => x.id === m.pers), rq = db.requests.find(r => r.id === m.req);
-      trash.push({ kind: 'Gán nhân sự', tone: 'neutral', title: (p ? p.name : '') + ' trong ' + (rq ? rq.code : ''), impact: 'Không ảnh hưởng nỗ lực', restore: () => this.restore('members', m.id) });
+      trash.push({ coll: 'members', id: m.id, kind: 'Gán nhân sự', tone: 'neutral', title: (p ? p.name : '') + ' trong ' + (rq ? rq.code : ''), impact: 'Không ảnh hưởng nỗ lực', restore: () => this.restore('members', m.id) });
     });
-    const trashRows = trash.map(t => ({ kind: t.kind, chip: chip(t.tone), title: t.title, impact: t.impact, restore: t.restore }));
+    const trashRows = trash.map(t => ({
+      kind: t.kind, chip: chip(t.tone), title: t.title, impact: t.impact,
+      restore: t.restore,
+      permanentDelete: () => this.ask('permanentDel', t.id, 'Xóa vĩnh viễn "' + t.title + '"?', 'Hành động này KHÔNG THỂ HOÀN TÁC. Bản ghi sẽ bị xóa hoàn toàn khỏi cơ sở dữ liệu.', 'Xóa vĩnh viễn', true, null, t.coll)
+    }));
 
     // ----- modals -----
     let av = { open: false, title: '', reqOpts: [], month: '', note: '', A: '', B: '', C: '', rem: '', remStyle: '', pill: '', pillStyle: '', boxStyle: '', bPct: 0, cPct: 0, cColor: '', barLabel: '', banner: '', hasBanner: false, rows: [], noMembers: false, canAdd: false, cantSave: true, close: () => {}, save: () => {}, addRow: () => {}, onMonth: () => {}, onNote: () => {} };
@@ -2656,8 +2737,8 @@ class Component extends DCLogic {
       batchSendBbnt: () => this.batchSetBbntStatus(true, selectedBbntIds),
       batchUnsendBbnt: () => this.batchSetBbntStatus(false, selectedBbntIds),
       persRows, newPers: () => this.openPers(null),
-      auditFilterOpts, auditRows, noAudit: auditRows.length === 0,
-      trashRows, noTrash: trashRows.length === 0,
+      auditFilterOpts, auditRows, noAudit: auditRows.length === 0, hasAudit: db.audit.length > 0, clearAudit: () => this.clearAudit(),
+      trashRows, noTrash: trashRows.length === 0, hasTrash: trashRows.length > 0, emptyTrash: () => this.emptyTrash(),
       av, pv, dv, nv, mj, bv, xv, wv, kv, qv, cv, tv
     };
   }
