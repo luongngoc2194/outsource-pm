@@ -355,6 +355,7 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
             <span class="chip mono" style="background:var(--pri);color:#fff">T{{b.month}}</span>
             <span style="font-weight:600;flex:1 1 220px"><span class="mono" style="color:var(--pri)">{{b.code}}</span> · {{b.name}}<br><span class="sub" style="font-weight:400">{{b.note}}</span></span>
             <span class="tn" style="font-weight:700">{{b.total}} MM <span class="sub" style="font-weight:400">({{b.totalMm}} MD)</span></span>
+            <button class="btn btn-sm" onClick="{{b.copy}}" style="color:var(--pri);border-color:var(--pri)">📋 Copy báo cáo</button>
             <button class="btn btn-sm" onClick="{{b.edit}}">Sửa đợt</button>
             <button class="btn btn-sm btn-bad" onClick="{{b.del}}">Xóa đợt</button>
           </div>
@@ -1209,6 +1210,49 @@ class Component extends DCLogic {
     if (a.edit) this.callApi('PUT', '/allocations/' + a.edit, { reqId: a.req, month: a.month, note: a.note, rows: items });
     else this.callApi('POST', '/allocations', { reqId: a.req, month: a.month, note: a.note, rows: items });
   }
+  copyBatchReport(batchId) {
+    const db = this.state.db;
+    const b = db.batches.find(x => x.id === batchId);
+    if (!b) return;
+    const rq = db.requests.find(r => r.id === b.req);
+    const proj = rq ? db.projects.find(p => p.id === rq.proj) : db.projects.find(p => p.id === this.curProjId(db));
+    const projName = proj ? proj.name : 'Dự án';
+    const mp = String(b.month || '').split('-');
+    const monthLabel = mp.length === 2 ? ('Tháng ' + mp[1] + '/' + mp[0]) : b.month;
+    const its = db.items.filter(i => i.batch === b.id && !i.del);
+    const total = this.r1(its.reduce((x, i) => x + Number(i.md), 0));
+    const lines = [
+      '[BÁO CÁO PHÂN BỔ NỖ LỰC]',
+      '- Dự án: ' + projName,
+      '- Đợt phân bổ: ' + monthLabel,
+      '- Chi tiết nhân sự:'
+    ];
+    its.forEach((it, idx) => {
+      const p = db.personnel.find(x => x.id === it.pers);
+      const pName = p ? p.name : 'N/A';
+      lines.push('  ' + (idx + 1) + '. ' + pName + ': ' + this.f1(it.md) + ' MM');
+    });
+    lines.push('=> Tổng phân bổ: ' + this.f1(total) + ' MM');
+    const text = lines.join('\n');
+    const done = () => this.toast('Đã copy báo cáo ' + monthLabel + ' (' + this.f1(total) + ' MM) vào Clipboard!', 'ok');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(() => this.fallbackCopy(text, done));
+    } else {
+      this.fallbackCopy(text, done);
+    }
+  }
+  fallbackCopy(text, cb) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try { document.execCommand('copy'); } catch (_) {}
+    document.body.removeChild(ta);
+    if (cb) cb();
+  }
 
   // ---------- PYC modal logic ----------
   openPyc(id) {
@@ -1887,6 +1931,7 @@ class Component extends DCLogic {
         const total = this.r1(its.reduce((x, i) => x + Number(i.md), 0));
         return { month: b.month, code: rq.code, name: rq.name, note: b.note || '', total: this.f1(total), totalMm: this.mm(total),
           items: its.map(i => { const p = db.personnel.find(x => x.id === i.pers); return { who: p ? p.code + ' · ' + p.name : 'N/A', md: this.f1(i.md), note: i.note || '' }; }),
+          copy: () => this.copyBatchReport(b.id),
           edit: () => this.openAlloc(rq.id, b.id),
           del: () => this.ask('delBatch', b.id, 'Xóa đợt phân bổ T' + b.month + ' của ' + rq.code + '?', 'Đợt chuyển vào Thùng rác; nỗ lực còn lại của PYC sẽ tăng thêm ' + this.f1(total) + ' MM.', 'Xóa mềm đợt', true) };
       });
