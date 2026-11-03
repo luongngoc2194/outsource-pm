@@ -6,10 +6,27 @@ const mammoth = require('mammoth');
 const XLSX = require('xlsx');
 const WordExtractor = require('word-extractor');
 const { createDatabase, BusinessError } = require('./db');
+const turso = require('./turso');
 
 const PORT = process.env.PORT || 3000;
 const DB_PATH = path.join(__dirname, 'data', 'outsource-pm.db');
 const repo = createDatabase(DB_PATH);
+
+function bgPushTurso() {
+  const cfg = turso.getConfig();
+  if (cfg.url && cfg.token) {
+    turso.pushToTurso(repo.db, cfg).catch(err => console.error('⚠ Turso push error:', err.message));
+  }
+}
+
+function getStateWithCloud() {
+  const cfg = turso.getConfig();
+  return {
+    ...repo.getFullState(),
+    tursoConnected: !!(cfg.url && cfg.token),
+    tursoUrl: cfg.url || ''
+  };
+}
 
 function sendJson(res, status, payload) {
   res.writeHead(status, {
@@ -217,73 +234,120 @@ const server = http.createServer(async (req, res) => {
   // ==================== REST API ROUTES ====================
   if (pathname.startsWith('/api/')) {
     try {
-      // GET /api/state -> Full normalized state from SQLite
+      // GET /api/state -> Full normalized state from SQLite (with optional ?pull=1 from Turso Cloud)
       if (req.method === 'GET' && pathname === '/api/state') {
-        return sendJson(res, 200, repo.getFullState());
+        if (parsedUrl.searchParams.get('pull') === '1') {
+          try { await turso.pullFromTurso(repo.db); } catch (e) { console.error('⚠ Turso pull:', e.message); }
+        }
+        return sendJson(res, 200, getStateWithCloud());
+      }
+
+      // GET /api/turso/status & POST /api/turso/config & POST /api/turso/sync
+      if (req.method === 'GET' && pathname === '/api/turso/status') {
+        const cfg = turso.getConfig();
+        return sendJson(res, 200, { configured: !!(cfg.url && cfg.token), url: cfg.url });
+      }
+      if (req.method === 'POST' && pathname === '/api/turso/config') {
+        const body = await readJsonBody(req);
+        const url = String(body.url || '').trim();
+        const token = String(body.token || '').trim();
+        const mode = body.mode || 'push'; // 'push' (push local to cloud) or 'pull' (pull cloud to local)
+        if (!url || !token) {
+          throw new BusinessError('VALIDATION', 'Vui lòng nhập đủ Database URL và Auth Token của Turso.');
+        }
+        const cfg = turso.saveConfig(url, token);
+        if (mode === 'pull') {
+          await turso.pullFromTurso(repo.db, cfg);
+        } else {
+          await turso.pushToTurso(repo.db, cfg);
+          await turso.syncLocalFilesToTurso(cfg);
+        }
+        return sendJson(res, 200, { ok: true, db: getStateWithCloud() });
+      }
+      if (req.method === 'POST' && pathname === '/api/turso/sync') {
+        const body = await readJsonBody(req);
+        const mode = body.mode || 'pull';
+        if (mode === 'push') {
+          await turso.pushToTurso(repo.db);
+          await turso.syncLocalFilesToTurso();
+        } else {
+          await turso.pullFromTurso(repo.db);
+        }
+        return sendJson(res, 200, { ok: true, db: getStateWithCloud() });
       }
 
       // POST /api/projects & PUT /api/projects/:id
       if (req.method === 'POST' && pathname === '/api/projects') {
         const body = await readJsonBody(req);
         const id = repo.saveProject(body);
-        return sendJson(res, 201, { id, db: repo.getFullState() });
+        bgPushTurso();
+        return sendJson(res, 201, { id, db: getStateWithCloud() });
       }
       if (req.method === 'PUT' && /^\/api\/projects\/\d+$/.test(pathname)) {
         const id = Number(pathname.split('/').pop());
         const body = await readJsonBody(req);
         repo.saveProject({ ...body, id });
-        return sendJson(res, 200, { id, db: repo.getFullState() });
+        bgPushTurso();
+        return sendJson(res, 200, { id, db: getStateWithCloud() });
       }
 
       // POST /api/requests & PUT /api/requests/:id
       if (req.method === 'POST' && pathname === '/api/requests') {
         const body = await readJsonBody(req);
         const id = repo.saveRequest(body);
-        return sendJson(res, 201, { id, db: repo.getFullState() });
+        bgPushTurso();
+        return sendJson(res, 201, { id, db: getStateWithCloud() });
       }
       if (req.method === 'PUT' && /^\/api\/requests\/\d+$/.test(pathname)) {
         const id = Number(pathname.split('/').pop());
         const body = await readJsonBody(req);
         repo.saveRequest({ ...body, id });
-        return sendJson(res, 200, { id, db: repo.getFullState() });
+        bgPushTurso();
+        return sendJson(res, 200, { id, db: getStateWithCloud() });
       }
 
       // POST /api/personnel, PUT /api/personnel/:id, PATCH /api/personnel/:id/toggle
       if (req.method === 'POST' && pathname === '/api/personnel') {
         const body = await readJsonBody(req);
         const id = repo.savePersonnel(body);
-        return sendJson(res, 201, { id, db: repo.getFullState() });
+        bgPushTurso();
+        return sendJson(res, 201, { id, db: getStateWithCloud() });
       }
       if (req.method === 'PUT' && /^\/api\/personnel\/\d+$/.test(pathname)) {
         const id = Number(pathname.split('/').pop());
         const body = await readJsonBody(req);
         repo.savePersonnel({ ...body, id });
-        return sendJson(res, 200, { id, db: repo.getFullState() });
+        bgPushTurso();
+        return sendJson(res, 200, { id, db: getStateWithCloud() });
       }
       if (req.method === 'PATCH' && /^\/api\/personnel\/\d+\/toggle$/.test(pathname)) {
         const id = Number(pathname.split('/')[3]);
         const status = repo.togglePersonnelStatus(id);
-        return sendJson(res, 200, { id, status, db: repo.getFullState() });
+        bgPushTurso();
+        return sendJson(res, 200, { id, status, db: getStateWithCloud() });
       }
 
       // POST /api/members
       if (req.method === 'POST' && pathname === '/api/members') {
         const body = await readJsonBody(req);
         const id = repo.assignMember(body);
-        return sendJson(res, 201, { id, db: repo.getFullState() });
+        bgPushTurso();
+        return sendJson(res, 201, { id, db: getStateWithCloud() });
       }
 
       // POST /api/allocations & PUT /api/allocations/:id
       if (req.method === 'POST' && pathname === '/api/allocations') {
         const body = await readJsonBody(req);
         const id = repo.saveAllocationBatch(body);
-        return sendJson(res, 201, { id, db: repo.getFullState() });
+        bgPushTurso();
+        return sendJson(res, 201, { id, db: getStateWithCloud() });
       }
       if (req.method === 'PUT' && /^\/api\/allocations\/\d+$/.test(pathname)) {
         const batchId = Number(pathname.split('/').pop());
         const body = await readJsonBody(req);
         repo.saveAllocationBatch({ ...body, batchId });
-        return sendJson(res, 200, { id: batchId, db: repo.getFullState() });
+        bgPushTurso();
+        return sendJson(res, 200, { id: batchId, db: getStateWithCloud() });
       }
 
       // POST /api/upload (Upload file attachment for Hồ sơ / BBNT)
@@ -302,6 +366,9 @@ const server = http.createServer(async (req, res) => {
         const destPath = path.join(uploadDir, savedName);
         const buf = Buffer.from(base64Data, 'base64');
         fs.writeFileSync(destPath, buf);
+        if (buf.length <= 10 * 1024 * 1024) {
+          turso.pushFileToTurso(savedName, base64Data).catch(e => console.error('⚠ Turso file upload:', e.message));
+        }
         return sendJson(res, 201, {
           url: '/uploads/' + encodeURIComponent(savedName),
           fileName: origName,
@@ -313,51 +380,59 @@ const server = http.createServer(async (req, res) => {
       if (req.method === 'POST' && pathname === '/api/documents') {
         const body = await readJsonBody(req);
         const id = repo.saveDocument(body);
-        return sendJson(res, 201, { id, db: repo.getFullState() });
+        bgPushTurso();
+        return sendJson(res, 201, { id, db: getStateWithCloud() });
       }
       if (req.method === 'PUT' && /^\/api\/documents\/\d+$/.test(pathname)) {
         const id = Number(pathname.split('/').pop());
         const body = await readJsonBody(req);
         repo.saveDocument({ ...body, id });
-        return sendJson(res, 200, { id, db: repo.getFullState() });
+        bgPushTurso();
+        return sendJson(res, 200, { id, db: getStateWithCloud() });
       }
 
       // POST /api/acceptance-records, PUT /api/acceptance-records/:id, PATCH /api/acceptance-records/:id/status
       if (req.method === 'POST' && pathname === '/api/acceptance-records') {
         const body = await readJsonBody(req);
         const id = repo.saveBbnt(body);
-        return sendJson(res, 201, { id, db: repo.getFullState() });
+        bgPushTurso();
+        return sendJson(res, 201, { id, db: getStateWithCloud() });
       }
       if (req.method === 'PUT' && /^\/api\/acceptance-records\/\d+$/.test(pathname)) {
         const id = Number(pathname.split('/').pop());
         const body = await readJsonBody(req);
         repo.saveBbnt({ ...body, id });
-        return sendJson(res, 200, { id, db: repo.getFullState() });
+        bgPushTurso();
+        return sendJson(res, 200, { id, db: getStateWithCloud() });
       }
       if (req.method === 'PATCH' && /^\/api\/acceptance-records\/\d+\/status$/.test(pathname)) {
         const id = Number(pathname.split('/')[3]);
         const body = await readJsonBody(req);
         repo.toggleBbntStatus(id, !!body.send, body.sentDate);
-        return sendJson(res, 200, { id, db: repo.getFullState() });
+        bgPushTurso();
+        return sendJson(res, 200, { id, db: getStateWithCloud() });
       }
 
       // DELETE /api/trash/:coll/:id (Soft delete) & POST /api/trash/:coll/:id/restore
       const delMatch = pathname.match(/^\/api\/trash\/([a-z]+)\/(\d+)$/);
       if (req.method === 'DELETE' && delMatch) {
         const label = repo.softDelete(delMatch[1], Number(delMatch[2]));
-        return sendJson(res, 200, { label, db: repo.getFullState() });
+        bgPushTurso();
+        return sendJson(res, 200, { label, db: getStateWithCloud() });
       }
       const restoreMatch = pathname.match(/^\/api\/trash\/([a-z]+)\/(\d+)\/restore$/);
       if (req.method === 'POST' && restoreMatch) {
         const label = repo.restore(restoreMatch[1], Number(restoreMatch[2]));
-        return sendJson(res, 200, { label, db: repo.getFullState() });
+        bgPushTurso();
+        return sendJson(res, 200, { label, db: getStateWithCloud() });
       }
 
       // POST /api/excel/import (Dry-run & Upsert)
       if (req.method === 'POST' && pathname === '/api/excel/import') {
         const body = await readJsonBody(req);
         const result = repo.importData(body);
-        return sendJson(res, 200, { ...result, db: repo.getFullState() });
+        if (!body.dryRun) bgPushTurso();
+        return sendJson(res, 200, { ...result, db: getStateWithCloud() });
       }
 
       // GET /api/excel/export/:type
@@ -422,7 +497,18 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
   console.log(`🚀 Outsource PM Server (SQLite) đang chạy tại: http://localhost:${PORT}`);
   console.log(`📂 CSDL SQLite lưu tại: ${DB_PATH}`);
+  const cfg = turso.getConfig();
+  if (cfg.url && cfg.token) {
+    try {
+      const r = await turso.pullFromTurso(repo.db, cfg);
+      console.log(`☁ Đã đồng bộ dữ liệu với Turso Cloud (${cfg.url})`, r);
+    } catch (e) {
+      console.error(`⚠ Không thể đồng bộ Turso Cloud khi khởi động:`, e.message);
+    }
+  } else {
+    console.log(`ℹ Chưa cấu hình Turso Cloud. Mở http://localhost:${PORT} và bấm "☁ Kết nối Turso" ở góc dưới trái để thiết lập.`);
+  }
 });

@@ -81,9 +81,12 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
       <div style="color:#fff;font-weight:600;margin-top:4px">{{curProj.code}} · {{curProj.name}}</div>
       <div style="font-size:12px;margin-top:2px">{{curProj.customer}}</div>
     </div>
-    <div style="font-size:12px;padding:0 8px;display:flex;align-items:center;justify-content:space-between">
-      <span>Ngày: <strong style="color:#fff">02/11/2026</strong></span>
-      <span class="chip" style="{{dbBadgeStyle}}">{{dbBadge}}</span>
+    <div style="font-size:12px;padding:0 4px;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span>Ngày: <strong style="color:#fff">02/11/2026</strong></span>
+        <span class="chip" style="{{dbBadgeStyle}}">{{dbBadge}}</span>
+      </div>
+      <button class="btn btn-sm" onClick="{{openTurso}}" style="width:100%;justify-content:center;{{tursoBtnStyle}}">{{tursoBtnLabel}}</button>
     </div>
   </div>
 </aside>
@@ -905,6 +908,44 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
 </div>
 </sc-if>
 
+<!-- ============ MODAL: TURSO CLOUD ============ -->
+<sc-if value="{{kv.open}}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;background:rgba(16,32,42,.62);display:flex;align-items:center;justify-content:center;padding:16px;z-index:58">
+  <div role="dialog" aria-modal="true" aria-label="Kết nối Turso Cloud SQLite" class="card" style="width:100%;max-width:580px;display:flex;flex-direction:column;border-radius:16px;overflow:hidden">
+    <div style="padding:16px 20px;background:#10202A;color:#fff;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <h3 style="font-size:17px">☁ Kết nối & Đồng bộ Turso Cloud SQLite</h3>
+        <div style="font-size:12px;color:#9FB0BA;margin-top:2px">Tự động đồng bộ dữ liệu và file đính kèm giữa nhiều thiết bị</div>
+      </div>
+      <button class="btn btn-sm" onClick="{{kv.close}}" style="background:transparent;color:#fff;border-color:#445664">Đóng</button>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:14px">
+      <div style="padding:12px 14px;background:#EEF5F6;border:1px solid #B5D3D7;border-radius:10px;font-size:12.5px;line-height:1.6">
+        <strong>Hướng dẫn lấy thông tin trên <a href="https://app.turso.tech" target="_blank" rel="noopener" style="color:var(--pri)">app.turso.tech</a>:</strong><br>
+        1. Bấm <strong>Create Database</strong> → Đặt tên (VD: <code>outsource-pm</code>) → Bấm <strong>Create</strong>.<br>
+        2. Bấm vào Database vừa tạo → Chọn <strong>Create Token</strong> (Read & Write) → Copy <strong>Database URL</strong> và <strong>Auth Token</strong> dán vào bên dưới.
+      </div>
+      <div>
+        <label class="lbl" for="turso-url">Turso Database URL</label>
+        <input id="turso-url" class="inp mono" value="{{kv.url}}" onInput="{{kv.onUrl}}" placeholder="libsql://outsource-pm-luongngoc2194.aws-ap-northeast-1.turso.io" />
+      </div>
+      <div>
+        <label class="lbl" for="turso-token">Turso Auth Token</label>
+        <input id="turso-token" type="password" class="inp mono" value="{{kv.token}}" onInput="{{kv.onToken}}" placeholder="eyJhbGciOiJFZERTQSI..." />
+      </div>
+      <sc-if value="{{kv.hasErr}}" hint-placeholder-val="{{ false }}"><div style="color:var(--bad);font-size:13px;font-weight:600">{{kv.err}}</div></sc-if>
+    </div>
+    <div style="padding:14px 20px;background:#F7F6F2;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px">
+      <button class="btn" onClick="{{kv.pull}}" disabled="{{kv.busy}}">⬇ Kéo dữ liệu từ Turso về máy</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onClick="{{kv.close}}">Hủy</button>
+        <button class="btn btn-pri" onClick="{{kv.push}}" disabled="{{kv.busy}}">{{kv.pushLabel}}</button>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
 <!-- ============ DIALOG: CONFIRM ============ -->
 <sc-if value="{{cv.open}}" hint-placeholder-val="{{ false }}">
 <div style="position:fixed;inset:0;background:rgba(16,32,42,.58);display:flex;align-items:center;justify-content:center;padding:16px;z-index:60">
@@ -978,7 +1019,7 @@ class Component extends DCLogic {
     return {
       screen: 'projects', tab: 'pyc', curProj: 1, memberReq: 1, allocFilter: 'ALL', docFilter: 'ALL', bbntFilter: 'ALL', auditFilter: 'ALL',
       assignPers: 0, assignRole: '', apiConnected: false,
-      alloc: null, pyc: null, doc: null, pers: null, proj: null, bbntModal: null, excelModal: null, previewModal: null, confirm: null, toast: null,
+      alloc: null, pyc: null, doc: null, pers: null, proj: null, bbntModal: null, excelModal: null, previewModal: null, tursoModal: null, confirm: null, toast: null,
       db: {
         projects: [
           { id: 1, code: 'DA-01', name: 'Cổng thông tin khách hàng', customer: 'Viettel / Khối CNTT', status: 'ACTIVE', del: false }
@@ -1340,6 +1381,50 @@ class Component extends DCLogic {
       });
     } else {
       window.open(url, '_blank', 'noopener');
+    }
+  }
+  openTurso() {
+    const curUrl = (this.state.db && this.state.db.tursoUrl) || '';
+    this.setState({
+      tursoModal: {
+        url: curUrl,
+        token: '',
+        busy: false,
+        err: ''
+      }
+    });
+  }
+  async saveTurso(mode) {
+    const tm = this.state.tursoModal;
+    if (!tm) return;
+    const url = (tm.url || '').trim();
+    const token = (tm.token || '').trim();
+    const isAlreadyConfigured = !!(this.state.db && this.state.db.tursoConnected && url === this.state.db.tursoUrl && !token);
+    if (!isAlreadyConfigured && (!url || !token)) {
+      this.setState({ tursoModal: { ...tm, err: 'Vui lòng nhập cả Turso Database URL và Auth Token.' } });
+      return;
+    }
+    this.setState({ tursoModal: { ...tm, busy: true, err: '' } });
+    try {
+      const endpoint = isAlreadyConfigured ? '/turso/sync' : '/turso/config';
+      const res = await fetch(this.apiBase + endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, token, mode })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        this.setState({ tursoModal: { ...tm, busy: false, err: data.message || 'Không thể kết nối Turso Cloud.' } });
+        return;
+      }
+      if (data && data.db) {
+        this.setState({ db: data.db, apiConnected: true, tursoModal: null });
+      } else {
+        this.setState({ tursoModal: null });
+      }
+      this.toast(mode === 'pull' ? 'Đã kéo dữ liệu mới nhất từ Turso Cloud về máy!' : 'Đã kết nối & đẩy toàn bộ dữ liệu + file lên Turso Cloud!', 'ok');
+    } catch (e) {
+      this.setState({ tursoModal: { ...tm, busy: false, err: 'Lỗi kết nối Server: ' + e.message } });
     }
   }
   pickAndUpload(multiple, onDone) {
@@ -2141,6 +2226,21 @@ class Component extends DCLogic {
       close: () => this.setState({ previewModal: null })
     } : { open: false, title: '', fileName: '', embedUrl: '', fullUrl: '', downloadUrl: '', close: () => {} };
 
+    const kv = s.tursoModal ? {
+      open: true,
+      url: s.tursoModal.url,
+      token: s.tursoModal.token,
+      busy: !!s.tursoModal.busy,
+      err: s.tursoModal.err || '',
+      hasErr: !!s.tursoModal.err,
+      pushLabel: s.tursoModal.busy ? 'Đang đồng bộ...' : '☁ Lưu & Đẩy dữ liệu hiện tại lên Turso',
+      onUrl: (ev) => this.setState({ tursoModal: { ...this.state.tursoModal, url: ev.target.value, err: '' } }),
+      onToken: (ev) => this.setState({ tursoModal: { ...this.state.tursoModal, token: ev.target.value, err: '' } }),
+      push: () => this.saveTurso('push'),
+      pull: () => this.saveTurso('pull'),
+      close: () => this.setState({ tursoModal: null })
+    } : { open: false, url: '', token: '', busy: false, err: '', hasErr: false, pushLabel: '', onUrl: () => {}, onToken: () => {}, push: () => {}, pull: () => {}, close: () => {} };
+
     const c = s.confirm;
     const cv = c ? { open: true, title: c.title, body: c.body, okLabel: c.okLabel, okStyle: c.danger ? 'background:#9B1F24;border-color:#9B1F24' : '', cancel: () => this.setState({ confirm: null }), ok: () => this.doConfirm() }
       : { open: false, title: '', body: '', okLabel: '', okStyle: '', cancel: () => {}, ok: () => {} };
@@ -2150,10 +2250,14 @@ class Component extends DCLogic {
     const tv = t ? { open: true, msg: t.msg, style: TST[t.tone] || TST.ok, hasUndo: !!t.undo, undo: () => { const u = t.undo; if (u) u(); }, close: () => this.setState({ toast: null }) }
       : { open: false, msg: '', style: '', hasUndo: false, undo: () => {}, close: () => {} };
 
+    const isTurso = !!(db && db.tursoConnected);
     return {
       nav, isDash: s.screen === 'dashboard', isProj: s.screen === 'projects', isPers: s.screen === 'personnel', isAudit: s.screen === 'audit', isTrash: s.screen === 'trash',
-      dbBadge: s.apiConnected ? '● SQLite Online' : '○ Local Mode',
-      dbBadgeStyle: s.apiConnected ? 'background:#11633A;color:#fff;font-size:10.5px' : 'background:#2A404D;color:#C7D2D9;font-size:10.5px',
+      dbBadge: isTurso ? '☁ Turso Cloud' : (s.apiConnected ? '● SQLite Local' : '○ Local Mode'),
+      dbBadgeStyle: isTurso ? 'background:#0B5563;color:#E2F3E8;font-size:10.5px' : (s.apiConnected ? 'background:#11633A;color:#fff;font-size:10.5px' : 'background:#2A404D;color:#C7D2D9;font-size:10.5px'),
+      tursoBtnLabel: isTurso ? '☁ Đã kết nối Turso Cloud (Đồng bộ)' : '☁ Kết nối Turso Cloud SQLite',
+      tursoBtnStyle: isTurso ? 'background:#0B5563;color:#fff;border-color:#1E7B8C;font-size:11.5px' : 'background:#1E3744;color:#5CC8C0;border-color:#2A404D;font-size:11.5px',
+      openTurso: () => this.openTurso(),
       curProj, projOpts, newProj: () => this.openProj(null), editCurProj: () => this.openProj(pid), openExcel: () => this.openExcel(),
       canDelProj: projs.length > 1,
       delCurProj: () => this.ask('delProj', pid, 'Xóa dự án ' + curProjObj.code + '?', 'Dự án được chuyển vào Thùng rác (xóa mềm). Bạn có thể khôi phục lại từ Thùng rác.', 'Xóa mềm dự án', true),
@@ -2170,7 +2274,7 @@ class Component extends DCLogic {
       persRows, newPers: () => this.openPers(null),
       auditFilterOpts, auditRows, noAudit: auditRows.length === 0,
       trashRows, noTrash: trashRows.length === 0,
-      av, pv, dv, nv, mj, bv, xv, wv, cv, tv
+      av, pv, dv, nv, mj, bv, xv, wv, kv, cv, tv
     };
   }
 }
