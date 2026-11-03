@@ -433,6 +433,7 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
           <span class="chip" style="background:#FBEFD0;color:#7A4F00;margin-left:4px">{{unsentCount}} biên bản chưa gửi</span>
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+          <button class="btn btn-sm" onClick="{{openClone}}" style="color:var(--pri);border-color:var(--pri)">⧉ Clone bộ BBNT từ PYC khác</button>
           <button class="btn btn-sm" onClick="{{importBbntFiles}}">⬆ Import file BBNT</button>
           <button class="btn btn-sm" onClick="{{expBbnt}}">⬇ Xuất danh sách (Excel)</button>
           <button class="btn btn-pri" onClick="{{newBbnt}}">+ Thêm biên bản</button>
@@ -908,6 +909,59 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
 </div>
 </sc-if>
 
+<!-- ============ MODAL: CLONE BBNT ============ -->
+<sc-if value="{{qv.open}}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;background:rgba(16,32,42,.58);display:flex;align-items:center;justify-content:center;padding:16px;z-index:52">
+  <div role="dialog" aria-modal="true" aria-label="Clone bộ biên bản nghiệm thu" class="card" style="width:100%;max-width:720px;max-height:94vh;display:flex;flex-direction:column;overflow:hidden;border-radius:16px">
+    <div style="padding:16px 22px;background:#10202A;color:#fff;display:flex;align-items:center;justify-content:space-between">
+      <h3 style="font-size:16px">⧉ Clone bộ biên bản nghiệm thu sang PYC mới</h3>
+      <button class="btn btn-sm" onClick="{{qv.close}}" style="background:transparent;color:#fff;border-color:#4A6070">Đóng</button>
+    </div>
+    <div style="padding:20px 22px;overflow-y:auto;display:flex;flex-direction:column;gap:14px">
+      <sc-if value="{{qv.showForm}}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;gap:8px" role="radiogroup" aria-label="PYC nguồn">
+          <span class="sub" style="font-weight:600">1. Clone từ PYC (nguồn)</span>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <sc-for list="{{qv.fromOpts}}" as="o" hint-placeholder-count="2"><button class="seg" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button></sc-for>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px" role="radiogroup" aria-label="PYC đích">
+          <span class="sub" style="font-weight:600">2. Sang PYC mới (đích)</span>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <sc-for list="{{qv.toOpts}}" as="o" hint-placeholder-count="2"><button class="seg" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button></sc-for>
+          </div>
+        </div>
+        <label class="field" style="max-width:240px">3. Tháng điền vào các thông tin thời gian<input class="inp" type="month" value="{{qv.month}}" onInput="{{qv.onMonth}}"></label>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span class="sub" style="font-weight:600">4. Chọn file cần clone ({{qv.selCount}}/{{qv.total}})</span>
+          <sc-for list="{{qv.files}}" as="f" hint-placeholder-count="3">
+            <button class="seg" role="checkbox" aria-checked="{{f.on}}" onClick="{{f.toggle}}" style="{{f.style}};text-align:left;justify-content:flex-start;width:100%">{{f.mark}} {{f.code}} · {{f.title}}</button>
+          </sc-for>
+          <sc-if value="{{qv.noFiles}}" hint-placeholder-val="{{ false }}"><div class="sub">PYC nguồn chưa có biên bản nào.</div></sc-if>
+        </div>
+        <div class="sub" style="background:#EEF5F6;border:1px solid #B5D3D7;border-radius:10px;padding:10px 12px;line-height:1.6">Tự động thay <strong>mã PYC</strong> trong tên file + nội dung (Word, Excel) và đổi <strong>tháng/năm</strong> ở các ngày tháng (<em>ngày dd/mm/yyyy, tháng M năm yyyy, tháng M/yyyy</em>). File .doc cũ chỉ sửa được chỗ cùng độ dài; ô ngày dạng số Excel không bị đổi.</div>
+        <sc-if value="{{qv.hasErr}}" hint-placeholder-val="{{ false }}"><p style="font-size:13px;font-weight:600;color:var(--bad)">{{qv.err}}</p></sc-if>
+      </sc-if>
+      <sc-if value="{{qv.hasResult}}" hint-placeholder-val="{{ false }}">
+        <div style="font-weight:700;color:var(--ok)">✓ Đã tạo {{qv.resultCount}} biên bản cho {{qv.toCode}}</div>
+        <sc-for list="{{qv.results}}" as="r" hint-placeholder-count="2">
+          <div style="border:1px solid var(--line);border-radius:10px;padding:10px 12px">
+            <div style="font-weight:600">{{r.code}} · {{r.title}}</div>
+            <div class="sub mono" style="font-size:11.5px">{{r.fileLine}}</div>
+            <div class="sub">{{r.stat}}</div>
+            <sc-if value="{{r.hasWarn}}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:#7A4F00;font-weight:600">⚠ {{r.warn}}</div></sc-if>
+          </div>
+        </sc-for>
+      </sc-if>
+    </div>
+    <div style="padding:14px 22px;background:#FAF9F5;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px">
+      <button class="btn" onClick="{{qv.close}}">Đóng</button>
+      <sc-if value="{{qv.showForm}}" hint-placeholder-val="{{ true }}"><button class="btn btn-pri" onClick="{{qv.run}}" disabled="{{qv.busy}}">{{qv.runLabel}}</button></sc-if>
+    </div>
+  </div>
+</div>
+</sc-if>
+
 <!-- ============ MODAL: TURSO CLOUD ============ -->
 <sc-if value="{{kv.open}}" hint-placeholder-val="{{ false }}">
 <div style="position:fixed;inset:0;background:rgba(16,32,42,.62);display:flex;align-items:center;justify-content:center;padding:16px;z-index:58">
@@ -1019,7 +1073,7 @@ class Component extends DCLogic {
     return {
       screen: 'projects', tab: 'pyc', curProj: 1, memberReq: 1, allocFilter: 'ALL', docFilter: 'ALL', bbntFilter: 'ALL', auditFilter: 'ALL',
       assignPers: 0, assignRole: '', apiConnected: false,
-      alloc: null, pyc: null, doc: null, pers: null, proj: null, bbntModal: null, excelModal: null, previewModal: null, tursoModal: null, confirm: null, toast: null,
+      alloc: null, pyc: null, doc: null, pers: null, proj: null, bbntModal: null, excelModal: null, previewModal: null, tursoModal: null, cloneModal: null, confirm: null, toast: null,
       db: {
         projects: [
           { id: 1, code: 'DA-01', name: 'Cổng thông tin khách hàng', customer: 'Viettel / Khối CNTT', status: 'ACTIVE', del: false }
@@ -1381,6 +1435,49 @@ class Component extends DCLogic {
       });
     } else {
       window.open(url, '_blank', 'noopener');
+    }
+  }
+  openClone() {
+    const db = this.state.db, pid = this.curProjId(db);
+    const reqs = db.requests.filter(r => !r.del && r.proj === pid);
+    if (reqs.length < 2) { this.toast('Cần ít nhất 2 PYC trong dự án để clone.', 'warn'); return; }
+    const hasBbnt = (rid) => db.bbnt.some(b => !b.del && b.req === rid);
+    const f = this.state.bbntFilter;
+    const from = (typeof f === 'number' && hasBbnt(f)) ? f : ((reqs.find(r => hasBbnt(r.id)) || reqs[0]).id);
+    const to = (reqs.find(r => r.id !== from && !hasBbnt(r.id)) || reqs.find(r => r.id !== from)).id;
+    const now = new Date();
+    const month = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    const sel = {};
+    db.bbnt.filter(b => !b.del && b.req === from).forEach(b => { sel[b.id] = true; });
+    this.setState({ cloneModal: { from, to, month, sel, busy: false, err: '', result: null } });
+  }
+  setCloneFrom(from) {
+    const db = this.state.db, cm = this.state.cloneModal;
+    const sel = {};
+    db.bbnt.filter(b => !b.del && b.req === from).forEach(b => { sel[b.id] = true; });
+    const reqs = db.requests.filter(r => !r.del && r.proj === this.curProjId(db));
+    const to = cm.to === from ? (reqs.find(r => r.id !== from) || {}).id : cm.to;
+    this.setState({ cloneModal: { ...cm, from, to, sel, err: '' } });
+  }
+  async runClone() {
+    const cm = this.state.cloneModal;
+    const ids = Object.keys(cm.sel).filter(k => cm.sel[k]).map(Number);
+    if (!cm.month) { this.setState({ cloneModal: { ...cm, err: 'Vui lòng chọn tháng.' } }); return; }
+    if (cm.from === cm.to) { this.setState({ cloneModal: { ...cm, err: 'PYC nguồn và đích phải khác nhau.' } }); return; }
+    if (!ids.length) { this.setState({ cloneModal: { ...cm, err: 'Chọn ít nhất 1 biên bản.' } }); return; }
+    if (!this.state.apiConnected) { this.setState({ cloneModal: { ...cm, err: 'Cần chạy server (start.bat) để clone file.' } }); return; }
+    this.setState({ cloneModal: { ...cm, busy: true, err: '' } });
+    try {
+      const res = await fetch(this.apiBase + '/bbnt/clone', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fromReq: cm.from, toReq: cm.to, month: cm.month, ids })
+      });
+      const data = await res.json();
+      if (!res.ok) { this.setState({ cloneModal: { ...cm, busy: false, err: data.message || 'Clone thất bại.' } }); return; }
+      this.setState({ db: data.db, bbntFilter: cm.to, cloneModal: { ...cm, busy: false, result: data.results } });
+      this.toast('Đã clone ' + data.results.length + ' biên bản.', 'ok');
+    } catch (e) {
+      this.setState({ cloneModal: { ...cm, busy: false, err: 'Lỗi: ' + e.message } });
     }
   }
   openTurso() {
@@ -2241,6 +2338,34 @@ class Component extends DCLogic {
       close: () => this.setState({ tursoModal: null })
     } : { open: false, url: '', token: '', busy: false, err: '', hasErr: false, pushLabel: '', onUrl: () => {}, onToken: () => {}, push: () => {}, pull: () => {}, close: () => {} };
 
+    const qv = (() => {
+      const cm = s.cloneModal;
+      if (!cm) return { open: false, showForm: false, hasResult: false, fromOpts: [], toOpts: [], files: [], results: [], close: () => {}, run: () => {}, onMonth: () => {} };
+      const files = db.bbnt.filter(b => !b.del && b.req === cm.from).map(b => ({
+        code: b.code, title: b.title, on: !!cm.sel[b.id], mark: cm.sel[b.id] ? '☑' : '☐',
+        style: cm.sel[b.id] ? ACTIVE : '',
+        toggle: () => this.setState({ cloneModal: { ...this.state.cloneModal, sel: { ...this.state.cloneModal.sel, [b.id]: !this.state.cloneModal.sel[b.id] } } })
+      }));
+      const toReq = reqs.find(r => r.id === cm.to);
+      return {
+        open: true, showForm: !cm.result, hasResult: !!cm.result,
+        fromOpts: reqs.map(r => ({ label: r.code + ' · ' + r.name, ...seg(cm.from === r.id, () => this.setCloneFrom(r.id)) })),
+        toOpts: reqs.filter(r => r.id !== cm.from).map(r => ({ label: r.code + ' · ' + r.name, ...seg(cm.to === r.id, () => this.setState({ cloneModal: { ...this.state.cloneModal, to: r.id, err: '' } })) })),
+        month: cm.month, onMonth: (ev) => this.setState({ cloneModal: { ...this.state.cloneModal, month: ev.target.value, err: '' } }),
+        files, total: files.length, selCount: files.filter(f => f.on).length, noFiles: files.length === 0,
+        busy: cm.busy, runLabel: cm.busy ? 'Đang clone...' : '⧉ Tạo bộ biên bản cho ' + (toReq ? toReq.code : 'PYC mới'),
+        err: cm.err, hasErr: !!cm.err,
+        toCode: toReq ? toReq.code : '', resultCount: (cm.result || []).length,
+        results: (cm.result || []).map(r => ({
+          code: r.code, title: r.title,
+          fileLine: r.newFileName ? (r.fileName + ' → ' + r.newFileName) : '(không có file đính kèm)',
+          stat: r.newFileName ? ('Thay mã PYC: ' + r.codeHits + ' chỗ · Sửa ngày tháng: ' + r.dateHits + ' chỗ') : '',
+          hasWarn: (r.warnings || []).length > 0, warn: (r.warnings || []).join('; ')
+        })),
+        close: () => this.setState({ cloneModal: null }), run: () => this.runClone()
+      };
+    })();
+
     const c = s.confirm;
     const cv = c ? { open: true, title: c.title, body: c.body, okLabel: c.okLabel, okStyle: c.danger ? 'background:#9B1F24;border-color:#9B1F24' : '', cancel: () => this.setState({ confirm: null }), ok: () => this.doConfirm() }
       : { open: false, title: '', body: '', okLabel: '', okStyle: '', cancel: () => {}, ok: () => {} };
@@ -2257,7 +2382,7 @@ class Component extends DCLogic {
       dbBadgeStyle: isTurso ? 'background:#0B5563;color:#E2F3E8;font-size:10.5px' : (s.apiConnected ? 'background:#11633A;color:#fff;font-size:10.5px' : 'background:#2A404D;color:#C7D2D9;font-size:10.5px'),
       tursoBtnLabel: isTurso ? '☁ Đã kết nối Turso Cloud (Đồng bộ)' : '☁ Kết nối Turso Cloud SQLite',
       tursoBtnStyle: isTurso ? 'background:#0B5563;color:#fff;border-color:#1E7B8C;font-size:11.5px' : 'background:#1E3744;color:#5CC8C0;border-color:#2A404D;font-size:11.5px',
-      openTurso: () => this.openTurso(),
+      openTurso: () => this.openTurso(), openClone: () => this.openClone(),
       curProj, projOpts, newProj: () => this.openProj(null), editCurProj: () => this.openProj(pid), openExcel: () => this.openExcel(),
       canDelProj: projs.length > 1,
       delCurProj: () => this.ask('delProj', pid, 'Xóa dự án ' + curProjObj.code + '?', 'Dự án được chuyển vào Thùng rác (xóa mềm). Bạn có thể khôi phục lại từ Thùng rác.', 'Xóa mềm dự án', true),
@@ -2274,7 +2399,7 @@ class Component extends DCLogic {
       persRows, newPers: () => this.openPers(null),
       auditFilterOpts, auditRows, noAudit: auditRows.length === 0,
       trashRows, noTrash: trashRows.length === 0,
-      av, pv, dv, nv, mj, bv, xv, wv, kv, cv, tv
+      av, pv, dv, nv, mj, bv, xv, wv, kv, qv, cv, tv
     };
   }
 }

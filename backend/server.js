@@ -7,6 +7,7 @@ const XLSX = require('xlsx');
 const WordExtractor = require('word-extractor');
 const { createDatabase, BusinessError } = require('./db');
 const turso = require('./turso');
+const { cloneFile, makeTransformer } = require('./clone');
 
 const PORT = process.env.PORT || 3000;
 const DB_PATH = path.join(__dirname, 'data', 'outsource-pm.db');
@@ -374,6 +375,58 @@ const server = http.createServer(async (req, res) => {
           fileName: origName,
           size: buf.length
         });
+      }
+
+      // POST /api/bbnt/clone -> clone a set of acceptance records (files) from one PYC to another
+      if (req.method === 'POST' && pathname === '/api/bbnt/clone') {
+        const body = await readJsonBody(req);
+        const fromReq = Number(body.fromReq), toReq = Number(body.toReq);
+        const month = String(body.month || '');
+        if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) throw new BusinessError('VALIDATION', 'Vui lòng chọn tháng đích hợp lệ.');
+        if (!fromReq || !toReq || fromReq === toReq) throw new BusinessError('VALIDATION', 'Cần chọn PYC nguồn và PYC đích khác nhau.');
+        const st = repo.getFullState();
+        const src = st.requests.find(r => r.id === fromReq && !r.del);
+        const dst = st.requests.find(r => r.id === toReq && !r.del);
+        if (!src || !dst) throw new BusinessError('NOT_FOUND', 'Không tìm thấy PYC nguồn/đích.');
+        const ids = Array.isArray(body.ids) ? body.ids.map(Number) : null;
+        const list = st.bbnt.filter(b => !b.del && b.req === fromReq && (!ids || ids.includes(b.id)));
+        if (!list.length) throw new BusinessError('VALIDATION', 'PYC nguồn chưa có biên bản nào để clone.');
+
+        const uploadDir = path.resolve(__dirname, '..', 'uploads');
+        fs.mkdirSync(uploadDir, { recursive: true });
+        let nextNo = st.bbnt.reduce((mx, b) => Math.max(mx, Number((String(b.code).match(/(\d+)\s*$/) || [0, 0])[1])), 0) + 1;
+        const results = [];
+        let stamp = Date.now();
+        for (const b of list) {
+          const tf = makeTransformer(src.code, dst.code, month);
+          const newTitle = tf.nameOnly(b.title);
+          const code = 'BBNT-' + String(nextNo).padStart(2, '0');
+          const item = { oldCode: b.code, code, title: newTitle, warnings: [] };
+          let newUrl = b.url;
+          const isUp = String(b.url || '').startsWith('/uploads/');
+          const oldName = isUp ? decodeURIComponent(b.url.slice('/uploads/'.length)) : '';
+          const oldPath = isUp ? path.join(uploadDir, path.basename(oldName)) : '';
+          if (isUp && fs.existsSync(oldPath)) {
+            const origName = path.basename(oldName).replace(/^\d+_/, '');
+            const newName = tf.nameOnly(origName);
+            const r = await cloneFile(fs.readFileSync(oldPath), path.extname(origName), src.code, dst.code, month);
+            const saved = `${++stamp}_${newName}`;
+            fs.writeFileSync(path.join(uploadDir, saved), r.buffer);
+            if (r.buffer.length <= 10 * 1024 * 1024) {
+              turso.pushFileToTurso(saved, r.buffer.toString('base64')).catch(e => console.error('⚠ Turso file upload:', e.message));
+            }
+            newUrl = '/uploads/' + encodeURIComponent(saved);
+            Object.assign(item, { fileName: origName, newFileName: newName, codeHits: r.code, dateHits: r.date });
+            item.warnings = r.warnings;
+          } else {
+            item.warnings.push(isUp ? 'Không tìm thấy file gốc trên máy' : 'Là liên kết ngoài, giữ nguyên link');
+          }
+          repo.saveBbnt({ req: toReq, code, title: newTitle, url: newUrl, status: 'NOT_SENT', sent: null });
+          nextNo++;
+          results.push(item);
+        }
+        bgPushTurso();
+        return sendJson(res, 201, { results, db: getStateWithCloud() });
       }
 
       // POST /api/documents & PUT /api/documents/:id
