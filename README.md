@@ -6,19 +6,19 @@
 
 ## 1. Truy cập & Chạy Ứng dụng
 
-Server đã được khởi chạy sẵn tại:
-* **Web UI (Full-stack SQLite)**: http://localhost:3000
-* **REST API State**: http://localhost:3000/api/state
-* **Mở trực tiếp file HTML**: [Main.dc.html](./Main.dc.html) hoặc [index.html](./index.html) (tự động kết nối tới `http://localhost:3000/api` và hiển thị huy hiệu `● SQLite Online` ở góc dưới Sidebar trái).
+### 🚀 Khởi động nhanh bằng 1 cú Click-đúp (Khuyên dùng)
+Ngay trên **Desktop (Màn hình chính)** của bạn đã có sẵn các biểu tượng:
+* **`Outsource PM`** (Icon màu xanh ngọc): Click đúp để khởi động ngầm cực êm (không hiện cửa sổ đen CMD) và tự động mở trình duyệt `http://localhost:3000`.
+* **`Outsource PM - Console`**: Click đúp để khởi động kèm cửa sổ dòng lệnh CMD (dùng khi muốn theo dõi log trực tiếp).
+* **`Dừng Outsource PM`**: Click đúp để tắt hoàn toàn máy chủ khi không dùng nữa.
 
-### Lệnh điều khiển trong thư mục `d:\qlduan`
-```powershell
-# Khởi động Backend + SQLite + Web UI tại http://localhost:3000
-npm start
-
-# Chạy bộ kiểm thử tự động 8 Test Cases (TC-01 -> TC-08) trên SQLite
-npm test
-```
+### Các file script tiện ích trong thư mục `d:\qlduan`
+* **`start.bat`**: Khởi động server chuẩn, kiểm tra môi trường, tự mở trình duyệt `http://localhost:3000`.
+* **`start-hidden.vbs`**: Chạy ngầm server không hiện cửa sổ console, tự mở web.
+* **`stop.bat`**: Tắt nhanh server và giải phóng cổng 3000.
+* **`tao-shortcut-desktop.bat`**: Tự động tạo lại các Shortcut ra Desktop (tiện lợi khi clone dự án về máy mới).
+* **`bat-khoi-dong-cung-windows.bat`**: Bật tự động khởi động Outsource PM cùng Windows (Startup).
+* **`tat-khoi-dong-cung-windows.bat`**: Tắt tự động khởi động cùng Windows.
 
 ---
 
