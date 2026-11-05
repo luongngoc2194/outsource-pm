@@ -357,7 +357,10 @@ main::-webkit-scrollbar-thumb:hover{background:#A8A59A}
             <button class="seg" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button>
           </sc-for>
         </div>
-        <button class="btn btn-pri" onClick="{{newAlloc}}">+ Tạo đợt phân bổ cuối tháng</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn" onClick="{{openReportModal}}" style="color:var(--pri);border-color:var(--pri);background:#fff;display:inline-flex;align-items:center;gap:6px;font-weight:600" title="Báo cáo tổng hợp nỗ lực đợt theo tất cả dự án">📋 Copy báo cáo đợt</button>
+          <button class="btn btn-pri" onClick="{{newAlloc}}">+ Tạo đợt phân bổ cuối tháng</button>
+        </div>
       </div>
       <sc-for list="{{batchCards}}" as="b" hint-placeholder-count="2">
         <section style="border:1px solid var(--line);border-radius:12px;overflow:hidden">
@@ -1054,6 +1057,49 @@ main::-webkit-scrollbar-thumb:hover{background:#A8A59A}
 </div>
 </sc-if>
 
+<!-- ============ MODAL: BÁO CÁO TỔNG HỢP NỖ LỰC ============ -->
+<sc-if value="{{rv.open}}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;background:rgba(16,32,42,.58);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50">
+  <div role="dialog" aria-modal="true" class="card" style="width:100%;max-width:580px;display:flex;flex-direction:column;border-radius:16px;overflow:hidden;box-shadow:0 12px 40px rgba(16,32,42,.35);background:#fff">
+    <div style="padding:16px 22px;background:#FAF9F5;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:16px;font-weight:700;color:var(--ink)">Báo cáo tổng hợp nỗ lực</div>
+        <div class="sub" style="font-size:12px;margin-top:2px">Tổng hợp nỗ lực theo từng dự án trong tháng</div>
+      </div>
+      <button class="btn btn-sm" onClick="{{rv.close}}" aria-label="Đóng">Đóng</button>
+    </div>
+    <div style="padding:18px 22px;display:flex;flex-direction:column;gap:14px;max-height:75vh;overflow-y:auto">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <span class="sub" style="font-weight:600">Chọn tháng báo cáo:</span>
+        <div style="display:flex;flex-wrap:wrap;gap:6px" role="radiogroup" aria-label="Chọn tháng báo cáo">
+          <sc-for list="{{rv.monthOpts}}" as="m" hint-placeholder-count="3">
+            <button class="seg" role="radio" aria-checked="{{m.on}}" onClick="{{m.pick}}" style="{{m.style}}">{{m.label}}</button>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span class="sub" style="font-weight:600">Nội dung báo cáo xem trước:</span>
+          <span class="sub" style="font-size:11.5px;color:var(--mute)">Hỗ trợ in đậm trên Teams/Word/Zalo/Telegram</span>
+        </div>
+        <div style="background:#FAF9F5;border:1px solid var(--line);border-left:4px solid var(--pri);border-radius:8px;padding:14px 16px;font-size:13.5px;line-height:1.6;max-height:280px;overflow-y:auto">
+          <sc-for list="{{rv.previewLines}}" as="l" hint-placeholder-count="4">
+            <div style="{{l.style}}">{{l.text}}</div>
+          </sc-for>
+          <sc-if value="{{rv.noData}}" hint-placeholder-val="{{ false }}">
+            <div class="sub" style="text-align:center;padding:16px">Không có dữ liệu phân bổ nào trong tháng này.</div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+    <div style="padding:14px 22px;background:#FAF9F5;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px">
+      <button class="btn" onClick="{{rv.close}}">Đóng</button>
+      <button class="btn btn-pri" onClick="{{rv.copy}}" disabled="{{rv.noData}}">📋 Sao chép vào Clipboard</button>
+    </div>
+  </div>
+</div>
+</sc-if>
+
 <!-- ============ DIALOG: CONFIRM ============ -->
 <sc-if value="{{cv.open}}" hint-placeholder-val="{{ false }}">
 <div style="position:fixed;inset:0;background:rgba(16,32,42,.58);display:flex;align-items:center;justify-content:center;padding:16px;z-index:60">
@@ -1128,7 +1174,7 @@ class Component extends DCLogic {
       screen: 'projects', tab: 'pyc', curProj: 1, memberReq: 1, allocFilter: 'ALL', docFilter: 'ALL', bbntFilter: 'ALL', auditFilter: 'ALL',
       assignPers: 0, assignRole: '', apiConnected: false,
       selectedDocs: {}, selectedBbnt: {},
-      alloc: null, pyc: null, doc: null, pers: null, proj: null, bbntModal: null, excelModal: null, previewModal: null, tursoModal: null, cloneModal: null, confirm: null, toast: null,
+      alloc: null, pyc: null, doc: null, pers: null, proj: null, bbntModal: null, excelModal: null, previewModal: null, tursoModal: null, cloneModal: null, reportModal: null, confirm: null, toast: null,
       db: {
         projects: [
           { id: 1, code: 'DA-01', name: 'Cổng thông tin khách hàng', customer: 'Viettel / Khối CNTT', status: 'ACTIVE', del: false }
@@ -1405,6 +1451,127 @@ class Component extends DCLogic {
     try { document.execCommand('copy'); } catch (_) {}
     document.body.removeChild(ta);
     if (cb) cb();
+  }
+  copyReportWithFormatting(plainText, htmlText, successToast) {
+    const done = () => this.toast(successToast, 'ok');
+    try {
+      if (navigator.clipboard && window.ClipboardItem) {
+        const textBlob = new Blob([plainText], { type: 'text/plain' });
+        const htmlBlob = new Blob([htmlText], { type: 'text/html' });
+        const item = new ClipboardItem({
+          'text/plain': textBlob,
+          'text/html': htmlBlob
+        });
+        navigator.clipboard.write([item]).then(done).catch(() => {
+          if (navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(plainText).then(done).catch(() => this.fallbackCopy(plainText, done));
+          } else {
+            this.fallbackCopy(plainText, done);
+          }
+        });
+        return;
+      }
+    } catch (_) {}
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(plainText).then(done).catch(() => this.fallbackCopy(plainText, done));
+    } else {
+      this.fallbackCopy(plainText, done);
+    }
+  }
+  openReportModal(month) {
+    const db = this.state.db;
+    const allMonths = Array.from(new Set(db.batches.filter(b => !b.del).map(b => b.month))).sort().reverse();
+    let m = month;
+    if (!m) {
+      const pid = this.curProjId(db);
+      const reqIds = db.requests.filter(r => !r.del && r.proj === pid).map(r => r.id);
+      const curBatches = db.batches.filter(b => !b.del && reqIds.includes(b.req)).sort((x, y) => y.month.localeCompare(x.month));
+      m = curBatches[0] ? curBatches[0].month : (allMonths[0] || '2026-11');
+    }
+    this.setState({ reportModal: { month: m } });
+  }
+  generateSummaryReport(db, month) {
+    const activeProjs = db.projects.filter(p => !p.del);
+    const activeProjIds = activeProjs.map(p => p.id);
+    const reqsInActive = db.requests.filter(r => !r.del && activeProjIds.includes(r.proj));
+    const reqMap = new Map(reqsInActive.map(r => [r.id, r]));
+    const batchesInMonth = db.batches.filter(b => !b.del && b.month === month && reqMap.has(b.req));
+
+    const mp = String(month || '').split('-');
+    const monthLabel = mp.length === 2 ? ('THÁNG ' + mp[1] + '/' + mp[0]) : month;
+
+    const projGroups = [];
+    let grandTotal = 0;
+
+    for (const proj of activeProjs) {
+      const projReqIds = new Set(reqsInActive.filter(r => r.proj === proj.id).map(r => r.id));
+      const projBatches = batchesInMonth.filter(b => projReqIds.has(b.req));
+      if (!projBatches.length) continue;
+
+      const projBatchIds = new Set(projBatches.map(b => b.id));
+      const items = db.items.filter(i => projBatchIds.has(i.batch) && !i.del);
+      if (!items.length) continue;
+
+      const persEffort = new Map();
+      items.forEach(it => {
+        const cur = persEffort.get(it.pers) || 0;
+        persEffort.set(it.pers, this.r1(cur + Number(it.md)));
+      });
+
+      let projTotal = 0;
+      const persList = [];
+      for (const [persId, md] of persEffort.entries()) {
+        projTotal = this.r1(projTotal + md);
+        const p = db.personnel.find(x => x.id === persId);
+        persList.push({ name: p ? p.name : 'N/A', md });
+      }
+      persList.sort((a, b) => b.md - a.md);
+      grandTotal = this.r1(grandTotal + projTotal);
+      projGroups.push({ proj, total: projTotal, persList });
+    }
+
+    const noData = projGroups.length === 0;
+
+    const plainLines = ['[TỔNG HỢP NỖ LỰC **' + monthLabel + '**]', ''];
+    const htmlLines = ['<div>[TỔNG HỢP NỖ LỰC <b>' + monthLabel + '</b>]</div>', '<br>'];
+    const previewLines = [
+      { text: '[TỔNG HỢP NỖ LỰC ' + monthLabel + ']', style: 'font-weight:700;color:var(--ink);font-size:14px' },
+      { text: '', style: 'height:8px' }
+    ];
+
+    projGroups.forEach((g, idx) => {
+      const num = idx + 1;
+      const pLine = num + '. ' + g.proj.name + ': ' + this.f1(g.total) + ' MM';
+      plainLines.push('**' + pLine + '**');
+      htmlLines.push('<div><b>' + pLine + '</b></div>');
+      previewLines.push({ text: pLine, style: 'font-weight:700;color:var(--ink);margin-top:6px' });
+
+      g.persList.forEach(pers => {
+        const line = '   - ' + pers.name + ': ' + this.f1(pers.md) + ' MM';
+        plainLines.push(line);
+        htmlLines.push('<div>&nbsp;&nbsp;&nbsp;- ' + pers.name + ': ' + this.f1(pers.md) + ' MM</div>');
+        previewLines.push({ text: '   - ' + pers.name + ': ' + this.f1(pers.md) + ' MM', style: 'color:#444;padding-left:14px' });
+      });
+
+      plainLines.push('');
+      htmlLines.push('<br>');
+      previewLines.push({ text: '', style: 'height:6px' });
+    });
+
+    const totLine = '=> TỔNG NỖ LỰC: ' + this.f1(grandTotal) + ' MM (' + this.mm(grandTotal) + ' MD)';
+    plainLines.push('**' + totLine + '**');
+    htmlLines.push('<div><b>' + totLine.replace('=>', '=&gt;') + '</b></div>');
+    previewLines.push({ text: totLine, style: 'font-weight:700;color:var(--ok);font-size:14px;margin-top:6px' });
+
+    return {
+      plain: plainLines.join('\n'),
+      html: htmlLines.join('\n'),
+      previewLines: noData ? [] : previewLines,
+      grandTotal,
+      monthLabel,
+      noData
+    };
   }
 
   // ---------- PYC modal logic ----------
@@ -2725,6 +2892,29 @@ class Component extends DCLogic {
       };
     })();
 
+    let rv = { open: false, monthOpts: [], previewLines: [], noData: true, close: () => {}, copy: () => {} };
+    if (s.reportModal) {
+      const rm = s.reportModal;
+      const allMonths = Array.from(new Set(db.batches.filter(b => !b.del).map(b => b.month))).sort().reverse();
+      const curMonth = rm.month || allMonths[0] || '2026-11';
+      const rep = this.generateSummaryReport(db, curMonth);
+      rv = {
+        open: true,
+        monthOpts: allMonths.map(mo => {
+          const parts = mo.split('-');
+          const lbl = parts.length === 2 ? ('Tháng ' + parts[1] + '/' + parts[0]) : mo;
+          return { label: lbl, on: mo === curMonth, style: mo === curMonth ? ACTIVE : '', pick: () => this.setState({ reportModal: { month: mo } }) };
+        }),
+        previewLines: rep.previewLines,
+        noData: rep.noData,
+        close: () => this.setState({ reportModal: null }),
+        copy: () => {
+          this.copyReportWithFormatting(rep.plain, rep.html, 'Đã copy báo cáo ' + rep.monthLabel + ' (' + this.f1(rep.grandTotal) + ' MM) vào Clipboard!');
+          this.setState({ reportModal: null });
+        }
+      };
+    }
+
     const c = s.confirm;
     const cv = c ? { open: true, title: c.title, body: c.body, okLabel: c.okLabel, okStyle: c.danger ? 'background:#9B1F24;border-color:#9B1F24' : '', cancel: () => this.setState({ confirm: null }), ok: () => this.doConfirm() }
       : { open: false, title: '', body: '', okLabel: '', okStyle: '', cancel: () => {}, ok: () => {} };
@@ -2752,7 +2942,7 @@ class Component extends DCLogic {
       onAssignRole: (e) => this.setState({ assignRole: e.target.value }),
       assign: () => this.assign(mReq, assignPersId, assignRoleVal.trim()),
       memberRows, noMembers: memberRows.length === 0,
-      allocFilterOpts, batchCards, noBatches: batchCards.length === 0, newAlloc: () => this.openAlloc(s.allocFilter === 'ALL' ? null : s.allocFilter),
+      allocFilterOpts, batchCards, noBatches: batchCards.length === 0, openReportModal: () => this.openReportModal(), newAlloc: () => this.openAlloc(s.allocFilter === 'ALL' ? null : s.allocFilter),
       docFilterOpts, docRows, noDocs: docRows.length === 0, newDoc: () => this.openDoc(null), importDocFiles: () => this.importDocFiles(), expDocs: () => this.exportExcel('docs'),
       hasSelectedDocs, selectedDocsCount, allDocsSelected,
       toggleSelectAllDocs: () => this.toggleSelectAllDocs(visibleDocIds),
@@ -2771,7 +2961,7 @@ class Component extends DCLogic {
       persRows, newPers: () => this.openPers(null),
       auditFilterOpts, auditRows, noAudit: auditRows.length === 0, hasAudit: db.audit.length > 0, clearAudit: () => this.clearAudit(),
       trashRows, noTrash: trashRows.length === 0, hasTrash: trashRows.length > 0, emptyTrash: () => this.emptyTrash(),
-      av, pv, dv, nv, mj, bv, xv, wv, kv, qv, cv, tv
+      av, pv, dv, nv, mj, bv, xv, wv, kv, qv, cv, tv, rv
     };
   }
 }
