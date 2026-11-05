@@ -1559,7 +1559,7 @@ class Component extends DCLogic {
       previewLines.push({ text: '', style: 'height:6px' });
     });
 
-    const totLine = '=> TỔNG NỖ LỰC: ' + this.f1(grandTotal) + ' MM (' + this.mm(grandTotal) + ' MD)';
+    const totLine = '=> TỔNG NỖ LỰC: ' + this.f1(grandTotal) + ' MM';
     plainLines.push('**' + totLine + '**');
     htmlLines.push('<div><b>' + totLine.replace('=>', '=&gt;') + '</b></div>');
     previewLines.push({ text: totLine, style: 'font-weight:700;color:var(--ok);font-size:14px;margin-top:6px' });
