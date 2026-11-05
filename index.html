@@ -40,6 +40,8 @@ a{color:var(--pri);text-decoration:none;font-weight:600}a:hover{text-decoration:
 .inp:focus{outline:2px solid var(--pri);outline-offset:0;border-color:var(--pri)}
 .seg{min-height:32px;padding:0 12px;border-radius:8px;border:1px solid #B9B6AB;background:#fff;color:var(--ink);font-size:13px;font-weight:600}
 .seg:hover{background:#F0EFE9}
+.seg:disabled{opacity:.4;cursor:not-allowed;background:#F0EFE9;color:#8C9096;border-color:#D5D3CC;pointer-events:none}
+.seg:disabled:hover{background:#F0EFE9;border-color:#D5D3CC}
 .nav-btn{display:flex;align-items:center;gap:11px;width:100%;min-height:42px;padding:0 12px;border:0;border-radius:9px;background:transparent;color:#C7D2D9;font-size:14px;font-weight:500;text-align:left}
 .nav-btn:hover{background:#1A2F3B;color:#fff}
 .tab{min-height:46px;padding:0 18px;border:0;background:transparent;color:var(--mute);font-size:13.5px;font-weight:600;white-space:nowrap}
@@ -670,7 +672,7 @@ main::-webkit-scrollbar-thumb:hover{background:#A8A59A}
           <div style="border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;background:#FDFCFA">
             <div style="display:flex;flex-wrap:wrap;gap:6px" role="radiogroup" aria-label="Nhân sự">
               <sc-for list="{{r.options}}" as="o" hint-placeholder-count="3">
-                <button class="seg" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button>
+                <button class="seg" role="radio" aria-checked="{{o.on}}" disabled="{{o.disabled}}" onClick="{{o.pick}}" style="{{o.style}}" title="{{o.title}}">{{o.label}}</button>
               </sc-for>
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start">
@@ -1279,9 +1281,12 @@ class Component extends DCLogic {
   }
 
   // ---------- allocation modal logic ----------
-  blankRow(reqId) {
-    const first = this.allowed(this.state.db, reqId)[0];
-    return { key: Date.now() + Math.random(), pers: first ? first.id : 0, md: '', note: '' };
+  blankRow(reqId, existingRows) {
+    const allowed = this.allowed(this.state.db, reqId);
+    const taken = new Set((existingRows || []).map(r => r.pers));
+    const available = allowed.find(p => !taken.has(p.id) && p.status === 'ACTIVE');
+    const chosen = available || allowed.find(p => !taken.has(p.id)) || allowed[0];
+    return { key: Date.now() + Math.random(), pers: chosen ? chosen.id : 0, md: '', note: '' };
   }
   openAlloc(reqId, batchId) {
     const db = this.state.db;
@@ -1298,7 +1303,7 @@ class Component extends DCLogic {
         rows: db.items.filter(i => i.batch === batchId && !i.del).map(i => ({ key: i.id, pers: i.pers, md: String(i.md), note: i.note || '' })) };
     } else {
       const rid = reqId || reqs[0].id;
-      a = { edit: null, req: rid, month: '2026-12', note: '', rows: [this.blankRow(rid)] };
+      a = { edit: null, req: rid, month: '2026-12', note: '', rows: [this.blankRow(rid, [])] };
     }
     this.setState({ alloc: a });
   }
@@ -2532,8 +2537,30 @@ class Component extends DCLogic {
         const cur = db.personnel.find(p => p.id === r.pers);
         if (cur && !opts.some(p => p.id === cur.id)) opts.push(cur);
         const e = chk.rows[i].err;
+        const otherPers = new Set(a.rows.filter(x => x.key !== r.key).map(x => x.pers));
         return { md: r.md, note: r.note, err: e, hasErr: !!e, border: e ? '#9B1F24' : '#8C9096',
-          options: opts.map(p => ({ label: p.code + ' · ' + p.name + (p.status === 'ACTIVE' ? '' : ' (đã nghỉ)'), ...seg(p.id === r.pers, () => this.rowSet(r.key, { pers: p.id })) })),
+          options: opts.map(p => {
+            const isCur = p.id === r.pers;
+            const isTaken = otherPers.has(p.id);
+            const isInactive = p.status !== 'ACTIVE' && !isCur;
+            const isDisabled = (!isCur && isTaken) || isInactive;
+            let optStyle = '';
+            let optTitle = '';
+            if (isCur) {
+              optStyle = ACTIVE;
+            } else if (isDisabled) {
+              optStyle = 'opacity:.35;cursor:not-allowed;background:#F0EFE9;color:#8C9096;border-color:#D5D3CC;pointer-events:none';
+              optTitle = isInactive ? 'Nhân sự đã nghỉ việc (BR-03)' : 'Nhân sự này đã có dòng khác trong cùng đợt';
+            }
+            return {
+              label: p.code + ' · ' + p.name + (p.status === 'ACTIVE' ? '' : ' (đã nghỉ)'),
+              on: isCur,
+              disabled: isDisabled,
+              title: optTitle,
+              style: optStyle,
+              pick: () => { if (!isDisabled) this.rowSet(r.key, { pers: p.id }); }
+            };
+          }),
           onMd: (ev) => this.rowSet(r.key, { md: ev.target.value.replace(',', '.') }),
           onNote: (ev) => this.rowSet(r.key, { note: ev.target.value }),
           onRemove: () => this.setState({ alloc: { ...this.state.alloc, rows: this.state.alloc.rows.filter(x => x.key !== r.key) } }) };
@@ -2550,7 +2577,7 @@ class Component extends DCLogic {
       const cPct = chk.A > 0 ? Math.max(0, Math.min(100 - bPct, chk.C / chk.A * 100)) : 0;
       av = { open: true, title: a.edit ? 'Sửa đợt phân bổ tháng ' + a.month : 'Tạo đợt phân bổ cuối tháng',
         reqOpts: reqs.map(r => ({ label: r.code + ' · ' + r.name, on: r.id === a.req, style: r.id === a.req ? ACTIVE : (a.edit ? 'opacity:.5;cursor:not-allowed' : ''),
-          pick: () => { if (!a.edit) this.setState({ alloc: { ...a, req: r.id, rows: [this.blankRow(r.id)] } }); } })),
+          pick: () => { if (!a.edit) this.setState({ alloc: { ...a, req: r.id, rows: [this.blankRow(r.id, [])] } }); } })),
         month: a.month, note: a.note,
         onMonth: (ev) => this.setState({ alloc: { ...this.state.alloc, month: ev.target.value } }),
         onNote: (ev) => this.setState({ alloc: { ...this.state.alloc, note: ev.target.value } }),
@@ -2560,10 +2587,10 @@ class Component extends DCLogic {
         boxStyle: bad ? 'border:2px solid #C9514F;background:#FDF1F0' : 'border:2px solid #B5D3D7;background:#EEF5F6',
         bPct, cPct: chk.over ? 100 - bPct : cPct, cColor: bad ? '#9B1F24' : '#0B5563',
         barLabel: 'Đã phân bổ khác ' + this.f1(chk.B) + ', đợt này ' + this.f1(chk.C) + (chk.hasLock ? ' trên tổng chốt ' + this.f1(chk.A) + ' MM' : ' (PYC chưa chốt nỗ lực)'),
-        banner, hasBanner: !!banner, rows: rowsV, noMembers: allowed.length === 0, canAdd: allowed.length > 0,
+        banner, hasBanner: !!banner, rows: rowsV, noMembers: allowed.length === 0, canAdd: allowed.length > 0 && a.rows.length < allowed.length,
         cantSave: bad || chk.C === 0 || !a.rows.length || chk.emptyRow || !a.month,
         close: () => this.setState({ alloc: null }), save: () => this.saveAlloc(),
-        addRow: () => this.setState({ alloc: { ...this.state.alloc, rows: this.state.alloc.rows.concat([this.blankRow(a.req)]) } }) };
+        addRow: () => { const cr = this.state.alloc.rows; this.setState({ alloc: { ...this.state.alloc, rows: cr.concat([this.blankRow(a.req, cr)]) } }); } };
     }
 
     let pv = { open: false, title: '', on: {}, typeOpts: [], statusOpts: [], hasErr: false, err: '', close: () => {}, save: () => {}, code: '', name: '', est: '', locked: '', deadline: '', requester: '', link: '' };
