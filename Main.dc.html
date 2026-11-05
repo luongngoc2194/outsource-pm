@@ -1094,7 +1094,10 @@ main::-webkit-scrollbar-thumb:hover{background:#A8A59A}
     <div style="padding:16px 20px;background:#10202A;color:#fff;display:flex;justify-content:space-between;align-items:center">
       <div>
         <h3 style="font-size:17px">☁ Kết nối & Đồng bộ Turso Cloud SQLite</h3>
-        <div style="font-size:12px;color:#9FB0BA;margin-top:2px">Tự động đồng bộ dữ liệu và file đính kèm giữa nhiều thiết bị</div>
+        <div style="font-size:12px;color:#9FB0BA;margin-top:2px">Tự động đồng bộ dữ liệu hai chiều giữa máy tính và điện thoại di động</div>
+        <sc-if value="{{kv.isDirect}}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:6px;display:inline-flex;align-items:center;gap:6px;background:#0B5563;color:#E2F3E8;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600">✔ Kết nối trực tiếp Turso Cloud (Di động / Web)</div>
+        </sc-if>
       </div>
       <button class="btn btn-sm" onClick="{{kv.close}}" style="background:transparent;color:#fff;border-color:#445664">Đóng</button>
     </div>
@@ -1194,30 +1197,1438 @@ main::-webkit-scrollbar-thumb:hover{background:#A8A59A}
 </x-dc>
 
 <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+const TURSO_DEFAULT_CONFIG = {
+  url: 'https://outsource-pm-luongngoc2194.aws-ap-southeast-1.turso.io/v2/pipeline',
+  token: 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3OTM2NzczNDMsImlkIjoiMDFhMTlmN2YtODkwMS03ZDliLTk0ZGItZGNkMzk3NDY2ZWJhIiwia2lkIjoiQ0diN1RyeVNYQk5oWWxUMnNUakNYdGctQTFtd2RZcm1BaE1oN2d2WDU1USIsInJpZCI6ImZiOWVhNmQ2LWI1MjUtNGYwZS05MDEwLTE2OTkzMzc0MmZmMyJ9.dJAB7-JRKtTEGCxalr17xT6dIPDHx-v6Fo7x9Xp0UjHc3JBzyz7IpgHH2xp5nCHcoRLLI0ddvTH1JkyKW9K6AQ'
+};
+
+const INITIAL_DB = {
+  "projects": [
+    {
+      "id": 1,
+      "code": "DA-01",
+      "name": "Vsds_V1",
+      "customer": "Viettel / Khối CNTT",
+      "status": "ACTIVE",
+      "del": false
+    },
+    {
+      "id": 2,
+      "code": "DA-02",
+      "name": "GenHub",
+      "customer": "Viettel / Khối CNTT",
+      "status": "ACTIVE",
+      "del": false
+    }
+  ],
+  "requests": [
+    {
+      "id": 1,
+      "proj": 1,
+      "code": "PYC-001",
+      "name": "Chuyển đổi đơn vị",
+      "type": "NEW_FEATURE",
+      "deadline": "2026-12-15",
+      "status": "IN_PROGRESS",
+      "requester": "T.Anh",
+      "link": "",
+      "est": 1.5,
+      "locked": 0,
+      "allocated_md": 1.5,
+      "remaining_md": -1.5,
+      "del": false
+    },
+    {
+      "id": 4,
+      "proj": 1,
+      "code": "PYC-3654",
+      "name": "Nâng cấp bản đồ xã",
+      "type": "CR",
+      "deadline": "2026-12-31",
+      "status": "ACCEPTED",
+      "requester": "T.Anh",
+      "link": "",
+      "est": 1.84,
+      "locked": 1.84,
+      "allocated_md": 1.84,
+      "remaining_md": 0,
+      "del": false
+    },
+    {
+      "id": 5,
+      "proj": 2,
+      "code": "PYC-3662",
+      "name": "Nâng cấp layoutbuilder",
+      "type": "CR",
+      "deadline": "2026-12-31",
+      "status": "CLOSED",
+      "requester": "Huy",
+      "link": "",
+      "est": 8,
+      "locked": 8,
+      "allocated_md": 6.6,
+      "remaining_md": 1.4,
+      "del": false
+    },
+    {
+      "id": 6,
+      "proj": 2,
+      "code": "PYC-3595",
+      "name": "LayoutBuilder",
+      "type": "CR",
+      "deadline": "2026-12-31",
+      "status": "CLOSED",
+      "requester": "",
+      "link": "",
+      "est": 18.42,
+      "locked": 18.42,
+      "allocated_md": 14.04,
+      "remaining_md": 4.38,
+      "del": false
+    }
+  ],
+  "personnel": [
+    {
+      "id": 1,
+      "code": "NS01",
+      "name": "Lê Thị Kim Chung",
+      "role": "Tester",
+      "email": "chung.le@lifesup.com",
+      "phone": "+84 901234567",
+      "status": "ACTIVE",
+      "note": "Gia nhập: 2/11/2026",
+      "del": false
+    },
+    {
+      "id": 2,
+      "code": "NS02",
+      "name": "Le Quang Minh",
+      "role": "Frontend",
+      "email": "minh.le@lifesup.com.vn",
+      "phone": "N/A",
+      "status": "ACTIVE",
+      "note": "Gia nhập: 10/9/2026",
+      "del": false
+    },
+    {
+      "id": 3,
+      "code": "NS03",
+      "name": "Do Tuan Long",
+      "role": "Frontend",
+      "email": "long.do@lifesup.com.vn",
+      "phone": "N/A",
+      "status": "ACTIVE",
+      "note": "Gia nhập: 10/9/2026",
+      "del": false
+    },
+    {
+      "id": 4,
+      "code": "NS04",
+      "name": "Nguyễn Trọng Nam",
+      "role": "PM",
+      "email": "nam.nguyen@lifesup.com.vn",
+      "phone": "N/A",
+      "status": "ACTIVE",
+      "note": "Gia nhập: 10/9/2026",
+      "del": false
+    },
+    {
+      "id": 8,
+      "code": "NS08",
+      "name": "Hoàng Thị Huyền Trang",
+      "role": "Tester",
+      "email": "trang.hoang01@lifesup.com.vn",
+      "phone": "+84 901234567",
+      "status": "ACTIVE",
+      "note": "Gia nhập: 30/7/2026",
+      "del": false
+    },
+    {
+      "id": 9,
+      "code": "NS09",
+      "name": "Dương Tuấn Vũ",
+      "role": "Leader",
+      "email": "vu.duong@lifesup.com.vn",
+      "phone": "+84 901234567",
+      "status": "ACTIVE",
+      "note": "Technical Leader · Gia nhập: 30/7/2026",
+      "del": false
+    },
+    {
+      "id": 10,
+      "code": "NS10",
+      "name": "Nguyễn Đức Thắng",
+      "role": "Frontend",
+      "email": "nguyenducthang.neu@gmail.com",
+      "phone": "0356851332",
+      "status": "ACTIVE",
+      "note": "Lập trình viên Frontend (FE) · Gia nhập: 29/7/2026",
+      "del": false
+    },
+    {
+      "id": 11,
+      "code": "NS11",
+      "name": "Lương Bá Ngọc",
+      "role": "Leader",
+      "email": "ngoc.luong@lifesup.com.vn",
+      "phone": "0379394690",
+      "status": "ACTIVE",
+      "note": "FE Lead hệ thống · Gia nhập: 29/7/2026",
+      "del": false
+    },
+    {
+      "id": 12,
+      "code": "NS12",
+      "name": "Nguyễn Hồng Thơm",
+      "role": "BA",
+      "email": "thom.nguyen@lifesup.com.vn",
+      "phone": "0971047982",
+      "status": "ACTIVE",
+      "note": "Chuyên viên Phân tích Nghiệp vụ (BA) · Gia nhập: 29/7/2026",
+      "del": false
+    },
+    {
+      "id": 14,
+      "code": "NS14",
+      "name": "Nguyễn Thị Hà",
+      "role": "Tester",
+      "email": "ha.nguyen07@lifesup.com.vn",
+      "phone": "0985286441",
+      "status": "ACTIVE",
+      "note": "Chuyên viên Kiểm thử (Tester) · Gia nhập: 29/7/2026",
+      "del": false
+    },
+    {
+      "id": 15,
+      "code": "NS15",
+      "name": "Tô Thị Mai Quy",
+      "role": "BA",
+      "email": "quy.to@lifesup.com.vn",
+      "phone": "0932235082",
+      "status": "ACTIVE",
+      "note": "Chuyên viên Phân tích Nghiệp vụ (BA) · Gia nhập: 29/7/2026",
+      "del": false
+    },
+    {
+      "id": 16,
+      "code": "NS16",
+      "name": "Nguyễn Quý Giang",
+      "role": "Frontend",
+      "email": "giang.nguyen02@lifesup.com.vn",
+      "phone": "0366608023",
+      "status": "ACTIVE",
+      "note": "Lập trình viên Frontend (FE) · Gia nhập: 29/7/2026",
+      "del": false
+    },
+    {
+      "id": 17,
+      "code": "NS17",
+      "name": "Đỗ Văn Trung",
+      "role": "Frontend",
+      "email": "trung.do@lifesup.com.vn",
+      "phone": "0876043542",
+      "status": "ACTIVE",
+      "note": "Lập trình viên Frontend (FE) · Gia nhập: 29/7/2026",
+      "del": false
+    },
+    {
+      "id": 18,
+      "code": "NS18",
+      "name": "Nguyễn Viết Hoàng",
+      "role": "UIUX",
+      "email": "HOANG.NGUYEN01@LIFESUP.COM.VN",
+      "phone": "0868229726",
+      "status": "ACTIVE",
+      "note": "Thiết kế Giao diện UI/UX Designer · Gia nhập: 29/7/2026",
+      "del": false
+    },
+    {
+      "id": 19,
+      "code": "NS19",
+      "name": "Đinh Đức Hải",
+      "role": "Backend",
+      "email": "hai.dinh@lifesup.com.vn",
+      "phone": "0347577771",
+      "status": "ACTIVE",
+      "note": "Lập trình viên DEV BE · Gia nhập: 29/7/2026",
+      "del": false
+    },
+    {
+      "id": 5,
+      "code": "NS05",
+      "name": "KHánh Trinh",
+      "role": "Frontend",
+      "email": "luong_ngoc21@yahoo.com",
+      "phone": "+84 901234567",
+      "status": "INACTIVE",
+      "note": "Gia nhập: 30/7/2026",
+      "del": false
+    },
+    {
+      "id": 6,
+      "code": "NS06",
+      "name": "Vương Sơn Tùng",
+      "role": "Frontend",
+      "email": "tung.vuong@lifesup.com.vn",
+      "phone": "+84 901234567",
+      "status": "INACTIVE",
+      "note": "Gia nhập: 30/7/2026",
+      "del": false
+    },
+    {
+      "id": 7,
+      "code": "NS07",
+      "name": "Đỗ Công Hòa",
+      "role": "Frontend",
+      "email": "hoa.do@lifesup.com.vn",
+      "phone": "+84 901234567",
+      "status": "INACTIVE",
+      "note": "Gia nhập: 30/7/2026",
+      "del": false
+    },
+    {
+      "id": 13,
+      "code": "NS13",
+      "name": "Trần Ngọc Phú",
+      "role": "Backend",
+      "email": "tranphuth0609@gmail.com",
+      "phone": "0376395844",
+      "status": "INACTIVE",
+      "note": "Lập trình viên Backend (BE) · Gia nhập: 29/7/2026",
+      "del": false
+    }
+  ],
+  "members": [
+    {
+      "id": 7,
+      "req": 4,
+      "pers": 1,
+      "role": "Tester",
+      "del": false
+    },
+    {
+      "id": 8,
+      "req": 4,
+      "pers": 11,
+      "role": "Leader",
+      "del": false
+    },
+    {
+      "id": 9,
+      "req": 1,
+      "pers": 11,
+      "role": "Leader",
+      "del": false
+    },
+    {
+      "id": 10,
+      "req": 1,
+      "pers": 16,
+      "role": "Frontend",
+      "del": false
+    },
+    {
+      "id": 21,
+      "req": 5,
+      "pers": 2,
+      "role": "Frontend",
+      "del": false
+    },
+    {
+      "id": 22,
+      "req": 5,
+      "pers": 8,
+      "role": "Tester",
+      "del": false
+    },
+    {
+      "id": 23,
+      "req": 5,
+      "pers": 11,
+      "role": "Leader",
+      "del": false
+    },
+    {
+      "id": 24,
+      "req": 5,
+      "pers": 17,
+      "role": "Frontend",
+      "del": false
+    },
+    {
+      "id": 25,
+      "req": 5,
+      "pers": 15,
+      "role": "BA",
+      "del": false
+    },
+    {
+      "id": 26,
+      "req": 6,
+      "pers": 2,
+      "role": "Frontend",
+      "del": false
+    },
+    {
+      "id": 27,
+      "req": 6,
+      "pers": 15,
+      "role": "BA",
+      "del": false
+    },
+    {
+      "id": 28,
+      "req": 6,
+      "pers": 17,
+      "role": "Frontend",
+      "del": false
+    },
+    {
+      "id": 29,
+      "req": 6,
+      "pers": 11,
+      "role": "Leader",
+      "del": false
+    },
+    {
+      "id": 30,
+      "req": 6,
+      "pers": 8,
+      "role": "Tester",
+      "del": false
+    },
+    {
+      "id": 31,
+      "req": 6,
+      "pers": 4,
+      "role": "PM",
+      "del": false
+    },
+    {
+      "id": 32,
+      "req": 6,
+      "pers": 3,
+      "role": "Frontend",
+      "del": false
+    },
+    {
+      "id": 33,
+      "req": 6,
+      "pers": 6,
+      "role": "Frontend",
+      "del": false
+    },
+    {
+      "id": 34,
+      "req": 6,
+      "pers": 7,
+      "role": "Frontend",
+      "del": false
+    },
+    {
+      "id": 35,
+      "req": 6,
+      "pers": 9,
+      "role": "Leader",
+      "del": false
+    },
+    {
+      "id": 36,
+      "req": 5,
+      "pers": 9,
+      "role": "Leader",
+      "del": false
+    }
+  ],
+  "batches": [
+    {
+      "id": 5,
+      "req": 4,
+      "month": "2026-09",
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 6,
+      "req": 4,
+      "month": "2026-10",
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 7,
+      "req": 1,
+      "month": "2026-08",
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 8,
+      "req": 1,
+      "month": "2026-09",
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 9,
+      "req": 6,
+      "month": "2026-07",
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 10,
+      "req": 6,
+      "month": "2026-08",
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 11,
+      "req": 6,
+      "month": "2026-12",
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 12,
+      "req": 5,
+      "month": "2026-12",
+      "note": "",
+      "del": false
+    }
+  ],
+  "items": [
+    {
+      "id": 7,
+      "batch": 5,
+      "pers": 11,
+      "md": 1,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 8,
+      "batch": 6,
+      "pers": 1,
+      "md": 0.3,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 9,
+      "batch": 6,
+      "pers": 11,
+      "md": 0.54,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 10,
+      "batch": 7,
+      "pers": 11,
+      "md": 0.3,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 11,
+      "batch": 7,
+      "pers": 16,
+      "md": 0.6,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 12,
+      "batch": 8,
+      "pers": 16,
+      "md": 0.6,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 27,
+      "batch": 9,
+      "pers": 11,
+      "md": 0.4,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 28,
+      "batch": 9,
+      "pers": 6,
+      "md": 0.77,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 29,
+      "batch": 9,
+      "pers": 7,
+      "md": 1.67,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 30,
+      "batch": 9,
+      "pers": 15,
+      "md": 0.5,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 31,
+      "batch": 9,
+      "pers": 8,
+      "md": 0.5,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 32,
+      "batch": 9,
+      "pers": 17,
+      "md": 1.05,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 33,
+      "batch": 9,
+      "pers": 9,
+      "md": 0.4,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 34,
+      "batch": 10,
+      "pers": 11,
+      "md": 0.4,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 35,
+      "batch": 10,
+      "pers": 9,
+      "md": 0.4,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 36,
+      "batch": 10,
+      "pers": 17,
+      "md": 0.4,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 37,
+      "batch": 10,
+      "pers": 15,
+      "md": 0.7,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 38,
+      "batch": 10,
+      "pers": 8,
+      "md": 0.5,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 39,
+      "batch": 10,
+      "pers": 7,
+      "md": 0.1,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 40,
+      "batch": 10,
+      "pers": 3,
+      "md": 0.2,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 41,
+      "batch": 10,
+      "pers": 2,
+      "md": 0.4,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 42,
+      "batch": 10,
+      "pers": 4,
+      "md": 1,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 43,
+      "batch": 11,
+      "pers": 17,
+      "md": 1,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 44,
+      "batch": 11,
+      "pers": 11,
+      "md": 1.25,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 45,
+      "batch": 11,
+      "pers": 15,
+      "md": 0.8,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 46,
+      "batch": 11,
+      "pers": 8,
+      "md": 0.8,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 47,
+      "batch": 11,
+      "pers": 9,
+      "md": 0.4,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 48,
+      "batch": 11,
+      "pers": 2,
+      "md": 0.4,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 90,
+      "batch": 12,
+      "pers": 2,
+      "md": 1.2,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 91,
+      "batch": 12,
+      "pers": 8,
+      "md": 1,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 92,
+      "batch": 12,
+      "pers": 11,
+      "md": 1.5,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 93,
+      "batch": 12,
+      "pers": 15,
+      "md": 1.2,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 94,
+      "batch": 12,
+      "pers": 17,
+      "md": 1.2,
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 95,
+      "batch": 12,
+      "pers": 9,
+      "md": 0.5,
+      "note": "",
+      "del": false
+    }
+  ],
+  "docs": [
+    {
+      "id": 4,
+      "proj": 2,
+      "req": 5,
+      "title": "ULNL VIC PYC 3662 v1 3",
+      "type": "Tài liệu chung",
+      "url": "/uploads/1793615157394_ULNL_VIC_PYC_3662_v1_3.xlsx",
+      "note": "Import từ file: ULNL_VIC_PYC_3662_v1_3.xlsx",
+      "del": false
+    },
+    {
+      "id": 5,
+      "proj": 2,
+      "req": 5,
+      "title": "BU01.VIC.VTF4.0 Sonarq dev pyc 3662",
+      "type": "Tài liệu chung",
+      "url": "/uploads/1793615180870_BU01.VIC.VTF4.0_Sonarq_dev_pyc_3662.docx",
+      "note": "Import từ file: BU01.VIC.VTF4.0_Sonarq_dev_pyc_3662.docx",
+      "del": false
+    },
+    {
+      "id": 6,
+      "proj": 2,
+      "req": 5,
+      "title": "HDSD VIC PYC 3662.v1.0",
+      "type": "Tài liệu chung",
+      "url": "/uploads/1793615181040_HDSD_VIC_PYC%203662.v1.0.docx",
+      "note": "Import từ file: HDSD_VIC_PYC 3662.v1.0.docx",
+      "del": false
+    },
+    {
+      "id": 7,
+      "proj": 2,
+      "req": 5,
+      "title": "Highlevel REQ",
+      "type": "Tài liệu chung",
+      "url": "/uploads/1793615181071_Highlevel%20REQ.xlsx",
+      "note": "Import từ file: Highlevel REQ.xlsx",
+      "del": false
+    },
+    {
+      "id": 8,
+      "proj": 2,
+      "req": 5,
+      "title": "KBKT VIC PYC 3662.v1.0",
+      "type": "Tài liệu chung",
+      "url": "/uploads/1793615181117_KBKT_VIC_PYC%203662.v1.0.xlsx",
+      "note": "Import từ file: KBKT_VIC_PYC 3662.v1.0.xlsx",
+      "del": false
+    },
+    {
+      "id": 9,
+      "proj": 2,
+      "req": 5,
+      "title": "KHKT VIC PYC 3662.v1.0",
+      "type": "Tài liệu chung",
+      "url": "/uploads/1793615181140_KHKT_VIC_PYC%203662.v1.0.xlsx",
+      "note": "Import từ file: KHKT_VIC_PYC 3662.v1.0.xlsx",
+      "del": false
+    },
+    {
+      "id": 10,
+      "proj": 2,
+      "req": 5,
+      "title": "PTYC VIC PYC 3662.v1.0",
+      "type": "Tài liệu chung",
+      "url": "/uploads/1793615181216_PTYC_VIC_PYC%203662.v1.0.docx",
+      "note": "Import từ file: PTYC_VIC_PYC 3662.v1.0.docx",
+      "del": false
+    },
+    {
+      "id": 11,
+      "proj": 2,
+      "req": 5,
+      "title": "TKCT VIC PYC 3662.v1.0",
+      "type": "Tài liệu chung",
+      "url": "/uploads/1793615181436_TKCT_VIC_PYC%203662.v1.0.docx",
+      "note": "Import từ file: TKCT_VIC_PYC 3662.v1.0.docx",
+      "del": false
+    }
+  ],
+  "bbnt": [
+    {
+      "id": 3,
+      "req": 4,
+      "code": "BBNT-01",
+      "title": "BBATTT VSDS VICPYC 3654",
+      "url": "/uploads/1793614953816_BBATTT_VSDS_VICPYC-3654.docx",
+      "status": "SENT",
+      "sent": "2026-11-02",
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 4,
+      "req": 4,
+      "code": "BBNT-02",
+      "title": "BBBG VSDS VICPYC 3654",
+      "url": "/uploads/1793614956997_BBBG_VSDS_VICPYC-3654.docx",
+      "status": "SENT",
+      "sent": "2026-11-02",
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 5,
+      "req": 4,
+      "code": "BBNT-03",
+      "title": "BBDG OS VICPYC 3654",
+      "url": "/uploads/1793614960399_BBDG_OS_VICPYC-3654.doc",
+      "status": "SENT",
+      "sent": "2026-11-02",
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 6,
+      "req": 4,
+      "code": "BBNT-04",
+      "title": "BBNTOS VSDS VICPYC 3654",
+      "url": "/uploads/1793614964124_BBNTOS_VSDS_VICPYC-3654.xlsx",
+      "status": "SENT",
+      "sent": "2026-11-02",
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 7,
+      "req": 4,
+      "code": "BBNT-05",
+      "title": "BBTNULNL VSDS VICPYC 3654",
+      "url": "/uploads/1793614967445_BBTNULNL_VSDS_VICPYC-3654.docx",
+      "status": "SENT",
+      "sent": "2026-11-02",
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 8,
+      "req": 4,
+      "code": "BBNT-06",
+      "title": "VICPYC 3654 QT.CNTT.KHCL.01.BM07 Checklist upcode",
+      "url": "/uploads/1793614972927_VICPYC-3654_QT.CNTT.KHCL.01.BM07_Checklist%20upcode.xlsx",
+      "status": "SENT",
+      "sent": "2026-11-02",
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 9,
+      "req": 5,
+      "code": "BBNT-07",
+      "title": "BBATTT OS VICPYC 3662",
+      "url": "/uploads/1793615206284_BBATTT_OS_VICPYC-3662.doc",
+      "status": "SENT",
+      "sent": "2026-11-02",
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 10,
+      "req": 5,
+      "code": "BBNT-08",
+      "title": "BBBG vOPS PYC 3662",
+      "url": "/uploads/1793615206290_BBBG_vOPS_PYC-3662.docx",
+      "status": "SENT",
+      "sent": "2026-11-02",
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 11,
+      "req": 5,
+      "code": "BBNT-09",
+      "title": "BBBGCode vOps PYC3662",
+      "url": "/uploads/1793615206417_BBBGCode_vOps_PYC3662.docx",
+      "status": "SENT",
+      "sent": "2026-11-02",
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 12,
+      "req": 5,
+      "code": "BBNT-10",
+      "title": "BBNT VOPS VICPYC 3662",
+      "url": "/uploads/1793615206440_BBNT_VOPS_VICPYC-3662.xlsx",
+      "status": "SENT",
+      "sent": "2026-11-02",
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 13,
+      "req": 5,
+      "code": "BBNT-11",
+      "title": "BBNTOS vOPs PYC 3662",
+      "url": "/uploads/1793615206469_BBNTOS_vOPs_PYC-3662.xlsx",
+      "status": "SENT",
+      "sent": "2026-11-02",
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 14,
+      "req": 5,
+      "code": "BBNT-12",
+      "title": "BBTNKH và PVTH VOPS PYC 3662",
+      "url": "/uploads/1793615206472_BBTNKH%20v%C3%A0%20PVTH_VOPS_PYC%203662.docx",
+      "status": "SENT",
+      "sent": "2026-11-02",
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 15,
+      "req": 5,
+      "code": "BBNT-13",
+      "title": "BBTNULNL VOPS VICPYC 3662",
+      "url": "/uploads/1793615206476_BBTNULNL_VOPS__VICPYC-3662.docx",
+      "status": "SENT",
+      "sent": "2026-11-02",
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 16,
+      "req": 6,
+      "code": "BBNT-14",
+      "title": "BBATTT OS VICPYC 3595 (QA revewed, update link sonar Q) (2)",
+      "url": "/uploads/1793615223932_BBATTT_OS_VICPYC-3595%20_QA%20revewed_%20update%20link%20sonar%20Q_%20_2_.doc",
+      "status": "SENT",
+      "sent": "2026-11-02",
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 17,
+      "req": 6,
+      "code": "BBNT-15",
+      "title": "BBBG vOPS PYC 3595 (1)",
+      "url": "/uploads/1793615223939_BBBG_vOPS_PYC-3595%20_1_.docx",
+      "status": "SENT",
+      "sent": "2026-11-02",
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 18,
+      "req": 6,
+      "code": "BBNT-16",
+      "title": "BBBGCode vOps PYC3595 (QA review) (2)",
+      "url": "/uploads/1793615224039_BBBGCode_vOps_PYC3595%20_QA%20review_%20_2_.docx",
+      "status": "SENT",
+      "sent": "2026-11-02",
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 19,
+      "req": 6,
+      "code": "BBNT-17",
+      "title": "BBNT VOPS VICPYC 3595 (QA review) (2)",
+      "url": "/uploads/1793615224052_BBNT_VOPS_VICPYC-3595%20_QA%20review_%20_2_.xlsx",
+      "status": "SENT",
+      "sent": "2026-11-02",
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 20,
+      "req": 6,
+      "code": "BBNT-18",
+      "title": "BBNTOS vOPs PYC 3595 (QA review) (2)",
+      "url": "/uploads/1793615224056_BBNTOS_vOPs_PYC-3595%20_QA%20review_%20_2_.xlsx",
+      "status": "SENT",
+      "sent": "2026-11-02",
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 21,
+      "req": 6,
+      "code": "BBNT-19",
+      "title": "BBTNKH và PVTH VOPS PYC 3595 (2)",
+      "url": "/uploads/1793615224076_BBTNKH%20v%C3%A0%20PVTH_VOPS_PYC%203595%20_2_.docx",
+      "status": "SENT",
+      "sent": "2026-11-02",
+      "note": "",
+      "del": false
+    },
+    {
+      "id": 22,
+      "req": 6,
+      "code": "BBNT-20",
+      "title": "BBTNULNL VOPS VICPYC 3595 (QA review) (2)",
+      "url": "/uploads/1793615224080_BBTNULNL_VOPS__VICPYC-3595%20_QA%20review_%20_2_.docx",
+      "status": "SENT",
+      "sent": "2026-11-02",
+      "note": "",
+      "del": false
+    }
+  ],
+  "audit": [
+    {
+      "id": 182,
+      "time": "2026-11-02 11:55:08",
+      "table": "ALLOCATION_BATCH",
+      "record": "PYC-3662 (2026-12)",
+      "action": "UPDATE",
+      "field": "effort_md",
+      "change": "Cập nhật đợt: 6.60 md"
+    },
+    {
+      "id": 181,
+      "time": "2026-11-02 09:45:57",
+      "table": "ALLOCATION_BATCH",
+      "record": "PYC-3662 (2026-10)",
+      "action": "UPDATE",
+      "field": "effort_md",
+      "change": "Cập nhật đợt: 6.80 md"
+    },
+    {
+      "id": 180,
+      "time": "2026-11-02 09:31:57",
+      "table": "PROJECT",
+      "record": "DA-01",
+      "action": "UPDATE",
+      "field": "info",
+      "change": "Cập nhật dự án Vsds_V1"
+    },
+    {
+      "id": 179,
+      "time": "2026-11-02 13:53:07",
+      "table": "ALLOCATION_BATCH",
+      "record": "PYC-3662 (2026-12)",
+      "action": "UPDATE",
+      "field": "effort_md",
+      "change": "Cập nhật đợt: 6.80 md"
+    },
+    {
+      "id": 178,
+      "time": "2026-11-02 15:20:59",
+      "table": "ACCEPTANCE_RECORD",
+      "record": "BBNT-02",
+      "action": "UPDATE",
+      "field": "delivery_status",
+      "change": "NOT_SENT → SENT (Ngày gửi: 2026-11-02)"
+    },
+    {
+      "id": 177,
+      "time": "2026-11-02 15:20:59",
+      "table": "ACCEPTANCE_RECORD",
+      "record": "BBNT-01",
+      "action": "UPDATE",
+      "field": "delivery_status",
+      "change": "NOT_SENT → SENT (Ngày gửi: 2026-11-02)"
+    }
+  ]
+};
+
 class Component extends DCLogic {
   constructor(props) {
     super(props);
     this.state = this.initial();
     this.apiBase = 'http://localhost:3000/api';
+    this._tursoDebounceTimer = null;
   }
 
   componentDidMount() {
     this.syncFromServer();
+    if (typeof window !== 'undefined' && window.addEventListener) {
+      window.addEventListener('visibilitychange', () => {
+        if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+          if (this.state.tursoDirect || !this.state.apiConnected) {
+            this.pullFromTursoCloud(true);
+          }
+        }
+      });
+    }
+  }
+
+  toHttpUrl(dbUrl) {
+    let u = String(dbUrl || '').trim().replace(/\/+$/, '');
+    if (u.startsWith('libsql://')) u = 'https://' + u.slice('libsql://'.length);
+    else if (u.startsWith('wss://')) u = 'https://' + u.slice('wss://'.length);
+    else if (!u.startsWith('http://') && !u.startsWith('https://')) u = 'https://' + u;
+    if (!u.endsWith('/v2/pipeline')) u = u + '/v2/pipeline';
+    return u;
+  }
+
+  getTursoConfig() {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const raw = localStorage.getItem('turso_config');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.url && parsed.token) return parsed;
+        }
+      }
+    } catch (_) {}
+    return TURSO_DEFAULT_CONFIG;
+  }
+
+  saveTursoConfig(url, token) {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('turso_config', JSON.stringify({ url: String(url || '').trim(), token: String(token || '').trim() }));
+      }
+    } catch (_) {}
+  }
+
+  saveLocalBackup(db) {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('outsource_pm_db_backup', JSON.stringify(db));
+      }
+    } catch (_) {}
+  }
+
+  loadLocalBackup() {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const raw = localStorage.getItem('outsource_pm_db_backup');
+        if (raw) return JSON.parse(raw);
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  dumpToDb(dump) {
+    if (!dump) return null;
+    if (dump.__db) return dump.__db;
+    const r1 = (v) => Math.round((Number(v) + Number.EPSILON) * 100) / 100;
+    const projects = (dump.PROJECT || []).map(p => ({
+      id: p.id, code: p.code, name: p.name, customer: p.customer_name || 'Nội bộ', status: p.status, del: !!p.is_deleted
+    }));
+    const personnel = (dump.PERSONNEL || []).map(p => ({
+      id: p.id, code: p.code, name: p.full_name, role: p.default_role, email: p.email || '', phone: p.phone || '', status: p.status, note: p.note || '', del: !!p.is_deleted
+    })).sort((a, b) => (a.status === 'ACTIVE' ? 0 : 1) - (b.status === 'ACTIVE' ? 0 : 1) || (a.id - b.id));
+    const batches = (dump.ALLOCATION_BATCH || []).map(b => ({
+      id: b.id, req: b.request_id, month: b.month_period, note: b.note || '', del: !!b.is_deleted
+    }));
+    const items = (dump.ALLOCATION_ITEM || []).map(i => ({
+      id: i.id, batch: i.batch_id, pers: i.personnel_id, md: r1(i.effort_md), note: i.note || '', del: !!i.is_deleted
+    }));
+    const requests = (dump.REQUEST || []).map(r => {
+      const validBatchIds = new Set(batches.filter(b => b.req === r.id && !b.del).map(b => b.id));
+      const allocated = items.filter(i => validBatchIds.has(i.batch) && !i.del).reduce((s, x) => s + x.md, 0);
+      const allocated_md = r1(allocated);
+      const remaining_md = r1((r.locked_md || 0) - allocated_md);
+      return {
+        id: r.id, proj: r.project_id, code: r.code, name: r.name, type: r.type,
+        deadline: r.deadline || '', status: r.status, requester: r.customer_requester || '',
+        link: r.external_link || '', est: r1(r.estimated_md), locked: r1(r.locked_md),
+        allocated_md, remaining_md,
+        del: !!r.is_deleted
+      };
+    });
+    const members = (dump.REQUEST_MEMBER || []).map(m => ({
+      id: m.id, req: m.request_id, pers: m.personnel_id, role: m.role_in_request, del: !!m.is_deleted
+    }));
+    const docs = (dump.DOCUMENT || []).map(d => ({
+      id: d.id, proj: d.project_id, req: d.request_id, title: d.title, type: d.document_type, url: d.external_url, note: d.note || '', del: !!d.is_deleted
+    }));
+    const bbnt = (dump.ACCEPTANCE_RECORD || []).map(b => ({
+      id: b.id, req: b.request_id, code: b.record_code, title: b.title, url: b.external_url, status: b.delivery_status, sent: b.sent_date, note: b.note || '', del: !!b.is_deleted
+    }));
+    const audit = (dump.AUDIT_LOG || []).map(a => ({
+      id: a.id, time: a.created_at, table: a.table_name, record: a.record_id, action: a.action, field: a.column_name, change: a.new_value
+    }));
+    return { projects, requests, personnel, members, batches, items, docs, bbnt, audit };
+  }
+
+  dbToDump(db) {
+    return {
+      PROJECT: (db.projects || []).map(p => ({
+        id: p.id, code: p.code, name: p.name, customer_name: p.customer || 'Nội bộ', status: p.status, is_deleted: p.del ? 1 : 0
+      })),
+      PERSONNEL: (db.personnel || []).map(p => ({
+        id: p.id, code: p.code, full_name: p.name, default_role: p.role, email: p.email || '', phone: p.phone || '', status: p.status, note: p.note || '', is_deleted: p.del ? 1 : 0
+      })),
+      REQUEST: (db.requests || []).map(r => ({
+        id: r.id, project_id: r.proj, code: r.code, name: r.name, description: r.desc || '', type: r.type, deadline: r.deadline || '', status: r.status, customer_requester: r.requester || '', external_link: r.link || '', estimated_md: r.est || 0, locked_md: r.locked || 0, is_deleted: r.del ? 1 : 0
+      })),
+      REQUEST_MEMBER: (db.members || []).map(m => ({
+        id: m.id, request_id: m.req, personnel_id: m.pers, role_in_request: m.role, is_deleted: m.del ? 1 : 0
+      })),
+      ALLOCATION_BATCH: (db.batches || []).map(b => ({
+        id: b.id, request_id: b.req, month_period: b.month, note: b.note || '', is_deleted: b.del ? 1 : 0
+      })),
+      ALLOCATION_ITEM: (db.items || []).map(i => ({
+        id: i.id, batch_id: i.batch, personnel_id: i.pers, effort_md: i.md, note: i.note || '', is_deleted: i.del ? 1 : 0
+      })),
+      DOCUMENT: (db.docs || []).map(d => ({
+        id: d.id, project_id: d.proj, request_id: d.req, title: d.title, document_type: d.type, external_url: d.url, note: d.note || '', is_deleted: d.del ? 1 : 0
+      })),
+      ACCEPTANCE_RECORD: (db.bbnt || []).map(b => ({
+        id: b.id, request_id: b.req, record_code: b.code, title: b.title, external_url: b.url, delivery_status: b.status, sent_date: b.sent || null, note: b.note || '', is_deleted: b.del ? 1 : 0
+      })),
+      AUDIT_LOG: (db.audit || []).map(a => ({
+        id: a.id, table_name: a.table, record_id: a.record, action: a.action, column_name: a.field || '', new_value: a.change || '', created_at: a.time
+      }))
+    };
+  }
+
+  async pullFromTursoCloud(silent = false, customCfg = null) {
+    const cfg = customCfg || this.getTursoConfig();
+    if (!cfg.url || !cfg.token) return false;
+    const endpoint = this.toHttpUrl(cfg.url);
+    try {
+      let res;
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          res = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Bearer ' + cfg.token,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              requests: [
+                { type: 'execute', stmt: { sql: 'SELECT updated_at, snapshot_json FROM CLOUD_META WHERE id = 1' } },
+                { type: 'close' }
+              ]
+            })
+          });
+          if (res.ok) break;
+        } catch (err) {
+          if (attempt === 3) throw err;
+          await new Promise(r => setTimeout(r, 600 * attempt));
+        }
+      }
+      if (!res || !res.ok) throw new Error('HTTP ' + (res ? res.status : 'error'));
+      const data = await res.json();
+      if (!data.results || !data.results[0] || !data.results[0].response || !data.results[0].response.result) return false;
+      const rows = data.results[0].response.result.rows;
+      if (!rows || !rows.length) return false;
+      const rawMeta = rows[0][1] ? rows[0][1].value : null;
+      if (!rawMeta) return false;
+      const dump = JSON.parse(rawMeta);
+      const db = dump.__db || this.dumpToDb(dump);
+      if (!db) return false;
+      const activeProjs = db.projects.filter(p => !p.del);
+      const curP = activeProjs.find(p => p.id === this.state.curProj) || activeProjs[0] || db.projects[0];
+      this.setState({
+        db,
+        curProj: curP ? curP.id : this.state.curProj,
+        apiConnected: true,
+        tursoConnected: true,
+        tursoDirect: true,
+        tursoUrl: cfg.url,
+        lastCloudSync: Date.now()
+      });
+      this.saveLocalBackup(db);
+      if (!silent) this.toast('Đã đồng bộ dữ liệu mới nhất từ Turso Cloud!', 'ok');
+      return true;
+    } catch (e) {
+      if (!silent) this.toast('Không thể tải từ Turso Cloud: ' + e.message, 'bad');
+      return false;
+    }
+  }
+
+  async pushToTursoCloud(dbToPush = null, customCfg = null) {
+    const targetDb = dbToPush || this.state.db;
+    const cfg = customCfg || this.getTursoConfig();
+    if (!cfg.url || !cfg.token) return false;
+    const endpoint = this.toHttpUrl(cfg.url);
+    try {
+      const dump = this.dbToDump(targetDb);
+      const now = Date.now();
+      const payloadJson = JSON.stringify({ ...dump, __db: targetDb });
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + cfg.token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          requests: [
+            {
+              type: 'execute',
+              stmt: {
+                sql: 'INSERT OR REPLACE INTO CLOUD_META (id, updated_at, snapshot_json) VALUES (1, ?, ?)',
+                args: [
+                  { type: 'integer', value: String(now) },
+                  { type: 'text', value: payloadJson }
+                ]
+              }
+            },
+            { type: 'close' }
+          ]
+        })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      if (data.results && data.results[0] && data.results[0].type === 'error') {
+        throw new Error(data.results[0].error ? data.results[0].error.message : 'SQL Error');
+      }
+      this.setState({ lastCloudSync: now, tursoConnected: true, tursoDirect: true });
+      return true;
+    } catch (e) {
+      console.error('Turso direct push error:', e);
+      return false;
+    }
+  }
+
+  notifyDbChange(newDb) {
+    this.saveLocalBackup(newDb);
+    if (this.state.tursoDirect || !this.state.apiConnected) {
+      this.debouncePushTurso(newDb);
+    }
+  }
+
+  debouncePushTurso(newDb) {
+    if (this._tursoDebounceTimer) clearTimeout(this._tursoDebounceTimer);
+    this._tursoDebounceTimer = setTimeout(() => {
+      this.pushToTursoCloud(newDb);
+    }, 600);
   }
 
   async syncFromServer() {
+    let serverOk = false;
     try {
-      const res = await fetch(this.apiBase + '/state');
+      const ctrl = new AbortController();
+      const tId = setTimeout(() => ctrl.abort(), 900);
+      const res = await fetch(this.apiBase + '/state', { signal: ctrl.signal });
+      clearTimeout(tId);
       if (res.ok) {
         const db = await res.json();
-        this.setState({ db, apiConnected: true });
+        this.setState({
+          db,
+          apiConnected: true,
+          tursoConnected: !!db.tursoConnected,
+          tursoDirect: false,
+          tursoUrl: db.tursoUrl || ''
+        });
+        this.saveLocalBackup(db);
+        serverOk = true;
       }
-    } catch (_) {
-      this.setState({ apiConnected: false });
+    } catch (_) {}
+
+    // If local server unreachable (e.g. mobile device, Netlify, or standalone):
+    if (!serverOk) {
+      const cloudOk = await this.pullFromTursoCloud(true);
+      if (!cloudOk) {
+        const cached = this.loadLocalBackup();
+        if (cached && cached.projects) {
+          this.setState({ db: cached });
+        }
+      }
     }
   }
 
   async callApi(method, path, body) {
+    if (this.state.tursoDirect) return null;
     try {
       const res = await fetch(this.apiBase + path, {
         method,
@@ -1228,6 +2639,7 @@ class Component extends DCLogic {
         const data = await res.json();
         if (data && data.db) {
           this.setState({ db: data.db, apiConnected: true });
+          this.saveLocalBackup(data.db);
           return data;
         }
       }
@@ -1243,70 +2655,10 @@ class Component extends DCLogic {
   initial() {
     return {
       screen: 'projects', tab: 'pyc', curProj: 1, memberReq: 1, allocFilter: 'ALL', docFilter: 'ALL', bbntFilter: 'ALL', auditFilter: 'ALL',
-      assignPers: 0, assignRole: '', apiConnected: false, mobileMenuOpen: false,
+      assignPers: 0, assignRole: '', apiConnected: false, tursoConnected: true, tursoDirect: true, tursoUrl: TURSO_DEFAULT_CONFIG.url, mobileMenuOpen: false,
       selectedDocs: {}, selectedBbnt: {},
       alloc: null, pyc: null, doc: null, pers: null, proj: null, bbntModal: null, excelModal: null, previewModal: null, tursoModal: null, cloneModal: null, reportModal: null, confirm: null, toast: null,
-      db: {
-        projects: [
-          { id: 1, code: 'DA-01', name: 'Cổng thông tin khách hàng', customer: 'Viettel / Khối CNTT', status: 'ACTIVE', del: false }
-        ],
-        requests: [
-          { id: 1, proj: 1, code: 'PYC-001', name: 'Thêm báo cáo doanh thu', type: 'CR', deadline: '2026-12-15', status: 'IN_PROGRESS', requester: 'Anh Nam - P.Kế toán', link: 'https://jira.example.com/browse/PYC-001', est: 28, locked: 30, del: false },
-          { id: 2, proj: 1, code: 'PYC-002', name: 'Sửa lỗi xuất Excel', type: 'BUG', deadline: '2026-11-10', status: 'IN_PROGRESS', requester: 'Chị Hương - Vận hành', link: 'https://jira.example.com/browse/PYC-002', est: 8, locked: 10, del: false }
-        ],
-        personnel: [
-          { id: 1, code: 'NS01', name: 'Lê Thị Kim Chung', role: 'Tester', email: 'chung.le@lifesup.com', phone: '+84 901234567', status: 'ACTIVE', note: 'Gia nhập: 2/11/2026', del: false },
-          { id: 2, code: 'NS02', name: 'Le Quang Minh', role: 'Frontend', email: 'minh.le@lifesup.com.vn', phone: 'N/A', status: 'ACTIVE', note: 'Gia nhập: 10/9/2026', del: false },
-          { id: 3, code: 'NS03', name: 'Do Tuan Long', role: 'Frontend', email: 'long.do@lifesup.com.vn', phone: 'N/A', status: 'ACTIVE', note: 'Gia nhập: 10/9/2026', del: false },
-          { id: 4, code: 'NS04', name: 'Nguyễn Trọng Nam', role: 'PM', email: 'nam.nguyen@lifesup.com.vn', phone: 'N/A', status: 'ACTIVE', note: 'Gia nhập: 10/9/2026', del: false },
-          { id: 5, code: 'NS05', name: 'KHánh Trinh', role: 'Frontend', email: 'luong_ngoc21@yahoo.com', phone: '+84 901234567', status: 'ACTIVE', note: 'Gia nhập: 30/7/2026', del: false },
-          { id: 6, code: 'NS06', name: 'Vương Sơn Tùng', role: 'Frontend', email: 'tung.vuong@lifesup.com.vn', phone: '+84 901234567', status: 'ACTIVE', note: 'Gia nhập: 30/7/2026', del: false },
-          { id: 7, code: 'NS07', name: 'Đỗ Công Hòa', role: 'Frontend', email: 'hoa.do@lifesup.com.vn', phone: '+84 901234567', status: 'ACTIVE', note: 'Gia nhập: 30/7/2026', del: false },
-          { id: 8, code: 'NS08', name: 'Hoàng Thị Huyền Trang', role: 'Tester', email: 'trang.hoang01@lifesup.com.vn', phone: '+84 901234567', status: 'ACTIVE', note: 'Gia nhập: 30/7/2026', del: false },
-          { id: 9, code: 'NS09', name: 'Dương Tuấn Vũ', role: 'Leader', email: 'vu.duong@lifesup.com.vn', phone: '+84 901234567', status: 'ACTIVE', note: 'Technical Leader · Gia nhập: 30/7/2026', del: false },
-          { id: 10, code: 'NS10', name: 'Nguyễn Đức Thắng', role: 'Frontend', email: 'nguyenducthang.neu@gmail.com', phone: '0356851332', status: 'ACTIVE', note: 'Lập trình viên Frontend (FE) · Gia nhập: 29/7/2026', del: false },
-          { id: 11, code: 'NS11', name: 'Lương Bá Ngọc', role: 'Leader', email: 'luongngoc2194@gmail.com', phone: '0379394690', status: 'ACTIVE', note: 'FE Lead hệ thống · Gia nhập: 29/7/2026', del: false },
-          { id: 12, code: 'NS12', name: 'Nguyễn Hồng Thơm', role: 'BA', email: 'thom.nh96@gmail.com', phone: '0971047982', status: 'ACTIVE', note: 'Chuyên viên Phân tích Nghiệp vụ (BA) · Gia nhập: 29/7/2026', del: false },
-          { id: 13, code: 'NS13', name: 'Trần Ngọc Phú', role: 'Backend', email: 'tranphuth0609@gmail.com', phone: '0376395844', status: 'ACTIVE', note: 'Lập trình viên Backend (BE) · Gia nhập: 29/7/2026', del: false },
-          { id: 14, code: 'NS14', name: 'Nguyễn Thị Hà', role: 'Tester', email: 'nguyenha.k9d@gmail.com', phone: '0985286441', status: 'ACTIVE', note: 'Chuyên viên Kiểm thử (Tester) · Gia nhập: 29/7/2026', del: false },
-          { id: 15, code: 'NS15', name: 'Tô Thị Mai Quy', role: 'BA', email: 'toquy2k2@gmail.com.vn', phone: '0932235082', status: 'ACTIVE', note: 'Chuyên viên Phân tích Nghiệp vụ (BA) · Gia nhập: 29/7/2026', del: false },
-          { id: 16, code: 'NS16', name: 'Nguyễn Quý Giang', role: 'Frontend', email: 'giangquy2706@gmail.com.vn', phone: '0366608023', status: 'ACTIVE', note: 'Lập trình viên Frontend (FE) · Gia nhập: 29/7/2026', del: false },
-          { id: 17, code: 'NS17', name: 'Đỗ Văn Trung', role: 'Frontend', email: 'dvant24102003@gmail.com', phone: '0876043542', status: 'ACTIVE', note: 'Lập trình viên Frontend (FE) · Gia nhập: 29/7/2026', del: false },
-          { id: 18, code: 'NS18', name: 'Nguyễn Viết Hoàng', role: 'UIUX', email: 'hoang17102003.work@gmail.com', phone: '0868229726', status: 'ACTIVE', note: 'Thiết kế Giao diện UI/UX Designer · Gia nhập: 29/7/2026', del: false },
-          { id: 19, code: 'NS19', name: 'Đinh Đức Hải', role: 'Backend', email: 'hdtht198@gmail.com', phone: '0347577771', status: 'ACTIVE', note: 'Lập trình viên DEV BE · Gia nhập: 29/7/2026', del: false }
-        ],
-        members: [
-          { id: 1, req: 1, pers: 1, role: 'Tester', del: false },
-          { id: 2, req: 1, pers: 2, role: 'Frontend', del: false },
-          { id: 3, req: 1, pers: 3, role: 'Frontend', del: false },
-          { id: 4, req: 2, pers: 2, role: 'Frontend', del: false }
-        ],
-        batches: [
-          { id: 1, req: 1, month: '2026-10', note: 'Phân bổ nỗ lực đợt cuối T10/2026', del: false },
-          { id: 2, req: 1, month: '2026-11', note: 'Phân bổ nỗ lực đợt cuối T11/2026', del: false },
-          { id: 3, req: 2, month: '2026-10', note: 'Xử lý lỗi xuất file Excel T10/2026', del: false }
-        ],
-        items: [
-          { id: 1, batch: 1, pers: 1, md: 10, note: 'Thiết kế DB + API báo cáo', del: false },
-          { id: 2, batch: 1, pers: 2, md: 6.5, note: 'Giao diện bảng biểu báo cáo', del: false },
-          { id: 3, batch: 2, pers: 1, md: 8, note: 'Tối ưu truy vấn và xuất file', del: false },
-          { id: 4, batch: 2, pers: 3, md: 3.5, note: 'Kiểm thử SIT và UAT', del: false },
-          { id: 5, batch: 3, pers: 2, md: 4, note: 'Fix lỗi tràn bộ nhớ khi xuất Excel', del: false }
-        ],
-        docs: [
-          { id: 1, proj: 1, req: null, title: 'Đề cương và kiến trúc tổng thể DA-01', type: 'Đề cương', url: 'https://sharepoint.example.com/da01-spec', note: 'Bản chốt v1.2', del: false },
-          { id: 2, proj: 1, req: 1, title: 'Đặc tả yêu cầu (SRS) - Báo cáo doanh thu', type: 'SRS / Thiết kế', url: 'https://sharepoint.example.com/pyc001-srs', note: 'Khách hàng đã ký duyệt', del: false }
-        ],
-        bbnt: [
-          { id: 1, req: 1, code: 'BBNT-01', title: 'Nghiệm thu giai đoạn 1 PYC-001', url: 'https://drive.google.com/bbnt-01', status: 'SENT', sent: '2026-11-01', del: false },
-          { id: 2, req: 2, code: 'BBNT-02', title: 'Nghiệm thu bản vá lỗi Excel PYC-002', url: 'https://drive.google.com/bbnt-02', status: 'NOT_SENT', sent: null, del: false }
-        ],
-        audit: [
-          { id: 3, time: '2026-11-01 15:20:00', table: 'ALLOCATION_BATCH', record: 'PYC-001 (2026-11)', action: 'INSERT', field: 'effort_md', change: '16.5 → 28.0 md (An: 8.0, Chi: 3.5)' },
-          { id: 2, time: '2026-10-31 17:30:00', table: 'ALLOCATION_BATCH', record: 'PYC-001 (2026-10)', action: 'INSERT', field: 'effort_md', change: '0.0 → 16.5 md (An: 10.0, Bình: 6.5)' },
-          { id: 1, time: '2026-10-01 09:00:00', table: 'REQUEST', record: 'PYC-001', action: 'INSERT', field: 'locked_md', change: 'NULL → 30.0 md' }
-        ]
-      }
+      db: INITIAL_DB
     };
   }
 
@@ -1335,7 +2687,7 @@ class Component extends DCLogic {
   mut(fn) {
     const db = JSON.parse(JSON.stringify(this.state.db));
     const out = fn(db);
-    this.setState({ db });
+    this.setState({ db }, () => this.notifyDbChange(db));
     return out;
   }
   log(db, table, record, action, field, change) {
@@ -1777,47 +3129,62 @@ class Component extends DCLogic {
     }
   }
   openTurso() {
-    const curUrl = (this.state.db && this.state.db.tursoUrl) || '';
+    const cfg = this.getTursoConfig();
+    const curUrl = (this.state.db && this.state.db.tursoUrl) || this.state.tursoUrl || cfg.url;
     this.setState({
       tursoModal: {
         url: curUrl,
-        token: '',
+        token: cfg.token,
         busy: false,
         err: ''
       }
     });
   }
+
   async saveTurso(mode) {
     const tm = this.state.tursoModal;
     if (!tm) return;
     const url = (tm.url || '').trim();
     const token = (tm.token || '').trim();
-    const isAlreadyConfigured = !!(this.state.db && this.state.db.tursoConnected && url === this.state.db.tursoUrl && !token);
-    if (!isAlreadyConfigured && (!url || !token)) {
+    if (!url || !token) {
       this.setState({ tursoModal: { ...tm, err: 'Vui lòng nhập cả Turso Database URL và Auth Token.' } });
       return;
     }
     this.setState({ tursoModal: { ...tm, busy: true, err: '' } });
+    this.saveTursoConfig(url, token);
+
+    // If local Node server is connected:
+    if (!this.state.tursoDirect && this.state.apiConnected) {
+      try {
+        const endpoint = (this.state.tursoConnected && url === this.state.tursoUrl) ? '/turso/sync' : '/turso/config';
+        const res = await fetch(this.apiBase + endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, token, mode: mode || 'push' })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          if (data.db) this.setState({ db: data.db, apiConnected: true, tursoConnected: true, tursoModal: null });
+          else this.setState({ tursoModal: null, tursoConnected: true });
+          this.toast(mode === 'pull' ? 'Đã kéo dữ liệu từ Turso Cloud về máy!' : 'Đã kết nối & đẩy CSDL lên Turso Cloud thành công!', 'ok');
+          return;
+        }
+      } catch (_) {}
+    }
+
+    // Direct Turso Cloud Mode (Mobile Phone / Web / Netlify):
     try {
-      const endpoint = isAlreadyConfigured ? '/turso/sync' : '/turso/config';
-      const res = await fetch(this.apiBase + endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, token, mode })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        this.setState({ tursoModal: { ...tm, busy: false, err: data.message || 'Không thể kết nối Turso Cloud.' } });
-        return;
-      }
-      if (data && data.db) {
-        this.setState({ db: data.db, apiConnected: true, tursoModal: null });
+      if (mode === 'pull') {
+        const ok = await this.pullFromTursoCloud(false, { url, token });
+        if (!ok) throw new Error('Không thể kéo dữ liệu từ Turso Cloud.');
       } else {
-        this.setState({ tursoModal: null });
+        const ok = await this.pushToTursoCloud(null, { url, token });
+        if (!ok) throw new Error('Không thể đẩy dữ liệu lên Turso Cloud.');
+        this.toast('Đã lưu & đẩy toàn bộ CSDL lên Turso Cloud thành công!', 'ok');
       }
-      this.toast(mode === 'pull' ? 'Đã kéo dữ liệu mới nhất từ Turso Cloud về máy!' : 'Đã kết nối & đẩy toàn bộ dữ liệu + file lên Turso Cloud!', 'ok');
+      this.setState({ tursoModal: null });
     } catch (e) {
-      this.setState({ tursoModal: { ...tm, busy: false, err: 'Lỗi kết nối Server: ' + e.message } });
+      this.setState({ tursoModal: { ...tm, busy: false, err: e.message } });
     }
   }
   pickAndUpload(multiple, onDone) {
@@ -2932,6 +4299,7 @@ class Component extends DCLogic {
 
     const kv = s.tursoModal ? {
       open: true,
+      isDirect: !!s.tursoDirect,
       url: s.tursoModal.url,
       token: s.tursoModal.token,
       busy: !!s.tursoModal.busy,
@@ -3005,10 +4373,10 @@ class Component extends DCLogic {
     const tv = t ? { open: true, msg: t.msg, style: TST[t.tone] || TST.ok, hasUndo: !!t.undo, undo: () => { const u = t.undo; if (u) u(); }, close: () => this.setState({ toast: null }) }
       : { open: false, msg: '', style: '', hasUndo: false, undo: () => {}, close: () => {} };
 
-    const isTurso = !!(db && db.tursoConnected);
+    const isTurso = !!(db && db.tursoConnected) || s.tursoConnected || s.tursoDirect;
     return {
       nav, isDash: s.screen === 'dashboard', isProj: s.screen === 'projects', isPers: s.screen === 'personnel', isAudit: s.screen === 'audit', isTrash: s.screen === 'trash',
-      dbBadge: isTurso ? '☁ Turso Cloud' : (s.apiConnected ? '● SQLite Local' : '○ Local Mode'),
+      dbBadge: isTurso ? (s.tursoDirect ? '☁ Turso Cloud' : '☁ Turso Sync') : (s.apiConnected ? '● SQLite Local' : '○ Local Mode'),
       dbBadgeStyle: isTurso ? 'background:#0B5563;color:#E2F3E8;font-size:10.5px' : (s.apiConnected ? 'background:#11633A;color:#fff;font-size:10.5px' : 'background:#2A404D;color:#C7D2D9;font-size:10.5px'),
       tursoBtnLabel: isTurso ? '☁ Đã kết nối Turso Cloud (Đồng bộ)' : '☁ Kết nối Turso Cloud SQLite',
       tursoBtnStyle: isTurso ? 'background:#0B5563;color:#fff;border-color:#1E7B8C;font-size:11.5px' : 'background:#1E3744;color:#5CC8C0;border-color:#2A404D;font-size:11.5px',
