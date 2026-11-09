@@ -131,6 +131,19 @@ function createDatabase(dbPath) {
       new_value TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
     );
+
+    CREATE TABLE IF NOT EXISTS TEAM_EXTERNAL_ALLOCATION (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      personnel_id INTEGER NOT NULL REFERENCES PERSONNEL(id),
+      month_period TEXT NOT NULL,
+      project_name TEXT NOT NULL,
+      project_leader TEXT DEFAULT '',
+      effort_mm REAL NOT NULL DEFAULT 0,
+      note TEXT DEFAULT '',
+      is_deleted INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+    );
   `);
 
   // Ensure email & phone columns exist on existing DBs
@@ -140,6 +153,13 @@ function createDatabase(dbPath) {
   }
   if (!cols.includes('phone')) {
     db.exec("ALTER TABLE PERSONNEL ADD COLUMN phone TEXT DEFAULT '';");
+  }
+  if (!cols.includes('is_my_team')) {
+    db.exec("ALTER TABLE PERSONNEL ADD COLUMN is_my_team INTEGER NOT NULL DEFAULT 0;");
+    db.exec("UPDATE PERSONNEL SET is_my_team = 1 WHERE code IN ('NS11', 'NS01', 'NS02', 'NS03', 'NS17', 'NS18');");
+  }
+  if (!cols.includes('target_kpi_mm')) {
+    db.exec("ALTER TABLE PERSONNEL ADD COLUMN target_kpi_mm REAL NOT NULL DEFAULT 1.0;");
   }
 
   // Seed default data if PROJECT is empty
@@ -289,7 +309,7 @@ class PMRepository {
       id: p.id, code: p.code, name: p.name, customer: p.customer_name || 'Nội bộ', status: p.status, del: !!p.is_deleted
     }));
     const personnel = this.db.prepare("SELECT * FROM PERSONNEL ORDER BY CASE WHEN status = 'ACTIVE' THEN 0 ELSE 1 END, id ASC").all().map(p => ({
-      id: p.id, code: p.code, name: p.full_name, role: p.default_role, email: p.email || '', phone: p.phone || '', status: p.status, note: p.note || '', del: !!p.is_deleted
+      id: p.id, code: p.code, name: p.full_name, role: p.default_role, email: p.email || '', phone: p.phone || '', status: p.status, note: p.note || '', is_my_team: !!p.is_my_team, target_kpi: p.target_kpi_mm != null ? r1(p.target_kpi_mm) : 1.0, del: !!p.is_deleted
     }));
     const requests = this.db.prepare('SELECT * FROM REQUEST ORDER BY id ASC').all().map(r => {
       const allocated = this.getAllocatedMd(r.id);
@@ -320,7 +340,10 @@ class PMRepository {
     const audit = this.db.prepare('SELECT * FROM AUDIT_LOG ORDER BY id DESC').all().map(a => ({
       id: a.id, time: a.created_at, table: a.table_name, record: a.record_id, action: a.action, field: a.column_name, change: a.new_value
     }));
-    return { projects, requests, personnel, members, batches, items, docs, bbnt, audit };
+    const teamAlloc = this.db.prepare('SELECT * FROM TEAM_EXTERNAL_ALLOCATION WHERE is_deleted = 0 ORDER BY id ASC').all().map(t => ({
+      id: t.id, pers: t.personnel_id, month: t.month_period, proj: t.project_name, leader: t.project_leader || '', mm: r1(t.effort_mm), note: t.note || '', del: !!t.is_deleted
+    }));
+    return { projects, requests, personnel, members, batches, items, docs, bbnt, audit, teamAlloc };
   }
 
   // ==================== PROJECT CRUD ====================
@@ -410,7 +433,7 @@ class PMRepository {
   }
 
   // ==================== PERSONNEL CRUD ====================
-  savePersonnel({ id, code, name, role, email, phone, status, note }) {
+  savePersonnel({ id, code, name, role, email, phone, status, note, is_my_team, target_kpi }) {
     const c = (code || '').trim();
     const n = (name || '').trim();
     const r = (role || 'Dev').trim();
@@ -418,6 +441,8 @@ class PMRepository {
     const ph = (phone || '').trim();
     const st = status || 'ACTIVE';
     const nt = (note || '').trim();
+    const myTeam = is_my_team ? 1 : 0;
+    const kpiVal = (target_kpi != null && !isNaN(target_kpi)) ? r1(target_kpi) : 1.0;
     if (!c || !n) throw new BusinessError('VALIDATION', 'Vui lòng nhập mã và họ tên.');
 
     const dup = this.db.prepare('SELECT id FROM PERSONNEL WHERE is_deleted = 0 AND LOWER(code) = LOWER(?) AND id != ?')
@@ -425,13 +450,13 @@ class PMRepository {
     if (dup) throw new BusinessError('BR-05', 'Mã nhân sự đã tồn tại.');
 
     if (id) {
-      this.db.prepare("UPDATE PERSONNEL SET code = ?, full_name = ?, default_role = ?, email = ?, phone = ?, status = ?, note = ?, updated_at = datetime('now','localtime') WHERE id = ?")
-        .run(c, n, r, em, ph, st, nt, id);
+      this.db.prepare("UPDATE PERSONNEL SET code = ?, full_name = ?, default_role = ?, email = ?, phone = ?, status = ?, note = ?, is_my_team = ?, target_kpi_mm = ?, updated_at = datetime('now','localtime') WHERE id = ?")
+        .run(c, n, r, em, ph, st, nt, myTeam, kpiVal, id);
       this.logAudit('PERSONNEL', c, 'UPDATE', 'info', `Cập nhật nhân sự ${n}`);
       return id;
     } else {
-      const res = this.db.prepare('INSERT INTO PERSONNEL (code, full_name, default_role, email, phone, status, note, is_deleted) VALUES (?, ?, ?, ?, ?, ?, ?, 0)')
-        .run(c, n, r, em, ph, st, nt);
+      const res = this.db.prepare('INSERT INTO PERSONNEL (code, full_name, default_role, email, phone, status, note, is_my_team, target_kpi_mm, is_deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)')
+        .run(c, n, r, em, ph, st, nt, myTeam, kpiVal);
       this.logAudit('PERSONNEL', c, 'INSERT', 'code', `Thêm mới ${n}`);
       return Number(res.lastInsertRowid);
     }
@@ -444,6 +469,56 @@ class PMRepository {
     this.db.prepare("UPDATE PERSONNEL SET status = ?, updated_at = datetime('now','localtime') WHERE id = ?").run(next, id);
     this.logAudit('PERSONNEL', p.code, 'UPDATE', 'status', `${p.status} → ${next}`);
     return next;
+  }
+
+  togglePersonnelTeam(id) {
+    const p = this.db.prepare('SELECT * FROM PERSONNEL WHERE id = ?').get(id);
+    if (!p) throw new BusinessError('NOT_FOUND', 'Không tìm thấy nhân sự.');
+    const next = p.is_my_team ? 0 : 1;
+    this.db.prepare("UPDATE PERSONNEL SET is_my_team = ?, updated_at = datetime('now','localtime') WHERE id = ?").run(next, id);
+    this.logAudit('PERSONNEL', p.code, 'UPDATE', 'is_my_team', next ? 'Gán vào Team' : 'Rời khỏi Team');
+    return next;
+  }
+
+  updatePersonnelKpi(id, kpi) {
+    const p = this.db.prepare('SELECT * FROM PERSONNEL WHERE id = ?').get(id);
+    if (!p) throw new BusinessError('NOT_FOUND', 'Không tìm thấy nhân sự.');
+    const kVal = r1(kpi);
+    this.db.prepare("UPDATE PERSONNEL SET target_kpi_mm = ?, updated_at = datetime('now','localtime') WHERE id = ?").run(kVal, id);
+    this.logAudit('PERSONNEL', p.code, 'UPDATE', 'target_kpi_mm', `${p.target_kpi_mm || 1.0} → ${kVal}`);
+    return kVal;
+  }
+
+  // ==================== TEAM EXTERNAL ALLOCATION ====================
+  saveTeamExternalAlloc({ id, persId, month, project, leader, mm, note }) {
+    if (!persId || !month || !project) throw new BusinessError('VALIDATION', 'Vui lòng chọn nhân sự, tháng và nhập tên dự án.');
+    if (!isValidStep(mm) || Number(mm) <= 0) throw new BusinessError('BR-07', 'Nỗ lực phải > 0 và theo bước nhảy 0.01 MM.');
+    const mVal = r1(mm);
+    const prName = String(project || '').trim();
+    const ldName = String(leader || '').trim();
+    const nt = String(note || '').trim();
+    const p = this.db.prepare('SELECT * FROM PERSONNEL WHERE id = ?').get(persId);
+    if (!p) throw new BusinessError('NOT_FOUND', 'Không tìm thấy nhân sự.');
+
+    if (id) {
+      this.db.prepare("UPDATE TEAM_EXTERNAL_ALLOCATION SET personnel_id = ?, month_period = ?, project_name = ?, project_leader = ?, effort_mm = ?, note = ?, updated_at = datetime('now','localtime') WHERE id = ?")
+        .run(persId, month, prName, ldName, mVal, nt, id);
+      this.logAudit('TEAM_EXTERNAL_ALLOCATION', `${p.code} (${month})`, 'UPDATE', 'effort_mm', `Cập nhật dự án ngoài ${prName}: ${mVal.toFixed(2)} MM`);
+      return id;
+    } else {
+      const res = this.db.prepare("INSERT INTO TEAM_EXTERNAL_ALLOCATION (personnel_id, month_period, project_name, project_leader, effort_mm, note, is_deleted) VALUES (?, ?, ?, ?, ?, ?, 0)")
+        .run(persId, month, prName, ldName, mVal, nt);
+      this.logAudit('TEAM_EXTERNAL_ALLOCATION', `${p.code} (${month})`, 'INSERT', 'effort_mm', `Thêm dự án ngoài ${prName} (${ldName}): +${mVal.toFixed(2)} MM`);
+      return Number(res.lastInsertRowid);
+    }
+  }
+
+  deleteTeamExternalAlloc(id) {
+    const it = this.db.prepare('SELECT t.*, p.code as pers_code FROM TEAM_EXTERNAL_ALLOCATION t JOIN PERSONNEL p ON t.personnel_id = p.id WHERE t.id = ?').get(id);
+    if (!it) return false;
+    this.db.prepare("UPDATE TEAM_EXTERNAL_ALLOCATION SET is_deleted = 1, updated_at = datetime('now','localtime') WHERE id = ?").run(id);
+    this.logAudit('TEAM_EXTERNAL_ALLOCATION', `${it.pers_code} (${it.month_period})`, 'SOFT_DELETE', 'is_deleted', `Xóa dự án ngoài ${it.project_name}`);
+    return true;
   }
 
   // ==================== ASSIGN MEMBER TO PYC ====================

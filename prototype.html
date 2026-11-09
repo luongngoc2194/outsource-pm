@@ -269,7 +269,6 @@ main::-webkit-scrollbar-thumb:hover{background:#A8A59A}
         </sc-for>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <button class="btn btn-sm" onClick="{{openExcel}}">Nhập / Xuất Excel</button>
         <button class="btn btn-sm" onClick="{{editCurProj}}">Sửa dự án</button>
         <sc-if value="{{canDelProj}}" hint-placeholder-val="{{ false }}">
           <button class="btn btn-sm btn-bad" onClick="{{delCurProj}}">Xóa dự án</button>
@@ -575,30 +574,191 @@ main::-webkit-scrollbar-thumb:hover{background:#A8A59A}
   <header style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px">
     <div>
       <h1 style="font-size:26px;letter-spacing:-.01em">Nhân sự</h1>
-      <p style="margin-top:4px;color:var(--mute)">Danh mục dùng chung. Nhân sự "Đã nghỉ" giữ nguyên phân bổ lịch sử nhưng không thể phân bổ mới (BR-03).</p>
+      <p style="margin-top:4px;color:var(--mute)">Quản lý danh mục nhân sự và tổng hợp nỗ lực Team trực tiếp (Nội bộ & Dự án ngoài).</p>
     </div>
-    <button class="btn btn-pri" onClick="{{newPers}}">+ Thêm nhân sự</button>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <sc-if value="{{isPersTabTeam}}" hint-placeholder-val="{{ true }}">
+        <button class="btn btn-pri btn-sm" onClick="{{openTeamReportModal}}">📋 Báo cáo nỗ lực Team</button>
+      </sc-if>
+      <button class="btn btn-pri" onClick="{{newPers}}">+ Thêm nhân sự</button>
+    </div>
   </header>
-  <section class="card" style="overflow:hidden">
-    <div style="overflow-x:auto">
-      <div role="table" aria-label="Danh mục nhân sự" style="--cols:72px minmax(150px,1.3fr) 95px minmax(180px,1.5fr) 125px 125px minmax(150px,1.3fr) 70px 80px;min-width:1120px">
-        <div class="thead" role="row"><span role="columnheader">Mã</span><span role="columnheader">Họ và tên</span><span role="columnheader">Vai trò</span><span role="columnheader">Email</span><span role="columnheader">Số điện thoại</span><span role="columnheader">Trạng thái</span><span role="columnheader">Ghi chú</span><span role="columnheader" class="r">Đang ở PYC</span><span role="columnheader" class="r">Thao tác</span></div>
-        <sc-for list="{{persRows}}" as="p" hint-placeholder-count="4">
-          <div class="trow" role="row">
-            <span role="cell" class="mono" style="font-weight:600">{{p.code}}</span>
-            <span role="cell" style="font-weight:600">{{p.name}}</span>
-            <span role="cell"><span class="chip" style="background:#ECEAE4;color:#444C55">{{p.role}}</span></span>
-            <span role="cell" class="mono" style="font-size:12.5px;color:var(--pri)">{{p.email}}</span>
-            <span role="cell" class="mono tn" style="font-size:12.5px">{{p.phone}}</span>
-            <span role="cell"><button class="chip" style="border:0;min-height:28px;{{p.chip}}" onClick="{{p.toggle}}" aria-label="Đổi trạng thái nhân sự">{{p.statusLabel}}</button></span>
-            <span role="cell" class="sub">{{p.note}}</span>
-            <span role="cell" class="r tn">{{p.count}}</span>
-            <span role="cell" class="r"><button class="btn btn-sm" onClick="{{p.edit}}">Sửa</button></span>
-          </div>
-        </sc-for>
+
+  <!-- Sub-tabs: Team của tôi vs Tất cả nhân sự -->
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--line);padding-bottom:12px">
+    <div style="display:flex;gap:8px" role="tablist" aria-label="Phân nhóm nhân sự">
+      <button class="seg" role="tab" aria-selected="{{persTabTeam}}" onClick="{{setPersTabTeam}}" style="{{persTabTeamStyle}}">★ Team của tôi ({{teamCount}})</button>
+      <button class="seg" role="tab" aria-selected="{{persTabAll}}" onClick="{{setPersTabAll}}" style="{{persTabAllStyle}}">👥 Tất cả nhân sự ({{totalPersCount}})</button>
+    </div>
+    <sc-if value="{{isPersTabTeam}}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span class="sub" style="font-weight:600">Tháng:</span>
+        <div style="display:flex;flex-wrap:wrap;gap:4px">
+          <sc-for list="{{teamMonthOpts}}" as="m" hint-placeholder-count="3">
+            <button class="seg" onClick="{{m.pick}}" style="{{m.style}}">{{m.label}}</button>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+
+  <!-- TAB: TEAM CỦA TÔI -->
+  <sc-if value="{{isPersTabTeam}}" hint-placeholder-val="{{ true }}">
+    <!-- 4 Summary Cards -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+      <div class="card" style="padding:14px 16px">
+        <div class="sub" style="font-size:12px;font-weight:600">NHÂN SỰ TRONG TEAM</div>
+        <div style="font-size:22px;font-weight:700;margin-top:4px;color:var(--ink)">{{teamSummary.memberCount}} <span style="font-size:14px;font-weight:400;color:var(--mute)">thành viên</span></div>
+        <div class="sub" style="font-size:11.5px;margin-top:2px">Đang làm việc: <strong>{{teamSummary.activeCount}}</strong></div>
+      </div>
+      <div class="card" style="padding:14px 16px">
+        <div class="sub" style="font-size:12px;font-weight:600">TỔNG NỖ LỰC THÁNG</div>
+        <div style="font-size:22px;font-weight:700;margin-top:4px;color:var(--pri)">{{teamSummary.totalRecorded}} <span style="font-size:14px;font-weight:400;color:var(--mute)">MM</span></div>
+        <div class="sub" style="font-size:11.5px;margin-top:2px">Tổng hợp toàn bộ thành viên trong tháng</div>
+      </div>
+      <div class="card" style="padding:14px 16px">
+        <div class="sub" style="font-size:12px;font-weight:600">NỖ LỰC NỘI BỘ</div>
+        <div style="font-size:22px;font-weight:700;margin-top:4px;color:#0369A1">{{teamSummary.internalMm}} <span style="font-size:14px;font-weight:400;color:var(--mute)">MM</span></div>
+        <div class="sub" style="font-size:11.5px;margin-top:2px">Dự án bạn quản lý (Tự động)</div>
+      </div>
+      <div class="card" style="padding:14px 16px">
+        <div class="sub" style="font-size:12px;font-weight:600">NỖ LỰC DỰ ÁN NGOÀI</div>
+        <div style="font-size:22px;font-weight:700;margin-top:4px;color:#92400E">{{teamSummary.externalMm}} <span style="font-size:14px;font-weight:400;color:var(--mute)">MM</span></div>
+        <div class="sub" style="font-size:11.5px;margin-top:2px">Dự án người khác quản lý (Thủ công)</div>
       </div>
     </div>
-  </section>
+
+    <!-- Team Members List -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <sc-for list="{{teamMembers}}" as="m" hint-placeholder-count="3">
+        <div class="card" style="padding:18px;display:flex;flex-direction:column;gap:14px;border-radius:14px">
+          <!-- Member Header -->
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="width:42px;height:42px;border-radius:50%;background:#0B5563;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px">
+                {{m.code}}
+              </div>
+              <div>
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                  <span style="font-size:16px;font-weight:700;color:var(--ink)">{{m.name}}</span>
+                  <span class="chip" style="background:#ECEAE4;color:#444C55;font-size:11.5px">{{m.role}}</span>
+                  <span class="chip" style="{{m.statusChip}};font-size:11px">{{m.statusLabel}}</span>
+                  <button class="btn btn-sm" onClick="{{m.toggleTeam}}" style="border:0;background:transparent;color:#D97706;padding:2px 6px;cursor:pointer" title="Gỡ khỏi Team">★ Thuộc team</button>
+                </div>
+                <div class="sub" style="font-size:12px;margin-top:2px">
+                  Email: <span class="mono">{{m.email}}</span> · SĐT: <span class="mono">{{m.phone}}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Member Monthly Effort & Action -->
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+              <div style="display:flex;flex-direction:column;align-items:flex-end">
+                <span class="sub" style="font-size:12px">Tổng nỗ lực tháng:</span>
+                <strong style="font-size:16px;color:var(--pri)">{{m.totalMm}} MM</strong>
+                <span class="sub" style="font-size:11.5px">Nội bộ: <strong>{{m.internalMm}}</strong> · Ngoài: <strong>{{m.externalMm}}</strong> MM</span>
+              </div>
+              <button class="btn btn-sm btn-pri" onClick="{{m.addExt}}">+ Thêm dự án ngoài</button>
+            </div>
+          </div>
+
+          <!-- Projects Table / Breakdown -->
+          <div style="background:#FAF9F5;border:1px solid var(--line);border-radius:10px;padding:12px 14px">
+            <div style="font-size:12px;font-weight:700;color:var(--mute);margin-bottom:8px;text-transform:uppercase;letter-spacing:.02em">
+              Dự án tham gia trong tháng {{teamMonth}}
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <!-- Internal projects -->
+              <sc-for list="{{m.internalList}}" as="p" hint-placeholder-count="1">
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;background:#fff;border:1px solid #E5E7EB;border-left:4px solid #1E7B8C;padding:8px 12px;border-radius:6px">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <span class="chip" style="background:#E0F2FE;color:#0369A1;font-size:11px;font-weight:600">Nội bộ</span>
+                    <strong style="color:var(--ink);font-size:13.5px">{{p.projName}}</strong>
+                    <span class="sub" style="font-size:12px">· Leader: <strong>Ngọc</strong></span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:12px">
+                    <span class="mono" style="font-size:13px;font-weight:700;color:#0369A1">{{p.mm}} MM</span>
+                    <span class="sub" style="font-size:11.5px">(Tự động tổng hợp)</span>
+                  </div>
+                </div>
+              </sc-for>
+
+              <!-- External projects -->
+              <sc-for list="{{m.externalList}}" as="e" hint-placeholder-count="1">
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;background:#fff;border:1px solid #E5E7EB;border-left:4px solid #D97706;padding:8px 12px;border-radius:6px">
+                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                    <span class="chip" style="background:#FEF3C7;color:#92400E;font-size:11px;font-weight:600">Dự án ngoài</span>
+                    <strong style="color:var(--ink);font-size:13.5px">{{e.projName}}</strong>
+                    <span class="sub" style="font-size:12px">· Leader: <strong>{{e.leader}}</strong></span>
+                    <sc-if value="{{e.hasNote}}" hint-placeholder-val="{{ false }}">
+                      <span class="sub" style="font-size:12px;font-style:italic">({{e.note}})</span>
+                    </sc-if>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <span class="mono" style="font-size:13px;font-weight:700;color:#92400E">{{e.mm}} MM</span>
+                    <button class="btn btn-sm" onClick="{{e.edit}}" style="padding:2px 8px;font-size:11.5px">Sửa</button>
+                    <button class="btn btn-sm btn-bad" onClick="{{e.del}}" style="padding:2px 8px;font-size:11.5px">Xóa</button>
+                  </div>
+                </div>
+              </sc-for>
+
+              <!-- No projects in month -->
+              <sc-if value="{{m.noProjects}}" hint-placeholder-val="{{ false }}">
+                <div class="sub" style="padding:10px;text-align:center;font-size:12.5px">
+                  Chưa ghi nhận phân bổ nào trong tháng này. Bấm <strong>"+ Thêm dự án ngoài"</strong> để nhập nỗ lực dự án khác.
+                </div>
+              </sc-if>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+
+      <sc-if value="{{noTeamMembers}}" hint-placeholder-val="{{ false }}">
+        <div class="card" style="padding:40px;text-align:center;color:var(--mute)">
+          Chưa có nhân sự nào được đánh dấu thuộc Team. Chuyển sang tab <strong>"👥 Tất cả nhân sự"</strong> và bấm ngôi sao <strong>☆</strong> để thêm vào Team.
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <!-- TAB: TẤT CẢ NHÂN SỰ -->
+  <sc-if value="{{isPersTabAll}}" hint-placeholder-val="{{ false }}">
+    <section class="card" style="overflow:hidden">
+      <div style="overflow-x:auto">
+        <div role="table" aria-label="Danh mục nhân sự" style="--cols:50px 72px minmax(150px,1.3fr) 95px minmax(180px,1.5fr) 125px 125px minmax(150px,1.3fr) 70px 80px;min-width:1100px">
+          <div class="thead" role="row">
+            <span role="columnheader" class="c">Team</span>
+            <span role="columnheader">Mã</span>
+            <span role="columnheader">Họ và tên</span>
+            <span role="columnheader">Vai trò</span>
+            <span role="columnheader">Email</span>
+            <span role="columnheader">Số điện thoại</span>
+            <span role="columnheader">Trạng thái</span>
+            <span role="columnheader">Ghi chú</span>
+            <span role="columnheader" class="r">Đang ở PYC</span>
+            <span role="columnheader" class="r">Thao tác</span>
+          </div>
+          <sc-for list="{{persRows}}" as="p" hint-placeholder-count="4">
+            <div class="trow" role="row">
+              <span role="cell" class="c">
+                <button class="btn btn-sm" onClick="{{p.toggleTeam}}" style="border:0;background:transparent;font-size:16px;cursor:pointer;color:{{p.starColor}}" title="{{p.starTitle}}">{{p.starIcon}}</button>
+              </span>
+              <span role="cell" class="mono" style="font-weight:600">{{p.code}}</span>
+              <span role="cell" style="font-weight:600">{{p.name}}</span>
+              <span role="cell"><span class="chip" style="background:#ECEAE4;color:#444C55">{{p.role}}</span></span>
+              <span role="cell" class="mono" style="font-size:12.5px;color:var(--pri)">{{p.email}}</span>
+              <span role="cell" class="mono tn" style="font-size:12.5px">{{p.phone}}</span>
+              <span role="cell"><button class="chip" style="border:0;min-height:28px;{{p.chip}}" onClick="{{p.toggle}}" aria-label="Đổi trạng thái nhân sự">{{p.statusLabel}}</button></span>
+              <span role="cell" class="sub">{{p.note}}</span>
+              <span role="cell" class="r tn">{{p.count}}</span>
+              <span role="cell" class="r"><button class="btn btn-sm" onClick="{{p.edit}}">Sửa</button></span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+  </sc-if>
 </div>
 </sc-if>
 
@@ -1128,6 +1288,111 @@ main::-webkit-scrollbar-thumb:hover{background:#A8A59A}
 </div>
 </sc-if>
 
+<!-- ============ MODAL: TEAM EXTERNAL ALLOCATION ============ -->
+<sc-if value="{{ev.open}}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;background:rgba(16,32,42,.58);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50">
+  <div role="dialog" aria-modal="true" class="card" style="width:100%;max-width:480px;display:flex;flex-direction:column;border-radius:16px;overflow:hidden;box-shadow:0 12px 40px rgba(16,32,42,.35);background:#fff">
+    <div style="padding:16px 22px;background:#10202A;color:#fff;display:flex;align-items:center;justify-content:space-between">
+      <h3 style="font-size:16px">{{ev.title}}</h3>
+      <button class="btn btn-sm" onClick="{{ev.close}}" aria-label="Đóng" style="background:transparent;color:#fff;border-color:#4A6070">Đóng</button>
+    </div>
+    <div style="padding:18px 22px;display:flex;flex-direction:column;gap:14px">
+      <div style="background:#FAF9F5;border:1px solid var(--line);border-radius:8px;padding:10px 14px;font-size:13px;display:flex;justify-content:space-between;align-items:center">
+        <span>Nhân sự: <strong>{{ev.persName}}</strong> ({{ev.persCode}})</span>
+        <span class="chip" style="background:#0B5563;color:#fff;font-size:11px">Tháng {{ev.month}}</span>
+      </div>
+      <label class="field">
+        Tên dự án ngoài <span style="color:var(--bad)">*</span>
+        <input class="inp" type="text" value="{{ev.project}}" onInput="{{ev.onProject}}" placeholder="Ví dụ: Core Banking, CRM, Ví điện tử...">
+      </label>
+      <label class="field">
+        Leader / Người chia nỗ lực
+        <input class="inp" type="text" value="{{ev.leader}}" onInput="{{ev.onLeader}}" placeholder="Ví dụ: Anh Tuấn, Chị Lan...">
+      </label>
+      <label class="field">
+        Nỗ lực ghi nhận (MM) <span style="color:var(--bad)">*</span>
+        <input class="inp tn" type="number" step="0.01" min="0.01" value="{{ev.mm}}" onInput="{{ev.onMm}}" placeholder="1.00">
+        <span class="sub" style="font-size:11.5px">Bước nhảy 0.01 MM (Quy đổi phụ: 1 MM = 22 MD)</span>
+      </label>
+      <label class="field">
+        Ghi chú công việc
+        <input class="inp" type="text" value="{{ev.note}}" onInput="{{ev.onNote}}" placeholder="Nội dung công việc phụ trách...">
+      </label>
+      <sc-if value="{{ev.hasErr}}" hint-placeholder-val="{{ false }}">
+        <p style="font-size:13px;font-weight:600;color:var(--bad)">{{ev.err}}</p>
+      </sc-if>
+    </div>
+    <div style="padding:14px 22px;background:#FAF9F5;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px">
+      <button class="btn" onClick="{{ev.close}}">Hủy</button>
+      <button class="btn btn-pri" onClick="{{ev.save}}">Lưu dự án</button>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ MODAL: BÁO CÁO NỖ LỰC TEAM ============ -->
+<sc-if value="{{tr.open}}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;background:rgba(16,32,42,.58);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50">
+  <div role="dialog" aria-modal="true" class="card" style="width:100%;max-width:580px;display:flex;flex-direction:column;border-radius:16px;overflow:hidden;box-shadow:0 12px 40px rgba(16,32,42,.35);background:#fff">
+    <div style="padding:16px 22px;background:#FAF9F5;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:16px;font-weight:700;color:var(--ink)">Báo cáo nỗ lực Team</div>
+        <div class="sub" style="font-size:12px;margin-top:2px">Tổng hợp nỗ lực nhân sự thuộc team (Nội bộ + Dự án ngoài)</div>
+      </div>
+      <button class="btn btn-sm" onClick="{{tr.close}}" aria-label="Đóng">Đóng</button>
+    </div>
+    <div style="padding:18px 22px;display:flex;flex-direction:column;gap:14px;max-height:75vh;overflow-y:auto">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <span class="sub" style="font-weight:600">Chọn tháng báo cáo:</span>
+        <div style="display:flex;flex-wrap:wrap;gap:6px" role="radiogroup" aria-label="Chọn tháng báo cáo Team">
+          <sc-for list="{{tr.monthOpts}}" as="m" hint-placeholder-count="3">
+            <button class="seg" role="radio" aria-checked="{{m.on}}" onClick="{{m.pick}}" style="{{m.style}}">{{m.label}}</button>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <div style="display:flex;gap:6px" role="tablist" aria-label="Chế độ xem báo cáo">
+            <button class="seg" role="tab" aria-selected="{{tr.isViewing}}" onClick="{{tr.switchToView}}" style="{{tr.viewTabStyle}}">👁 Xem trước</button>
+            <button class="seg" role="tab" aria-selected="{{tr.isEditing}}" onClick="{{tr.switchToEdit}}" style="{{tr.editTabStyle}}">✏️ Chỉnh sửa nội dung</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <sc-if value="{{tr.hasCustom}}" hint-placeholder-val="{{ false }}">
+              <button class="btn btn-sm" onClick="{{tr.resetText}}" style="font-size:11.5px;padding:2px 8px">🔄 Khôi phục ban đầu</button>
+            </sc-if>
+            <span class="sub" style="font-size:11.5px;color:var(--mute)">Hỗ trợ in đậm trên Teams/Word/Zalo/Telegram</span>
+          </div>
+        </div>
+
+        <!-- Chế độ Xem trước định dạng -->
+        <sc-if value="{{tr.isViewing}}" hint-placeholder-val="{{ true }}">
+          <div style="background:#FAF9F5;border:1px solid var(--line);border-left:4px solid #0B5563;border-radius:8px;padding:14px 16px;font-size:13.5px;line-height:1.6;max-height:300px;overflow-y:auto">
+            <sc-for list="{{tr.previewLines}}" as="l" hint-placeholder-count="4">
+              <div style="{{l.style}}">{{l.text}}</div>
+            </sc-for>
+            <sc-if value="{{tr.noData}}" hint-placeholder-val="{{ false }}">
+              <div class="sub" style="text-align:center;padding:16px">Không có thành viên nào trong Team hoặc chưa có phân bổ.</div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <!-- Chế độ Chỉnh sửa văn bản trực tiếp -->
+        <sc-if value="{{tr.isEditing}}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <textarea class="inp mono" style="width:100%;min-height:280px;font-size:13px;line-height:1.6;padding:12px;border:1px solid var(--line);border-left:4px solid #D97706;border-radius:8px;resize:vertical;background:#FAF9F5" value="{{tr.editText}}" onInput="{{tr.onEditText}}" placeholder="Nhập hoặc chỉnh sửa nội dung báo cáo..."></textarea>
+            <span class="sub" style="font-size:11.5px;color:var(--mute)">💡 Bạn có thể trực tiếp sửa tên, số liệu MM hoặc ghi chú. Bấm "Sao chép" sẽ lấy nội dung bạn đã chỉnh sửa.</span>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+    <div style="padding:14px 22px;background:#FAF9F5;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px">
+      <button class="btn" onClick="{{tr.close}}">Đóng</button>
+      <button class="btn btn-pri" onClick="{{tr.copy}}" disabled="{{tr.noData}}">📋 Sao chép vào Clipboard</button>
+    </div>
+  </div>
+</div>
+</sc-if>
+
 <!-- ============ MODAL: BÁO CÁO TỔNG HỢP NỖ LỰC ============ -->
 <sc-if value="{{rv.open}}" hint-placeholder-val="{{ false }}">
 <div style="position:fixed;inset:0;background:rgba(16,32,42,.58);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50">
@@ -1291,6 +1556,8 @@ const INITIAL_DB = {
     {
       "id": 1,
       "code": "NS01",
+      "is_my_team": true,
+      "target_kpi": 1.0,
       "name": "Lê Thị Kim Chung",
       "role": "Tester",
       "email": "chung.le@lifesup.com",
@@ -1302,6 +1569,8 @@ const INITIAL_DB = {
     {
       "id": 2,
       "code": "NS02",
+      "is_my_team": true,
+      "target_kpi": 1.0,
       "name": "Le Quang Minh",
       "role": "Frontend",
       "email": "minh.le@lifesup.com.vn",
@@ -1313,6 +1582,8 @@ const INITIAL_DB = {
     {
       "id": 3,
       "code": "NS03",
+      "is_my_team": true,
+      "target_kpi": 1.0,
       "name": "Do Tuan Long",
       "role": "Frontend",
       "email": "long.do@lifesup.com.vn",
@@ -1324,6 +1595,8 @@ const INITIAL_DB = {
     {
       "id": 4,
       "code": "NS04",
+      "is_my_team": false,
+      "target_kpi": 1.0,
       "name": "Nguyễn Trọng Nam",
       "role": "PM",
       "email": "nam.nguyen@lifesup.com.vn",
@@ -1335,6 +1608,8 @@ const INITIAL_DB = {
     {
       "id": 8,
       "code": "NS08",
+      "is_my_team": false,
+      "target_kpi": 1.0,
       "name": "Hoàng Thị Huyền Trang",
       "role": "Tester",
       "email": "trang.hoang01@lifesup.com.vn",
@@ -1346,6 +1621,8 @@ const INITIAL_DB = {
     {
       "id": 9,
       "code": "NS09",
+      "is_my_team": false,
+      "target_kpi": 1.0,
       "name": "Dương Tuấn Vũ",
       "role": "Leader",
       "email": "vu.duong@lifesup.com.vn",
@@ -1357,6 +1634,8 @@ const INITIAL_DB = {
     {
       "id": 10,
       "code": "NS10",
+      "is_my_team": false,
+      "target_kpi": 1.0,
       "name": "Nguyễn Đức Thắng",
       "role": "Frontend",
       "email": "nguyenducthang.neu@gmail.com",
@@ -1368,6 +1647,8 @@ const INITIAL_DB = {
     {
       "id": 11,
       "code": "NS11",
+      "is_my_team": true,
+      "target_kpi": 1.0,
       "name": "Lương Bá Ngọc",
       "role": "Leader",
       "email": "ngoc.luong@lifesup.com.vn",
@@ -1379,6 +1660,8 @@ const INITIAL_DB = {
     {
       "id": 12,
       "code": "NS12",
+      "is_my_team": false,
+      "target_kpi": 1.0,
       "name": "Nguyễn Hồng Thơm",
       "role": "BA",
       "email": "thom.nguyen@lifesup.com.vn",
@@ -1390,6 +1673,8 @@ const INITIAL_DB = {
     {
       "id": 14,
       "code": "NS14",
+      "is_my_team": false,
+      "target_kpi": 1.0,
       "name": "Nguyễn Thị Hà",
       "role": "Tester",
       "email": "ha.nguyen07@lifesup.com.vn",
@@ -1401,6 +1686,8 @@ const INITIAL_DB = {
     {
       "id": 15,
       "code": "NS15",
+      "is_my_team": false,
+      "target_kpi": 1.0,
       "name": "Tô Thị Mai Quy",
       "role": "BA",
       "email": "quy.to@lifesup.com.vn",
@@ -1412,6 +1699,8 @@ const INITIAL_DB = {
     {
       "id": 16,
       "code": "NS16",
+      "is_my_team": false,
+      "target_kpi": 1.0,
       "name": "Nguyễn Quý Giang",
       "role": "Frontend",
       "email": "giang.nguyen02@lifesup.com.vn",
@@ -1423,6 +1712,8 @@ const INITIAL_DB = {
     {
       "id": 17,
       "code": "NS17",
+      "is_my_team": true,
+      "target_kpi": 1.0,
       "name": "Đỗ Văn Trung",
       "role": "Frontend",
       "email": "trung.do@lifesup.com.vn",
@@ -1434,6 +1725,8 @@ const INITIAL_DB = {
     {
       "id": 18,
       "code": "NS18",
+      "is_my_team": true,
+      "target_kpi": 1.0,
       "name": "Nguyễn Viết Hoàng",
       "role": "UIUX",
       "email": "HOANG.NGUYEN01@LIFESUP.COM.VN",
@@ -1445,6 +1738,8 @@ const INITIAL_DB = {
     {
       "id": 19,
       "code": "NS19",
+      "is_my_team": false,
+      "target_kpi": 1.0,
       "name": "Đinh Đức Hải",
       "role": "Backend",
       "email": "hai.dinh@lifesup.com.vn",
@@ -1456,6 +1751,8 @@ const INITIAL_DB = {
     {
       "id": 5,
       "code": "NS05",
+      "is_my_team": false,
+      "target_kpi": 1.0,
       "name": "KHánh Trinh",
       "role": "Frontend",
       "email": "luong_ngoc21@yahoo.com",
@@ -1467,6 +1764,8 @@ const INITIAL_DB = {
     {
       "id": 6,
       "code": "NS06",
+      "is_my_team": false,
+      "target_kpi": 1.0,
       "name": "Vương Sơn Tùng",
       "role": "Frontend",
       "email": "tung.vuong@lifesup.com.vn",
@@ -1478,6 +1777,8 @@ const INITIAL_DB = {
     {
       "id": 7,
       "code": "NS07",
+      "is_my_team": false,
+      "target_kpi": 1.0,
       "name": "Đỗ Công Hòa",
       "role": "Frontend",
       "email": "hoa.do@lifesup.com.vn",
@@ -1489,6 +1790,8 @@ const INITIAL_DB = {
     {
       "id": 13,
       "code": "NS13",
+      "is_my_team": false,
+      "target_kpi": 1.0,
       "name": "Trần Ngọc Phú",
       "role": "Backend",
       "email": "tranphuth0609@gmail.com",
@@ -2276,6 +2579,7 @@ const INITIAL_DB = {
       "del": false
     }
   ],
+  "teamAlloc": [],
   "audit": [
     {
       "id": 182,
@@ -2411,7 +2715,7 @@ class Component extends DCLogic {
       id: p.id, code: p.code, name: p.name, customer: p.customer_name || 'Nội bộ', status: p.status, del: !!p.is_deleted
     }));
     const personnel = (dump.PERSONNEL || []).map(p => ({
-      id: p.id, code: p.code, name: p.full_name, role: p.default_role, email: p.email || '', phone: p.phone || '', status: p.status, note: p.note || '', del: !!p.is_deleted
+      id: p.id, code: p.code, name: p.full_name, role: p.default_role, email: p.email || '', phone: p.phone || '', status: p.status, note: p.note || '', is_my_team: !!p.is_my_team, target_kpi: p.target_kpi_mm != null ? r1(p.target_kpi_mm) : (p.target_kpi != null ? r1(p.target_kpi) : 1.0), del: !!p.is_deleted
     })).sort((a, b) => (a.status === 'ACTIVE' ? 0 : 1) - (b.status === 'ACTIVE' ? 0 : 1) || (a.id - b.id));
     const batches = (dump.ALLOCATION_BATCH || []).map(b => ({
       id: b.id, req: b.request_id, month: b.month_period, note: b.note || '', del: !!b.is_deleted
@@ -2444,7 +2748,10 @@ class Component extends DCLogic {
     const audit = (dump.AUDIT_LOG || []).map(a => ({
       id: a.id, time: a.created_at, table: a.table_name, record: a.record_id, action: a.action, field: a.column_name, change: a.new_value
     }));
-    return { projects, requests, personnel, members, batches, items, docs, bbnt, audit };
+    const teamAlloc = (dump.TEAM_EXTERNAL_ALLOCATION || dump.teamAlloc || []).map(t => ({
+      id: t.id, pers: t.personnel_id != null ? t.personnel_id : t.pers, month: t.month_period || t.month, proj: t.project_name || t.proj, leader: t.project_leader || t.leader || '', mm: r1(t.effort_mm != null ? t.effort_mm : t.mm), note: t.note || '', del: !!t.is_deleted
+    }));
+    return { projects, requests, personnel, members, batches, items, docs, bbnt, audit, teamAlloc };
   }
 
   dbToDump(db) {
@@ -2453,7 +2760,7 @@ class Component extends DCLogic {
         id: p.id, code: p.code, name: p.name, customer_name: p.customer || 'Nội bộ', status: p.status, is_deleted: p.del ? 1 : 0
       })),
       PERSONNEL: (db.personnel || []).map(p => ({
-        id: p.id, code: p.code, full_name: p.name, default_role: p.role, email: p.email || '', phone: p.phone || '', status: p.status, note: p.note || '', is_deleted: p.del ? 1 : 0
+        id: p.id, code: p.code, full_name: p.name, default_role: p.role, email: p.email || '', phone: p.phone || '', status: p.status, note: p.note || '', is_my_team: p.is_my_team ? 1 : 0, target_kpi_mm: p.target_kpi != null ? p.target_kpi : 1.0, is_deleted: p.del ? 1 : 0
       })),
       REQUEST: (db.requests || []).map(r => ({
         id: r.id, project_id: r.proj, code: r.code, name: r.name, description: r.desc || '', type: r.type, deadline: r.deadline || '', status: r.status, customer_requester: r.requester || '', external_link: r.link || '', estimated_md: r.est || 0, locked_md: r.locked || 0, is_deleted: r.del ? 1 : 0
@@ -2475,6 +2782,9 @@ class Component extends DCLogic {
       })),
       AUDIT_LOG: (db.audit || []).map(a => ({
         id: a.id, table_name: a.table, record_id: a.record, action: a.action, column_name: a.field || '', new_value: a.change || '', created_at: a.time
+      })),
+      TEAM_EXTERNAL_ALLOCATION: (db.teamAlloc || []).map(t => ({
+        id: t.id, personnel_id: t.pers, month_period: t.month, project_name: t.proj, project_leader: t.leader || '', effort_mm: t.mm, note: t.note || '', is_deleted: t.del ? 1 : 0
       }))
     };
   }
@@ -2655,6 +2965,7 @@ class Component extends DCLogic {
   initial() {
     return {
       screen: 'projects', tab: 'pyc', curProj: 1, memberReq: 1, allocFilter: 'ALL', docFilter: 'ALL', bbntFilter: 'ALL', auditFilter: 'ALL',
+      persTab: 'team', teamMonth: '2026-12', extModal: null, kpiModal: null, teamReportModal: null,
       assignPers: 0, assignRole: '', apiConnected: false, tursoConnected: true, tursoDirect: true, tursoUrl: TURSO_DEFAULT_CONFIG.url, mobileMenuOpen: false,
       selectedDocs: {}, selectedBbnt: {},
       alloc: null, pyc: null, doc: null, pers: null, proj: null, bbntModal: null, excelModal: null, previewModal: null, tursoModal: null, cloneModal: null, reportModal: null, confirm: null, toast: null,
@@ -3448,10 +3759,10 @@ class Component extends DCLogic {
     const db = this.state.db;
     if (id) {
       const p = db.personnel.find(x => x.id === id);
-      this.setState({ pers: { id, code: p.code, name: p.name, role: p.role, email: p.email || '', phone: p.phone || '', status: p.status, note: p.note || '', err: '' } });
+      this.setState({ pers: { id, code: p.code, name: p.name, role: p.role, email: p.email || '', phone: p.phone || '', status: p.status, note: p.note || '', is_my_team: !!p.is_my_team, target_kpi: p.target_kpi != null ? p.target_kpi : 1.0, err: '' } });
     } else {
       const nextNum = String(db.personnel.length + 1).padStart(2, '0');
-      this.setState({ pers: { id: null, code: 'NS' + nextNum, name: '', role: 'Frontend', email: '', phone: '', status: 'ACTIVE', note: '', err: '' } });
+      this.setState({ pers: { id: null, code: 'NS' + nextNum, name: '', role: 'Frontend', email: '', phone: '', status: 'ACTIVE', note: '', is_my_team: false, target_kpi: 1.0, err: '' } });
     }
   }
   savePers() {
@@ -3459,20 +3770,256 @@ class Component extends DCLogic {
     if (!p.code.trim() || !p.name.trim()) { this.setState({ pers: { ...p, err: 'Vui lòng nhập mã và họ tên.' } }); return; }
     if (db0.personnel.some(x => !x.del && x.code.toLowerCase() === p.code.trim().toLowerCase() && x.id !== p.id)) { this.setState({ pers: { ...p, err: 'Mã nhân sự đã tồn tại.' } }); return; }
     const email = (p.email || '').trim(), phone = (p.phone || '').trim();
+    const is_my_team = !!p.is_my_team;
+    const target_kpi = (p.target_kpi != null && !isNaN(p.target_kpi)) ? this.r1(p.target_kpi) : 1.0;
     this.mut(db => {
       if (p.id) {
         const x = db.personnel.find(y => y.id === p.id);
-        Object.assign(x, { code: p.code.trim(), name: p.name.trim(), role: p.role.trim(), email, phone, status: p.status, note: p.note.trim() });
+        Object.assign(x, { code: p.code.trim(), name: p.name.trim(), role: p.role.trim(), email, phone, status: p.status, note: p.note.trim(), is_my_team, target_kpi });
         this.log(db, 'PERSONNEL', x.code, 'UPDATE', 'info', 'Cập nhật nhân sự ' + x.name);
       } else {
-        db.personnel.push({ id: Date.now(), code: p.code.trim(), name: p.name.trim(), role: p.role.trim(), email, phone, status: p.status, note: p.note.trim(), del: false });
+        db.personnel.push({ id: Date.now(), code: p.code.trim(), name: p.name.trim(), role: p.role.trim(), email, phone, status: p.status, note: p.note.trim(), is_my_team, target_kpi, del: false });
         this.log(db, 'PERSONNEL', p.code.trim(), 'INSERT', 'code', 'Thêm mới ' + p.name.trim());
       }
     });
     this.setState({ pers: null });
     this.toast('Đã lưu nhân sự ' + p.name.trim() + '.', 'ok');
-    if (p.id) this.callApi('PUT', '/personnel/' + p.id, p);
-    else this.callApi('POST', '/personnel', p);
+    if (p.id) this.callApi('PUT', '/personnel/' + p.id, { ...p, is_my_team, target_kpi });
+    else this.callApi('POST', '/personnel', { ...p, is_my_team, target_kpi });
+  }
+
+  // ---------- Team Management Methods ----------
+  toggleTeamMember(id) {
+    let msg = '';
+    this.mut(db => {
+      const p = db.personnel.find(x => x.id === id);
+      if (!p) return;
+      p.is_my_team = !p.is_my_team;
+      this.log(db, 'PERSONNEL', p.code, 'UPDATE', 'is_my_team', p.is_my_team ? 'Thêm vào Team' : 'Gỡ khỏi Team');
+      msg = p.is_my_team ? 'Đã thêm ' + p.name + ' vào Team của tôi.' : 'Đã gỡ ' + p.name + ' khỏi Team của tôi.';
+    });
+    this.toast(msg, 'ok');
+    this.callApi('PATCH', '/personnel/' + id + '/team-toggle');
+  }
+
+  openKpiModal(id) {
+    const db = this.state.db;
+    const p = db.personnel.find(x => x.id === id);
+    if (!p) return;
+    this.setState({ kpiModal: { id, name: p.name, code: p.code, kpi: p.target_kpi != null ? p.target_kpi : 1.0, err: '' } });
+  }
+
+  saveKpiModal() {
+    const km = this.state.kpiModal;
+    if (!km) return;
+    const val = Number(km.kpi);
+    if (isNaN(val) || val <= 0 || !this.step(val)) {
+      this.setState({ kpiModal: { ...km, err: 'KPI mục tiêu phải > 0 và theo bước nhảy 0.01 MM.' } });
+      return;
+    }
+    const kpiVal = this.r1(val);
+    this.mut(db => {
+      const p = db.personnel.find(x => x.id === km.id);
+      if (p) {
+        p.target_kpi = kpiVal;
+        this.log(db, 'PERSONNEL', p.code, 'UPDATE', 'target_kpi_mm', kpiVal + ' MM');
+      }
+    });
+    this.setState({ kpiModal: null });
+    this.toast('Đã cập nhật KPI mục tiêu cho ' + km.name + ': ' + this.f1(kpiVal) + ' MM.', 'ok');
+    this.callApi('PATCH', '/personnel/' + km.id + '/kpi', { kpi: kpiVal });
+  }
+
+  openExtAlloc(persId, allocId = null) {
+    const db = this.state.db;
+    const p = db.personnel.find(x => x.id === persId);
+    if (!p) return;
+    const curMonth = this.state.teamMonth || '2026-12';
+    if (allocId) {
+      const it = (db.teamAlloc || []).find(x => x.id === allocId);
+      if (it) {
+        this.setState({
+          extModal: {
+            id: it.id, persId, persName: p.name, persCode: p.code,
+            month: it.month, project: it.proj, leader: it.leader,
+            mm: it.mm, note: it.note, err: ''
+          }
+        });
+        return;
+      }
+    }
+    this.setState({
+      extModal: {
+        id: null, persId, persName: p.name, persCode: p.code,
+        month: curMonth, project: '', leader: '',
+        mm: 0.5, note: '', err: ''
+      }
+    });
+  }
+
+  saveExtAlloc() {
+    const em = this.state.extModal;
+    if (!em) return;
+    const pr = (em.project || '').trim();
+    const ld = (em.leader || '').trim();
+    const nt = (em.note || '').trim();
+    const val = Number(em.mm);
+    if (!pr) {
+      this.setState({ extModal: { ...em, err: 'Vui lòng nhập tên dự án.' } });
+      return;
+    }
+    if (isNaN(val) || val <= 0 || !this.step(val)) {
+      this.setState({ extModal: { ...em, err: 'Nỗ lực phải > 0 và theo bước nhảy 0.01 MM.' } });
+      return;
+    }
+    const mmVal = this.r1(val);
+    const payload = {
+      id: em.id,
+      persId: em.persId,
+      month: em.month,
+      project: pr,
+      leader: ld,
+      mm: mmVal,
+      note: nt
+    };
+    this.mut(db => {
+      if (!db.teamAlloc) db.teamAlloc = [];
+      if (em.id) {
+        const it = db.teamAlloc.find(x => x.id === em.id);
+        if (it) {
+          Object.assign(it, { proj: pr, leader: ld, mm: mmVal, note: nt });
+          this.log(db, 'TEAM_EXTERNAL_ALLOCATION', em.persCode + ' (' + em.month + ')', 'UPDATE', 'effort_mm', pr + ': ' + this.f1(mmVal) + ' MM');
+        }
+      } else {
+        const newId = Date.now();
+        db.teamAlloc.push({
+          id: newId, pers: em.persId, month: em.month,
+          proj: pr, leader: ld, mm: mmVal, note: nt, del: false
+        });
+        this.log(db, 'TEAM_EXTERNAL_ALLOCATION', em.persCode + ' (' + em.month + ')', 'INSERT', 'effort_mm', 'Thêm ' + pr + ' (' + ld + '): ' + this.f1(mmVal) + ' MM');
+      }
+    });
+    this.setState({ extModal: null });
+    this.toast('Đã lưu phân bổ dự án ngoài ' + pr + ' (' + this.f1(mmVal) + ' MM).', 'ok');
+    if (em.id) {
+      this.callApi('PUT', '/team/external-alloc/' + em.id, payload);
+    } else {
+      this.callApi('POST', '/team/external-alloc', payload);
+    }
+  }
+
+  delExtAlloc(id) {
+    const db = this.state.db;
+    const it = (db.teamAlloc || []).find(x => x.id === id);
+    if (!it) return;
+    const p = db.personnel.find(x => x.id === it.pers);
+    const pName = p ? p.name : '';
+    this.ask('delExtAlloc', id, 'Xóa dự án ' + it.proj + '?', 'Nỗ lực ' + this.f1(it.mm) + ' MM của ' + pName + ' sẽ bị xóa khỏi tổng hợp tháng ' + it.month + '.', 'Xóa dự án', true);
+  }
+
+  openTeamReportModal(month) {
+    const m = month || this.state.teamMonth || '2026-12';
+    this.setState({ teamReportModal: { month: m, isEditing: false, customText: null } });
+  }
+
+  generateTeamSummaryReport(db, month) {
+    const mp = String(month || '').split('-');
+    const monthLabel = mp.length === 2 ? ('THÁNG ' + mp[1] + '/' + mp[0]) : month;
+
+    const teamMembers = db.personnel.filter(p => !p.del && p.is_my_team);
+    const validBatches = db.batches.filter(b => !b.del && b.month === month);
+    const validBatchIds = new Set(validBatches.map(b => b.id));
+    const batchMap = new Map(validBatches.map(b => [b.id, b]));
+    const reqMap = new Map(db.requests.map(r => [r.id, r]));
+    const projMap = new Map(db.projects.map(p => [p.id, p]));
+
+    let teamTotalMm = 0;
+    const memberReports = [];
+
+    for (const m of teamMembers) {
+      // Internal projects:
+      const mItems = db.items.filter(i => !i.del && i.pers === m.id && validBatchIds.has(i.batch));
+      const projEffort = new Map();
+      for (const item of mItems) {
+        const b = batchMap.get(item.batch);
+        if (!b) continue;
+        const rq = reqMap.get(b.req);
+        if (!rq) continue;
+        const pr = projMap.get(rq.proj);
+        const prName = pr ? pr.name : 'Dự án nội bộ';
+        const cur = projEffort.get(prName) || 0;
+        projEffort.set(prName, this.r1(cur + Number(item.md)));
+      }
+
+      const projectsList = [];
+      let memberTotalMm = 0;
+
+      for (const [pName, md] of projEffort.entries()) {
+        memberTotalMm = this.r1(memberTotalMm + md);
+        projectsList.push({ name: pName, leader: 'Ngọc', mm: md });
+      }
+
+      // External projects:
+      const mExt = (db.teamAlloc || []).filter(t => !t.del && t.pers === m.id && t.month === month);
+      for (const ext of mExt) {
+        memberTotalMm = this.r1(memberTotalMm + ext.mm);
+        projectsList.push({ name: ext.proj, leader: ext.leader || 'Leader khác', mm: ext.mm });
+      }
+
+      teamTotalMm = this.r1(teamTotalMm + memberTotalMm);
+      memberReports.push({ member: m, totalMm: memberTotalMm, projects: projectsList });
+    }
+
+    // Sắp xếp: Nhân sự CÓ phân bổ xếp trước (theo nỗ lực giảm dần), KHÔNG CÓ phân bổ xếp sau
+    memberReports.sort((a, b) => {
+      const aHas = a.totalMm > 0 ? 1 : 0;
+      const bHas = b.totalMm > 0 ? 1 : 0;
+      if (aHas !== bHas) return bHas - aHas;
+      if (b.totalMm !== a.totalMm) return b.totalMm - a.totalMm;
+      return a.member.name.localeCompare(b.member.name);
+    });
+
+    const noData = teamMembers.length === 0;
+
+    const plainLines = ['[TỔNG HỢP NỖ LỰC TEAM ' + monthLabel + ']', ''];
+    const htmlLines = ['<div>[TỔNG HỢP NỖ LỰC TEAM <b>' + monthLabel + '</b>]</div>', '<br>'];
+    const previewLines = [
+      { text: '[TỔNG HỢP NỖ LỰC TEAM ' + monthLabel + ']', style: 'font-weight:700;color:var(--ink);font-size:14px' },
+      { text: '', style: 'height:8px' }
+    ];
+
+    memberReports.forEach((mr, idx) => {
+      const num = idx + 1;
+      const mLine = num + '. ' + mr.member.name + ': ' + this.f1(mr.totalMm) + ' MM';
+      plainLines.push('**' + mLine + '**');
+      htmlLines.push('<div><b>' + mLine + '</b></div>');
+      previewLines.push({ text: mLine, style: 'font-weight:700;color:var(--ink);margin-top:6px' });
+
+      if (mr.projects.length === 0) {
+        const line = '   - (Chưa có phân bổ)';
+        plainLines.push(line);
+        htmlLines.push('<div>&nbsp;&nbsp;&nbsp;- (Chưa có phân bổ)</div>');
+        previewLines.push({ text: line, style: 'color:#888;padding-left:14px;font-style:italic' });
+      } else {
+        mr.projects.forEach(p => {
+          const line = '   - ' + p.name + ' (Leader: ' + p.leader + '): ' + this.f1(p.mm) + ' MM';
+          plainLines.push(line);
+          htmlLines.push('<div>&nbsp;&nbsp;&nbsp;- ' + p.name + ' (Leader: ' + p.leader + '): ' + this.f1(p.mm) + ' MM</div>');
+          previewLines.push({ text: line, style: 'color:#444;padding-left:14px' });
+        });
+      }
+
+      plainLines.push('');
+      htmlLines.push('<br>');
+      previewLines.push({ text: '', style: 'height:6px' });
+    });
+
+    const totLine = '=> TỔNG NỖ LỰC TEAM: ' + this.f1(teamTotalMm) + ' MM';
+    plainLines.push('**' + totLine + '**');
+    htmlLines.push('<div><b>' + totLine.replace('=>', '=&gt;') + '</b></div>');
+    previewLines.push({ text: totLine, style: 'font-weight:700;color:var(--ok);font-size:14px;margin-top:6px' });
+
+    return { plain: plainLines.join('\n'), html: htmlLines.join('\n'), previewLines, teamTotalMm, monthLabel, noData };
   }
   togglePers(id) {
     let msg = '';
@@ -3665,6 +4212,18 @@ class Component extends DCLogic {
     if (!c) return;
     this.setState({ confirm: null });
     const k = c.kind, id = c.id;
+    if (k === 'delExtAlloc') {
+      this.mut(db => {
+        const it = (db.teamAlloc || []).find(x => x.id === id);
+        if (it) {
+          it.del = true;
+          this.log(db, 'TEAM_EXTERNAL_ALLOCATION', (it.proj || '') + ' (' + it.month + ')', 'SOFT_DELETE', 'is_deleted', 'Xóa phân bổ dự án ngoài');
+        }
+      });
+      this.toast('Đã xóa dự án ngoài.', 'ok');
+      this.callApi('DELETE', '/team/external-alloc/' + id);
+      return;
+    }
     if (k === 'clearAudit') {
       this.mut(db => {
         db.audit = [];
@@ -4108,11 +4667,146 @@ class Component extends DCLogic {
         del: () => this.ask('delBbnt', b.id, 'Xóa biên bản ' + b.code + '?', 'Biên bản được chuyển vào Thùng rác.', 'Xóa mềm', true) };
     });
 
-    // ----- personnel / audit / trash -----
-    const persRows = pers.map(p => ({ code: p.code, name: p.name, role: p.role, email: p.email || '--', phone: p.phone || 'N/A', note: p.note || '',
-      statusLabel: p.status === 'ACTIVE' ? '● Đang làm' : '○ Đã nghỉ', chip: chip(p.status === 'ACTIVE' ? 'ok' : 'bad'),
-      count: db.members.filter(m => m.pers === p.id && !m.del).length,
-      toggle: () => this.togglePers(p.id), edit: () => this.openPers(p.id) }));
+    // ----- Team & Personnel Management -----
+    const isPersTabAll = s.persTab === 'all';
+    const isPersTabTeam = !isPersTabAll;
+    const persTabAll = isPersTabAll;
+    const persTabTeam = isPersTabTeam;
+    const persTabAllStyle = isPersTabAll ? ACTIVE : '';
+    const persTabTeamStyle = isPersTabTeam ? ACTIVE : '';
+    const setPersTabAll = () => this.setState({ persTab: 'all' });
+    const setPersTabTeam = () => this.setState({ persTab: 'team' });
+
+    const totalPersCount = pers.length;
+    const teamMembersList = pers.filter(p => p.is_my_team);
+    const teamCount = teamMembersList.length;
+
+    // Available months for team:
+    const allTeamMonths = Array.from(new Set([
+      ...db.batches.filter(b => !b.del).map(b => b.month),
+      ...(db.teamAlloc || []).filter(t => !t.del).map(t => t.month),
+      '2026-12', '2026-11', '2026-10'
+    ])).sort().reverse();
+    const curTeamMonth = s.teamMonth || allTeamMonths[0] || '2026-12';
+    const teamMonthOpts = allTeamMonths.map(mo => {
+      const p = mo.split('-');
+      const lbl = p.length === 2 ? ('Tháng ' + p[1] + '/' + p[0]) : mo;
+      return {
+        label: lbl,
+        on: mo === curTeamMonth,
+        style: mo === curTeamMonth ? ACTIVE : '',
+        pick: () => this.setState({ teamMonth: mo })
+      };
+    });
+
+    const monthBatches = db.batches.filter(b => !b.del && b.month === curTeamMonth);
+    const monthBatchIds = new Set(monthBatches.map(b => b.id));
+    const mBatchMap = new Map(monthBatches.map(b => [b.id, b]));
+    const mReqMap = new Map(db.requests.map(r => [r.id, r]));
+    const mProjMap = new Map(db.projects.map(p => [p.id, p]));
+
+    let teamSumInternalMm = 0;
+    let teamSumExternalMm = 0;
+
+    const teamMembersCards = teamMembersList.map(m => {
+      // 1. Internal projects (auto-summed)
+      const mItems = db.items.filter(i => !i.del && i.pers === m.id && monthBatchIds.has(i.batch));
+      const projMapInternal = new Map();
+      for (const item of mItems) {
+        const b = mBatchMap.get(item.batch);
+        if (!b) continue;
+        const rq = mReqMap.get(b.req);
+        if (!rq) continue;
+        const pr = mProjMap.get(rq.proj);
+        const prName = pr ? pr.name : 'Dự án nội bộ';
+        const cur = projMapInternal.get(prName) || { mm: 0, count: 0 };
+        projMapInternal.set(prName, { mm: this.r1(cur.mm + Number(item.md)), count: cur.count + 1 });
+      }
+
+      let mInternalMm = 0;
+      const internalList = [];
+      for (const [prName, data] of projMapInternal.entries()) {
+        mInternalMm = this.r1(mInternalMm + data.mm);
+        internalList.push({ projName: prName, leader: 'Ngọc', mm: this.f1(data.mm), reqCount: data.count });
+      }
+      teamSumInternalMm = this.r1(teamSumInternalMm + mInternalMm);
+
+      // 2. External projects (manual entry)
+      const mExt = (db.teamAlloc || []).filter(t => !t.del && t.pers === m.id && t.month === curTeamMonth);
+      let mExternalMm = 0;
+      const externalList = mExt.map(t => {
+        mExternalMm = this.r1(mExternalMm + t.mm);
+        return {
+          id: t.id,
+          projName: t.proj,
+          leader: t.leader || 'Leader dự án',
+          mm: this.f1(t.mm),
+          note: t.note || '',
+          hasNote: !!t.note,
+          edit: () => this.openExtAlloc(m.id, t.id),
+          del: () => this.delExtAlloc(t.id)
+        };
+      });
+      teamSumExternalMm = this.r1(teamSumExternalMm + mExternalMm);
+
+      const mTotalMm = this.r1(mInternalMm + mExternalMm);
+      const statusLabel = m.status === 'ACTIVE' ? '● Đang làm' : '○ Đã nghỉ';
+      const statusChip = chip(m.status === 'ACTIVE' ? 'ok' : 'bad');
+
+      return {
+        id: m.id,
+        code: m.code,
+        name: m.name,
+        role: m.role,
+        email: m.email || '--',
+        phone: m.phone || 'N/A',
+        statusLabel,
+        statusChip,
+        isMyTeam: true,
+        toggleTeam: () => this.toggleTeamMember(m.id),
+        totalMm: this.f1(mTotalMm),
+        internalMm: this.f1(mInternalMm),
+        externalMm: this.f1(mExternalMm),
+        internalList,
+        externalList,
+        noProjects: internalList.length === 0 && externalList.length === 0,
+        addExt: () => this.openExtAlloc(m.id)
+      };
+    });
+
+    // Nhân sự có phân bổ xếp trước, không có phân bổ xếp sau
+    teamMembersCards.sort((a, b) => {
+      const aHas = Number(a.totalMm) > 0 ? 1 : 0;
+      const bHas = Number(b.totalMm) > 0 ? 1 : 0;
+      if (aHas !== bHas) return bHas - aHas;
+      if (Number(b.totalMm) !== Number(a.totalMm)) return Number(b.totalMm) - Number(a.totalMm);
+      return a.name.localeCompare(b.name);
+    });
+
+    const teamSumRecordedMm = this.r1(teamSumInternalMm + teamSumExternalMm);
+    const teamSummary = {
+      memberCount: teamCount,
+      activeCount: teamMembersList.filter(m => m.status === 'ACTIVE').length,
+      totalRecorded: this.f1(teamSumRecordedMm),
+      internalMm: this.f1(teamSumInternalMm),
+      externalMm: this.f1(teamSumExternalMm)
+    };
+    const noTeamMembers = teamCount === 0;
+
+    const persRows = pers.map(p => {
+      const isTeam = !!p.is_my_team;
+      return {
+        id: p.id, code: p.code, name: p.name, role: p.role, email: p.email || '--', phone: p.phone || 'N/A', note: p.note || '',
+        isTeam,
+        starIcon: isTeam ? '★' : '☆',
+        starColor: isTeam ? '#D97706' : '#9CA3AF',
+        starTitle: isTeam ? 'Đang thuộc Team của tôi (bấm để gỡ)' : 'Bấm để thêm vào Team của tôi',
+        toggleTeam: () => this.toggleTeamMember(p.id),
+        statusLabel: p.status === 'ACTIVE' ? '● Đang làm' : '○ Đã nghỉ', chip: chip(p.status === 'ACTIVE' ? 'ok' : 'bad'),
+        count: db.members.filter(m => m.pers === p.id && !m.del).length,
+        toggle: () => this.togglePers(p.id), edit: () => this.openPers(p.id)
+      };
+    });
 
     const ACT = { INSERT: ['Thêm mới', 'ok'], UPDATE: ['Cập nhật', 'info'], SOFT_DELETE: ['Xóa mềm', 'bad'], RESTORE: ['Khôi phục', 'warn'] };
     const auditFilterOpts = [['ALL', 'Tất cả']].concat(Object.keys(ACT).map(k => [k, ACT[k][0]]))
@@ -4341,6 +5035,132 @@ class Component extends DCLogic {
       };
     })();
 
+    // Team External Alloc Modal:
+    let ev = { open: false, title: '', persName: '', persCode: '', month: '', project: '', leader: '', mm: '', note: '', hasErr: false, err: '', onProject: () => {}, onLeader: () => {}, onMm: () => {}, onNote: () => {}, close: () => {}, save: () => {} };
+    if (s.extModal) {
+      const em = s.extModal;
+      ev = {
+        open: true,
+        title: em.id ? 'Sửa phân bổ dự án ngoài' : 'Thêm phân bổ dự án ngoài',
+        persName: em.persName,
+        persCode: em.persCode,
+        month: em.month,
+        project: em.project,
+        leader: em.leader,
+        mm: em.mm,
+        note: em.note,
+        hasErr: !!em.err,
+        err: em.err || '',
+        onProject: (e) => this.setState({ extModal: { ...this.state.extModal, project: e.target.value, err: '' } }),
+        onLeader: (e) => this.setState({ extModal: { ...this.state.extModal, leader: e.target.value, err: '' } }),
+        onMm: (e) => this.setState({ extModal: { ...this.state.extModal, mm: e.target.value, err: '' } }),
+        onNote: (e) => this.setState({ extModal: { ...this.state.extModal, note: e.target.value } }),
+        close: () => this.setState({ extModal: null }),
+        save: () => this.saveExtAlloc()
+      };
+    }
+
+    // KPI Target Modal:
+    let kp = { open: false, name: '', code: '', kpi: '', hasErr: false, err: '', onKpi: () => {}, close: () => {}, save: () => {} };
+    if (s.kpiModal) {
+      const km = s.kpiModal;
+      kp = {
+        open: true,
+        name: km.name,
+        code: km.code,
+        kpi: km.kpi,
+        hasErr: !!km.err,
+        err: km.err || '',
+        onKpi: (e) => this.setState({ kpiModal: { ...this.state.kpiModal, kpi: e.target.value, err: '' } }),
+        close: () => this.setState({ kpiModal: null }),
+        save: () => this.saveKpiModal()
+      };
+    }
+
+    // Team Report Modal:
+    let tr = { open: false, monthOpts: [], previewLines: [], noData: true, isEditing: false, isViewing: true, editText: '', hasCustom: false, viewTabStyle: '', editTabStyle: '', switchToView: () => {}, switchToEdit: () => {}, onEditText: () => {}, resetText: () => {}, close: () => {}, copy: () => {} };
+    if (s.teamReportModal) {
+      const curMo = s.teamReportModal.month || curTeamMonth;
+      const isEditing = !!s.teamReportModal.isEditing;
+      const tMonthOpts = allTeamMonths.map(mo => {
+        const p = mo.split('-');
+        const lbl = p.length === 2 ? ('Tháng ' + p[1] + '/' + p[0]) : mo;
+        return {
+          label: lbl,
+          on: mo === curMo,
+          style: mo === curMo ? ACTIVE : '',
+          pick: () => this.setState({ teamReportModal: { month: mo, isEditing: false, customText: null } })
+        };
+      });
+      const rep = this.generateTeamSummaryReport(db, curMo);
+      const textToUse = s.teamReportModal.customText !== null && s.teamReportModal.customText !== undefined ? s.teamReportModal.customText : rep.plain;
+      const hasCustom = s.teamReportModal.customText !== null && s.teamReportModal.customText !== undefined && s.teamReportModal.customText !== rep.plain;
+
+      // Xây dựng previewLines từ văn bản (kể cả khi người dùng đã chỉnh sửa)
+      let previewLinesToUse = rep.previewLines;
+      if (hasCustom) {
+        previewLinesToUse = textToUse.split('\n').map(line => {
+          const trimmed = line.trim();
+          if (!trimmed) return { text: '', style: 'height:6px' };
+          if (trimmed.startsWith('[') || trimmed.startsWith('**') || trimmed.startsWith('=>')) {
+            const clean = trimmed.replace(/\*\*/g, '');
+            const isTotal = clean.startsWith('=>');
+            return {
+              text: clean,
+              style: isTotal
+                ? 'font-weight:700;color:var(--ok);font-size:14px;margin-top:6px'
+                : 'font-weight:700;color:var(--ink);margin-top:6px'
+            };
+          }
+          if (trimmed.startsWith('-')) {
+            return { text: '   ' + trimmed, style: 'color:#444;padding-left:14px' };
+          }
+          return { text: line, style: 'color:#333' };
+        });
+      }
+
+      tr = {
+        open: true,
+        monthOpts: tMonthOpts,
+        previewLines: previewLinesToUse,
+        noData: rep.noData,
+        isEditing,
+        isViewing: !isEditing,
+        editText: textToUse,
+        hasCustom,
+        viewTabStyle: !isEditing ? ACTIVE : '',
+        editTabStyle: isEditing ? ACTIVE : '',
+        switchToView: () => this.setState({ teamReportModal: { ...this.state.teamReportModal, isEditing: false } }),
+        switchToEdit: () => this.setState({ teamReportModal: { ...this.state.teamReportModal, isEditing: true, customText: textToUse } }),
+        onEditText: (e) => this.setState({ teamReportModal: { ...this.state.teamReportModal, customText: e.target.value } }),
+        resetText: () => this.setState({ teamReportModal: { ...this.state.teamReportModal, customText: null, isEditing: false } }),
+        close: () => this.setState({ teamReportModal: null }),
+        copy: () => {
+          const finalPlain = textToUse;
+          const htmlLines = finalPlain.split('\n').map(l => {
+            const t = l.trim();
+            if (!t) return '<br>';
+            if (t.startsWith('**') && t.endsWith('**')) {
+              return '<div><b>' + t.slice(2, -2).replace('=>', '=&gt;') + '</b></div>';
+            }
+            if (t.startsWith('[') && t.endsWith(']')) {
+              return '<div><b>' + t + '</b></div>';
+            }
+            if (t.startsWith('=>')) {
+              return '<div><b>' + t.replace('=>', '=&gt;') + '</b></div>';
+            }
+            if (t.startsWith('-')) {
+              return '<div>&nbsp;&nbsp;&nbsp;' + t + '</div>';
+            }
+            return '<div>' + l + '</div>';
+          });
+          const finalHtml = htmlLines.join('\n');
+          this.copyReportWithFormatting(finalPlain, finalHtml, 'Đã copy báo cáo Team ' + rep.monthLabel + ' vào Clipboard!');
+          this.setState({ teamReportModal: null });
+        }
+      };
+    }
+
     let rv = { open: false, monthOpts: [], previewLines: [], noData: true, close: () => {}, copy: () => {} };
     if (s.reportModal) {
       const rm = s.reportModal;
@@ -4408,6 +5228,10 @@ class Component extends DCLogic {
       batchSendBbnt: () => this.batchSetBbntStatus(true, selectedBbntIds),
       batchUnsendBbnt: () => this.batchSetBbntStatus(false, selectedBbntIds),
       persRows, newPers: () => this.openPers(null),
+      isPersTabAll, isPersTabTeam, persTabAll, persTabTeam, persTabAllStyle, persTabTeamStyle,
+      setPersTabAll, setPersTabTeam, totalPersCount, teamCount,
+      teamMonthOpts, teamMonth: curTeamMonth, teamSummary, teamMembers: teamMembersCards, noTeamMembers,
+      ev, kp, tr, openTeamReportModal: () => this.openTeamReportModal(curTeamMonth),
       auditFilterOpts, auditRows, noAudit: auditRows.length === 0, hasAudit: db.audit.length > 0, clearAudit: () => this.clearAudit(),
       trashRows, noTrash: trashRows.length === 0, hasTrash: trashRows.length > 0, emptyTrash: () => this.emptyTrash(),
       mobileMenuOpen: s.mobileMenuOpen,

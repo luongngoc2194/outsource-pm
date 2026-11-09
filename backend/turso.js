@@ -13,7 +13,8 @@ const TABLES = [
   'ALLOCATION_ITEM',
   'DOCUMENT',
   'ACCEPTANCE_RECORD',
-  'AUDIT_LOG'
+  'AUDIT_LOG',
+  'TEAM_EXTERNAL_ALLOCATION'
 ];
 
 const SCHEMA_STMTS = [
@@ -26,6 +27,7 @@ const SCHEMA_STMTS = [
     id INTEGER PRIMARY KEY, code TEXT NOT NULL, full_name TEXT NOT NULL,
     default_role TEXT NOT NULL, email TEXT DEFAULT '', phone TEXT DEFAULT '',
     status TEXT NOT NULL DEFAULT 'ACTIVE', note TEXT DEFAULT '',
+    is_my_team INTEGER NOT NULL DEFAULT 0, target_kpi_mm REAL NOT NULL DEFAULT 1.0,
     is_deleted INTEGER NOT NULL DEFAULT 0, created_at TEXT, updated_at TEXT
   )`,
   `CREATE TABLE IF NOT EXISTS REQUEST (
@@ -66,6 +68,13 @@ const SCHEMA_STMTS = [
     id INTEGER PRIMARY KEY, table_name TEXT NOT NULL, record_id TEXT NOT NULL,
     action TEXT NOT NULL, column_name TEXT DEFAULT '', old_value TEXT DEFAULT '',
     new_value TEXT DEFAULT '', created_at TEXT
+  )`,
+  `CREATE TABLE IF NOT EXISTS TEAM_EXTERNAL_ALLOCATION (
+    id INTEGER PRIMARY KEY, personnel_id INTEGER NOT NULL,
+    month_period TEXT NOT NULL, project_name TEXT NOT NULL,
+    project_leader TEXT DEFAULT '', effort_mm REAL NOT NULL DEFAULT 0,
+    note TEXT DEFAULT '', is_deleted INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT, updated_at TEXT
   )`,
   `CREATE TABLE IF NOT EXISTS CLOUD_META (
     id INTEGER PRIMARY KEY, updated_at INTEGER NOT NULL, snapshot_json TEXT NOT NULL
@@ -192,6 +201,16 @@ async function pushToTurso(sqliteDb, customCfg) {
   if (!cfg.url || !cfg.token) return { synced: false, reason: 'NO_CONFIG' };
 
   await execPipeline(SCHEMA_STMTS, cfg);
+
+  // Ensure newly added columns exist on Turso
+  try {
+    const pInfoRes = await execPipeline(['PRAGMA table_info(PERSONNEL)'], cfg);
+    const pCols = parseRows(pInfoRes.results[0]).map(c => c.name);
+    const alterStmts = [];
+    if (!pCols.includes('is_my_team')) alterStmts.push('ALTER TABLE PERSONNEL ADD COLUMN is_my_team INTEGER NOT NULL DEFAULT 0');
+    if (!pCols.includes('target_kpi_mm')) alterStmts.push('ALTER TABLE PERSONNEL ADD COLUMN target_kpi_mm REAL NOT NULL DEFAULT 1.0');
+    if (alterStmts.length) await execPipeline(alterStmts, cfg);
+  } catch (_) {}
 
   const dump = {};
   const mirrorStmts = [];

@@ -327,6 +327,40 @@ const server = http.createServer(async (req, res) => {
         bgPushTurso();
         return sendJson(res, 200, { id, status, db: getStateWithCloud() });
       }
+      if (req.method === 'PATCH' && /^\/api\/personnel\/\d+\/team-toggle$/.test(pathname)) {
+        const id = Number(pathname.split('/')[3]);
+        const isMyTeam = repo.togglePersonnelTeam(id);
+        bgPushTurso();
+        return sendJson(res, 200, { id, isMyTeam, db: getStateWithCloud() });
+      }
+      if (req.method === 'PATCH' && /^\/api\/personnel\/\d+\/kpi$/.test(pathname)) {
+        const id = Number(pathname.split('/')[3]);
+        const body = await readJsonBody(req);
+        const kpi = repo.updatePersonnelKpi(id, body.kpi);
+        bgPushTurso();
+        return sendJson(res, 200, { id, kpi, db: getStateWithCloud() });
+      }
+
+      // ==================== TEAM EXTERNAL ALLOCATION ====================
+      if (req.method === 'POST' && pathname === '/api/team/external-alloc') {
+        const body = await readJsonBody(req);
+        const id = repo.saveTeamExternalAlloc(body);
+        bgPushTurso();
+        return sendJson(res, 201, { id, db: getStateWithCloud() });
+      }
+      if (req.method === 'PUT' && /^\/api\/team\/external-alloc\/\d+$/.test(pathname)) {
+        const id = Number(pathname.split('/').pop());
+        const body = await readJsonBody(req);
+        repo.saveTeamExternalAlloc({ ...body, id });
+        bgPushTurso();
+        return sendJson(res, 200, { id, db: getStateWithCloud() });
+      }
+      if (req.method === 'DELETE' && /^\/api\/team\/external-alloc\/\d+$/.test(pathname)) {
+        const id = Number(pathname.split('/').pop());
+        repo.deleteTeamExternalAlloc(id);
+        bgPushTurso();
+        return sendJson(res, 200, { id, db: getStateWithCloud() });
+      }
 
       // POST /api/members
       if (req.method === 'POST' && pathname === '/api/members') {
